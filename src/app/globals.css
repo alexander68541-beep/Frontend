@@ -723,3 +723,8 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
   .ed-rail { position: static; }
   .ed-gallery { column-count: 1; }
 }
+
+/* admin: suspended badge + removable chip */
+.badge-error { color: var(--danger); border-color: rgba(255,107,107,0.3); background: rgba(255,107,107,0.1); }
+.chip-x { background: none; border: none; color: var(--faint); cursor: pointer; margin-left: 7px; font-size: 15px; line-height: 1; padding: 0; }
+.chip-x:hover { color: var(--danger); }
