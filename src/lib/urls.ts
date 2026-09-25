@@ -49,3 +49,9 @@ export function portfolioLabel(username: string): string {
   if (typeof window !== "undefined") return `${window.location.host}/p/${username}`;
   return `/p/${username}`;
 }
+
+
+export function pathPrefix(): string {
+  if (typeof window !== "undefined") return `${window.location.host}/p/`;
+  return "/p/";
+}

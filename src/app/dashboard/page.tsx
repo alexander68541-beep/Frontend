@@ -79,6 +79,7 @@ export default function OverviewPage() {
             {statusErr && <div className="alert alert-error mt-2">{statusErr}</div>}
           </div>
           <div className="row gap-3">
+            <a className="btn" href="/preview" target="_blank" rel="noreferrer">Preview</a>
             {published ? (
               <Button loading={setStatus.isPending} onClick={() => setStatus.mutate("unpublished")}>
                 Unpublish

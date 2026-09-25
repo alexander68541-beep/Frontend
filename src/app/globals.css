@@ -597,3 +597,11 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .tpl-min .tm-visit { color: var(--tpl-accent, #55524b); }
 .tpl-min .tm-resume { border-color: var(--tpl-accent, #1a1a1a); color: var(--tpl-accent, #1a1a1a); }
 .tpl-min .tm-quote { border-left-color: var(--tpl-accent, #d8d4c8); }
+
+/* gallery: ensure natural aspect (override any earlier square crop) */
+.tm-gal img, .tb-gal img { aspect-ratio: auto !important; object-fit: fill !important; height: auto !important; }
+
+/* ---------- live preview bar ---------- */
+.preview-bar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; background: rgba(10,11,18,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.preview-tag { font-size: 13px; color: var(--muted); }
+.preview-body { min-height: calc(100vh - 44px); }

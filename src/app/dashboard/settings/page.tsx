@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAccount, usePortfolio } from "@/lib/hooks";
+import { portfolioLabel } from "@/lib/urls";
 import { Button } from "@/components/ui/Button";
 
 export default function SettingsPage() {
@@ -29,7 +30,7 @@ export default function SettingsPage() {
           <div className="row between"><span className="muted">Email</span><span>{account.data?.email ?? "…"}</span></div>
           <div className="row between"><span className="muted">Plan</span><span>Free</span></div>
           <div className="row between"><span className="muted">Public address</span>
-            <span>{portfolio.data?.username ? `folio.assetprim.com/p/${portfolio.data.username}` : "Not set"}</span>
+            <span>{portfolio.data?.username ? portfolioLabel(portfolio.data.username) : "Not set"}</span>
           </div>
         </div>
       </div>

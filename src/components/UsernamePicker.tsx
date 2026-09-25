@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { Availability, Portfolio } from "@/lib/types";
 import { normalizeUsername, validateUsername } from "@/lib/username";
-import { rootSuffix } from "@/lib/urls";
+import { rootSuffix, pathPrefix } from "@/lib/urls";
 import { Button } from "@/components/ui/Button";
 
 export function UsernamePicker({ portfolio }: { portfolio: Portfolio }) {
@@ -92,7 +92,7 @@ export function UsernamePicker({ portfolio }: { portfolio: Portfolio }) {
           </div>
         ) : (
           <div className="input-affix">
-            <span className="prefix">folio.assetprim.com/p/</span>
+            <span className="prefix">{pathPrefix()}</span>
             <input
               id="username"
               className="input"

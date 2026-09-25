@@ -43,11 +43,12 @@ export default function AppearancePage() {
           <h1 className="page-title">Appearance</h1>
           <p className="muted">Pick a template and an accent colour. Your data never changes.</p>
         </div>
-        {username && (
-          <a className="btn btn-sm" href={portfolioUrl(username)} target="_blank" rel="noreferrer">
-            {published ? "View live page ↗" : "Preview page ↗"}
-          </a>
-        )}
+        <div className="row gap-2 wrap">
+          <a className="btn btn-sm" href="/preview" target="_blank" rel="noreferrer">Live preview ↗</a>
+          {username && published && (
+            <a className="btn btn-sm btn-accent" href={portfolioUrl(username)} target="_blank" rel="noreferrer">View live page ↗</a>
+          )}
+        </div>
       </div>
 
       {err && <div className="alert alert-error">{err}</div>}

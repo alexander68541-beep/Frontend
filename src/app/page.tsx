@@ -21,7 +21,7 @@ const FEATURES = [
   },
   {
     title: "Your own address",
-    body: "Claim folio.assetprim.com/p/your-name. A clean, memorable link that's yours — change it whenever you like.",
+    body: "Claim your own clean, memorable link that's yours — and change it whenever you like.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" /></svg>
     ),

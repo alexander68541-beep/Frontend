@@ -32,7 +32,7 @@ export function TemplatePreview() {
       >
         <div className="device-bar">
           <i /> <i /> <i />
-          <span className="url">arya.assetprim.com</span>
+          <span className="url">arya’s portfolio</span>
         </div>
         <div className="device-screen">
           {/* Minimal */}
