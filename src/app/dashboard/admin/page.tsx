@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAccount } from "@/lib/hooks";
 import { Button } from "@/components/ui/Button";
+import { AdminBilling } from "@/components/AdminBilling";
 
 interface Stats { users: number; portfolios: number; published: number; }
 interface Row { id: string; username: string | null; status: string; template: string; email: string | null; }
@@ -140,6 +141,8 @@ export default function AdminPage() {
           ))}
         </div>
       </div>
+
+      <AdminBilling />
     </div>
   );
 }

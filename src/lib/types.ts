@@ -3,6 +3,7 @@ export interface Account {
   email: string | null;
   full_name: string | null;
   role: string;
+  plan: string;
 }
 
 export interface PortfolioProfile {

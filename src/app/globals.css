@@ -728,3 +728,8 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .badge-error { color: var(--danger); border-color: rgba(255,107,107,0.3); background: rgba(255,107,107,0.1); }
 .chip-x { background: none; border: none; color: var(--faint); cursor: pointer; margin-left: 7px; font-size: 15px; line-height: 1; padding: 0; }
 .chip-x:hover { color: var(--danger); }
+
+/* ---------- billing: payment method rows ---------- */
+.pay-method { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,0.02); }
+.pay-label { font-weight: 600; font-size: 14px; min-width: 120px; }
+.pay-value { flex: 1; min-width: 0; font-family: ui-monospace, monospace; font-size: 13px; color: var(--muted); word-break: break-all; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 7px; }

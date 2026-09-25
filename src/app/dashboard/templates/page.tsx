@@ -16,6 +16,7 @@ export default function TemplatesPage() {
   const portfolio = usePortfolio();
   const account = useAccount();
   const isAdmin = account.data?.role === "admin";
+  const isPro = isAdmin || account.data?.plan === "pro";
   const current = portfolio.data?.template ?? "minimal";
   const accent = portfolio.data?.accent ?? "#7c6cff";
   const published = portfolio.data?.status === "published";
@@ -62,7 +63,7 @@ export default function TemplatesPage() {
           <div className="tpl-grid">
             {TEMPLATES.filter((t) => t.category === cat).map((t) => {
               const active = current === t.id;
-              const locked = t.pro && !isAdmin;
+              const locked = t.pro && !isPro;
               return (
                 <div key={t.id} className={`tpl-card ${active ? "is-active" : ""} ${locked ? "is-locked" : ""}`}>
                   <div className={`tpl-thumb ${t.id === "bold" || t.id === "studio" ? "thumb-1" : "thumb-0"}`} aria-hidden>
