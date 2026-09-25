@@ -39,6 +39,7 @@ export interface PublicVideo { id: string; title: string | null; url: string; }
 export interface PublicPortfolio {
   username: string | null;
   template: string;
+  accent: string;
   profile: PublicProfile | null;
   projects: PublicProject[];
   skills: PublicSkill[];

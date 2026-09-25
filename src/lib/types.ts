@@ -25,6 +25,7 @@ export interface Portfolio {
   username: string | null;
   status: PortfolioStatus;
   template: string;
+  accent: string;
   is_primary: boolean;
   username_change_count: number;
   username_changed_at: string | null;

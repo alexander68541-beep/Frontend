@@ -1,25 +1,26 @@
 import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed } from "@/lib/publicTypes";
+import { LinkChip } from "@/components/LinkChip";
+import { ZoomImage } from "@/components/ZoomImage";
 
 export function BoldTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const name = p?.display_name || data.username || "Untitled";
   return (
-    <div className="tpl-bold">
+    <div className="tpl-bold" style={{ ["--tpl-accent" as string]: data.accent || "#7c6cff" } as React.CSSProperties}>
       <div className="tb-aurora" aria-hidden><span /><span /></div>
       <div className="tb-wrap">
         <header className="tb-hero">
-          {p?.avatar_url && <img className="tb-avatar" src={p.avatar_url} alt={name} />}
-          {p?.title && <p className="tb-eyebrow">{p.title}</p>}
+          {p?.avatar_url && <ZoomImage className="tb-avatar" src={p.avatar_url} alt={name} />}
+          {p?.title && <p className="tb-eyebrow">{p.title}{p?.pronouns ? ` \u00b7 ${p.pronouns}` : ""}</p>}
           <h1 className="tb-name">{name}</h1>
+          {p?.tagline && <p className="tb-tagline">{p.tagline}</p>}
           {p?.location && <p className="tb-loc">{p.location}</p>}
           {p?.bio && <p className="tb-bio">{p.bio}</p>}
           {data.links.length > 0 && (
             <div className="tb-links">
               {data.links.map((l) => (
-                <a key={l.id} href={l.url} target="_blank" rel="noreferrer" className="tb-link">
-                  {l.label || l.platform}
-                </a>
+                <LinkChip key={l.id} className="tb-link" platform={l.platform} url={l.url} label={l.label} />
               ))}
             </div>
           )}
@@ -159,7 +160,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
             <div className="tb-gallery">
               {data.gallery.map((g) => (
                 <figure key={g.id} className="tb-gal">
-                  <img src={g.image_url} alt={g.caption || ""} />
+                  <ZoomImage src={g.image_url} alt={g.caption || ""} />
                   {g.caption && <figcaption>{g.caption}</figcaption>}
                 </figure>
               ))}

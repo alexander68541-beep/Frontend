@@ -1,22 +1,28 @@
 import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed } from "@/lib/publicTypes";
+import { LinkChip } from "@/components/LinkChip";
+import { ZoomImage } from "@/components/ZoomImage";
 
 export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const name = p?.display_name || data.username || "Untitled";
   return (
-    <div className="tpl-min">
+    <div className="tpl-min" style={{ ["--tpl-accent" as string]: data.accent || "#7c6cff" } as React.CSSProperties}>
       <div className="tm-wrap">
         <header className="tm-head">
-          {p?.avatar_url && <img className="tm-avatar" src={p.avatar_url} alt={name} />}
-          <h1 className="tm-name">{name}</h1>
+          {p?.avatar_url && <ZoomImage className="tm-avatar" src={p.avatar_url} alt={name} />}
+          <h1 className="tm-name">
+            {name}
+            {p?.pronouns && <span className="tm-pronouns">({p.pronouns})</span>}
+          </h1>
           {p?.title && <p className="tm-title">{p.title}</p>}
+          {p?.tagline && <p className="tm-tagline">{p.tagline}</p>}
           {p?.location && <p className="tm-loc">{p.location}</p>}
           {p?.bio && <p className="tm-bio">{p.bio}</p>}
           {data.links.length > 0 && (
             <div className="tm-links">
               {data.links.map((l) => (
-                <a key={l.id} href={l.url} target="_blank" rel="noreferrer">{l.label || l.platform}</a>
+                <LinkChip key={l.id} className="tm-link" platform={l.platform} url={l.url} label={l.label} />
               ))}
             </div>
           )}
@@ -35,7 +41,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
             <div className="tm-projects">
               {data.projects.map((pr) => (
                 <article key={pr.id} className="tm-project">
-                  {pr.image_url && <img src={pr.image_url} alt={pr.title} className="tm-proj-img" />}
+                  {pr.image_url && <ZoomImage src={pr.image_url} alt={pr.title} className="tm-proj-img" />}
                   <div className="tm-proj-body">
                     <div className="tm-proj-top">
                       <h3>{pr.title}</h3>
@@ -161,7 +167,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
             <div className="tm-gallery">
               {data.gallery.map((g) => (
                 <figure key={g.id} className="tm-gal">
-                  <img src={g.image_url} alt={g.caption || ""} />
+                  <ZoomImage src={g.image_url} alt={g.caption || ""} />
                   {g.caption && <figcaption>{g.caption}</figcaption>}
                 </figure>
               ))}
@@ -197,7 +203,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
               <blockquote key={t.id} className="tm-quote">
                 <p>&ldquo;{t.quote}&rdquo;</p>
                 <cite className="tm-cite">
-                  {t.avatar_url && <img className="tm-cite-av" src={t.avatar_url} alt={t.author} />}
+                  {t.avatar_url && <ZoomImage className="tm-cite-av" src={t.avatar_url} alt={t.author} />}
                   <span>— {t.author}{t.role ? `, ${t.role}` : ""}</span>
                 </cite>
               </blockquote>

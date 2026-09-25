@@ -543,3 +543,57 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .tb-cite { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
 .tb-cite-av { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 @media (max-width: 560px) { .tb-gallery { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- link chips with icons (clearly clickable) ---------- */
+.lc-ic { display: inline-flex; align-items: center; }
+.lc-ic svg { width: 16px; height: 16px; display: block; }
+
+/* Minimal link chips */
+.tm-links { gap: 10px; }
+.tm-links a { display: inline-flex; align-items: center; gap: 8px; border: 1px solid #d8d4c8; border-bottom: 1px solid #d8d4c8; background: #fff; border-radius: 999px; padding: 8px 14px; color: #1a1a1a; font-size: 14px; transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
+.tm-links a:hover { border-color: #1a1a1a; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+.tm-pronouns { font-family: var(--font-sans); font-size: 15px; color: #8a867d; font-weight: 400; margin-left: 8px; }
+.tm-tagline { font-size: 16px; color: #44413b; margin: 8px 0 0; font-style: italic; }
+
+/* Bold link chips */
+.tb-link { display: inline-flex; align-items: center; gap: 8px; }
+.tb-tagline { font-size: 18px; color: #c7cad6; margin: 12px 0 0; font-style: italic; }
+
+/* ---------- gallery: natural aspect (no crop), masonry ---------- */
+.tm-gallery { display: block; column-count: 3; column-gap: 10px; }
+.tm-gal { break-inside: avoid; margin: 0 0 10px; }
+.tm-gal img { width: 100%; height: auto; border-radius: 10px; border: 1px solid #e3e0d8; display: block; }
+.tb-gallery { display: block; column-count: 3; column-gap: 12px; }
+.tb-gal { break-inside: avoid; margin: 0 0 12px; }
+.tb-gal img { width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.09); display: block; }
+@media (max-width: 640px) { .tm-gallery, .tb-gallery { column-count: 2; } }
+@media (max-width: 420px) { .tm-gallery, .tb-gallery { column-count: 1; } }
+
+/* project cover: don't force-crop tall/wide images too hard on Minimal */
+.tm-proj-img { height: auto; }
+
+/* ---------- zoom lightbox ---------- */
+.zoom-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.92); display: grid; place-items: center; padding: 24px; animation: zoomIn .18s ease; }
+.zoom-full { max-width: 94vw; max-height: 92vh; object-fit: contain; border-radius: 8px; box-shadow: 0 20px 80px rgba(0,0,0,0.6); }
+.zoom-close { position: fixed; top: 16px; right: 20px; width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.3); font-size: 24px; line-height: 1; cursor: pointer; }
+.zoom-close:hover { background: rgba(255,255,255,0.22); }
+@keyframes zoomIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- appearance: swatches ---------- */
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+.swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line-strong); cursor: pointer; transition: transform .12s ease; }
+.swatch:hover { transform: scale(1.08); }
+.swatch.is-active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px #fff; }
+.color-input { width: 46px; height: 40px; padding: 0; border: 1px solid var(--line-strong); border-radius: 9px; background: transparent; cursor: pointer; }
+
+/* ---------- templates consume the user's accent (--tpl-accent) ---------- */
+.tpl-bold .tb-eyebrow { color: var(--tpl-accent, #38d2c6); }
+.tpl-bold .tb-name { background: linear-gradient(92deg, #fff, var(--tpl-accent, #7c6cff)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tpl-bold .tb-proj-role { color: var(--tpl-accent, #38d2c6); }
+.tpl-bold .tb-project:hover { border-color: var(--tpl-accent, #7c6cff); }
+.tpl-bold .tb-link:hover { border-color: var(--tpl-accent, #7c6cff); background: color-mix(in srgb, var(--tpl-accent, #7c6cff) 16%, transparent); }
+
+.tpl-min .tm-links a:hover { border-color: var(--tpl-accent, #1a1a1a); }
+.tpl-min .tm-visit { color: var(--tpl-accent, #55524b); }
+.tpl-min .tm-resume { border-color: var(--tpl-accent, #1a1a1a); color: var(--tpl-accent, #1a1a1a); }
+.tpl-min .tm-quote { border-left-color: var(--tpl-accent, #d8d4c8); }
