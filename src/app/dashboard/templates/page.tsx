@@ -4,16 +4,18 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { Portfolio } from "@/lib/types";
-import { usePortfolio } from "@/lib/hooks";
-import { TEMPLATES } from "@/templates";
+import { useAccount, usePortfolio } from "@/lib/hooks";
+import { TEMPLATES, TEMPLATE_CATEGORIES } from "@/templates";
 import { Button } from "@/components/ui/Button";
 import { portfolioUrl, portfolioLabel } from "@/lib/urls";
 
 const PRESET_ACCENTS = ["#7c6cff", "#38d2c6", "#ff8a6b", "#f0b869", "#4b9fff", "#ff5f9e", "#46d296", "#e0b34d"];
 
-export default function AppearancePage() {
+export default function TemplatesPage() {
   const qc = useQueryClient();
   const portfolio = usePortfolio();
+  const account = useAccount();
+  const isAdmin = account.data?.role === "admin";
   const current = portfolio.data?.template ?? "minimal";
   const accent = portfolio.data?.accent ?? "#7c6cff";
   const published = portfolio.data?.status === "published";
@@ -40,7 +42,7 @@ export default function AppearancePage() {
     <div className="stack gap-6">
       <div className="row between wrap gap-3">
         <div>
-          <h1 className="page-title">Appearance</h1>
+          <h1 className="page-title">Templates</h1>
           <p className="muted">Pick a template and an accent colour. Your data never changes.</p>
         </div>
         <div className="row gap-2 wrap">
@@ -54,44 +56,45 @@ export default function AppearancePage() {
       {err && <div className="alert alert-error">{err}</div>}
       {!username && <div className="alert">Claim a username first (Overview) to preview your page.</div>}
 
-      <div className="tpl-grid">
-        {TEMPLATES.map((t) => {
-          const active = current === t.id;
-          return (
-            <div key={t.id} className={`tpl-card ${active ? "is-active" : ""}`}>
-              <div className={`tpl-thumb ${t.id === "bold" ? "thumb-1" : "thumb-0"}`} aria-hidden>
-                <span className="tt-avatar" /><span className="tt-line w60" /><span className="tt-line w40" />
-                <span className="tt-row"><span /><span /></span>
-              </div>
-              <div className="row between">
-                <div>
-                  <h3 className="tpl-name">{t.name}</h3>
-                  <p className="muted small">{t.desc}</p>
+      {TEMPLATE_CATEGORIES.map((cat) => (
+        <div key={cat} className="stack gap-3">
+          <h2 className="cat-h">{cat}</h2>
+          <div className="tpl-grid">
+            {TEMPLATES.filter((t) => t.category === cat).map((t) => {
+              const active = current === t.id;
+              const locked = t.pro && !isAdmin;
+              return (
+                <div key={t.id} className={`tpl-card ${active ? "is-active" : ""} ${locked ? "is-locked" : ""}`}>
+                  <div className={`tpl-thumb ${t.id === "bold" || t.id === "studio" ? "thumb-1" : "thumb-0"}`} aria-hidden>
+                    <span className="tt-avatar" /><span className="tt-line w60" /><span className="tt-line w40" />
+                    <span className="tt-row"><span /><span /></span>
+                  </div>
+                  <div className="row between">
+                    <div>
+                      <h3 className="tpl-name">{t.name} {t.pro && <span className="pro-tag">PRO</span>}</h3>
+                      <p className="muted small">{t.desc}</p>
+                    </div>
+                    {active ? (
+                      <span className="badge badge-published"><span className="dot" />Active</span>
+                    ) : locked ? (
+                      <span className="badge badge-draft">Admin only</span>
+                    ) : (
+                      <Button variant="accent" className="btn-sm" loading={setTemplate.isPending} onClick={() => setTemplate.mutate(t.id)}>Use</Button>
+                    )}
+                  </div>
                 </div>
-                {active ? (
-                  <span className="badge badge-published"><span className="dot" />Active</span>
-                ) : (
-                  <Button variant="accent" className="btn-sm" loading={setTemplate.isPending} onClick={() => setTemplate.mutate(t.id)}>Use</Button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
 
       <div className="card">
         <h2 className="card-title">Accent colour</h2>
         <p className="muted small">Used for links, highlights and headings on your page.</p>
         <div className="swatches mt-4">
           {PRESET_ACCENTS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              className={`swatch ${accent.toLowerCase() === c.toLowerCase() ? "is-active" : ""}`}
-              style={{ background: c }}
-              aria-label={c}
-              onClick={() => setAccent.mutate(c)}
-            />
+            <button key={c} type="button" className={`swatch ${accent.toLowerCase() === c.toLowerCase() ? "is-active" : ""}`} style={{ background: c }} aria-label={c} onClick={() => setAccent.mutate(c)} />
           ))}
         </div>
         <div className="row gap-3 mt-4 wrap">

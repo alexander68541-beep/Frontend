@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAccount, usePortfolio } from "@/lib/hooks";
 import { portfolioLabel } from "@/lib/urls";
 
-type NavItem = { href: string; label: string; icon: React.ReactNode; soon?: string };
+type NavItem = { href: string; label: string; icon: React.ReactNode; soon?: string; adminOnly?: boolean };
 
 const I = {
   overview: (
@@ -149,9 +149,10 @@ const NAV: { section: string; items: NavItem[] }[] = [
     { href: "/dashboard/resume", label: "Resume / CV", icon: I.resume },
   ]},
   { section: "Optional", items: [
-    { href: "/dashboard/templates", label: "Appearance", icon: I.appearance },
+    { href: "/dashboard/templates", label: "Templates", icon: I.appearance },
     { href: "/dashboard/seo", label: "SEO / Sharing", icon: I.seo, soon: "Soon" },
     { href: "/dashboard/settings", label: "Settings", icon: I.settings },
+    { href: "/dashboard/admin", label: "Admin", icon: I.settings, adminOnly: true },
   ]},
 ];
 
@@ -161,6 +162,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const account = useAccount();
   const portfolio = usePortfolio();
+  const isAdmin = account.data?.role === "admin";
 
   const pf = portfolio.data;
   const published = pf?.status === "published";
@@ -186,7 +188,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {NAV.map((group) => (
             <div key={group.section} className="dash-group">
               <span className="dash-group-label">{group.section}</span>
-              {group.items.map((it) => (
+              {group.items.filter((it) => !it.adminOnly || isAdmin).map((it) => (
                 <Link
                   key={it.href}
                   href={it.href}
