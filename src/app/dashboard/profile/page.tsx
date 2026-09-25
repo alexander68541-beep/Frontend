@@ -12,7 +12,7 @@ export default function ProfilePage() {
         { name: "pronouns", label: "Pronouns", half: true, placeholder: "she/her" },
         { name: "location", label: "Location", half: true, placeholder: "Dhaka, Bangladesh" },
         { name: "bio", label: "Short bio", type: "textarea", placeholder: "A one or two line intro…" },
-        { name: "avatar_url", label: "Avatar URL", type: "url", placeholder: "https://… (uploads in Phase 5)" },
+        { name: "avatar_url", label: "Avatar", type: "image" },
       ]}
     />
   );

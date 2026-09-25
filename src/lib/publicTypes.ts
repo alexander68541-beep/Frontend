@@ -33,6 +33,8 @@ export interface PublicCertification { id: string; name: string; issuer: string 
 export interface PublicAchievement { id: string; title: string; description: string | null; date: string | null; }
 export interface PublicTestimonial { id: string; author: string; role: string | null; quote: string; avatar_url: string | null; }
 export interface PublicPublication { id: string; title: string; publisher: string | null; date: string | null; url: string | null; description: string | null; }
+export interface PublicGalleryItem { id: string; image_url: string; caption: string | null; }
+export interface PublicVideo { id: string; title: string | null; url: string; }
 
 export interface PublicPortfolio {
   username: string | null;
@@ -48,10 +50,34 @@ export interface PublicPortfolio {
   achievements: PublicAchievement[];
   testimonials: PublicTestimonial[];
   publications: PublicPublication[];
+  gallery: PublicGalleryItem[];
+  videos: PublicVideo[];
 }
 
 export function dateRange(s: string | null, e: string | null, current?: boolean): string {
   const end = current ? "Present" : e;
   if (s && end) return `${s} – ${end}`;
   return s || end || "";
+}
+
+
+export function videoEmbed(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtube.com")) {
+      const id = u.searchParams.get("v");
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+    if (u.hostname === "youtu.be") {
+      const id = u.pathname.slice(1);
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+    if (u.hostname.includes("vimeo.com")) {
+      const id = u.pathname.split("/").filter(Boolean).pop();
+      if (id && /^[0-9]+$/.test(id)) return `https://player.vimeo.com/video/${id}`;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
 }

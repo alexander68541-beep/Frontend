@@ -513,3 +513,33 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .tb-card h3 { margin: 0; font-size: 18px; }
 .tb-quote { font-size: 16px; line-height: 1.65; color: #dfe2ec; font-style: italic; margin: 0 0 10px; }
 @media (max-width: 620px) { .tb-cards { grid-template-columns: 1fr; } }
+
+/* ---------- image upload widget (dashboard) ---------- */
+.img-upload { display: flex; align-items: center; gap: 14px; }
+.img-preview { width: 84px; height: 84px; border-radius: 12px; object-fit: cover; border: 1px solid var(--line-strong); background: rgba(0,0,0,0.25); }
+.img-placeholder { width: 84px; height: 84px; border-radius: 12px; border: 1px dashed var(--line-strong); display: grid; place-items: center; color: var(--faint); font-size: 12px; }
+.img-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- Minimal: gallery + videos + testimonial avatar ---------- */
+.tm-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tm-gal { margin: 0; }
+.tm-gal img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 10px; border: 1px solid #e3e0d8; display: block; }
+.tm-gal figcaption { font-size: 12.5px; color: #8a867d; margin-top: 6px; }
+.tm-videos { display: grid; gap: 16px; }
+.tm-video { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 10px; overflow: hidden; border: 1px solid #e3e0d8; }
+.tm-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.tm-cite { display: flex; align-items: center; gap: 10px; }
+.tm-cite-av { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+@media (max-width: 560px) { .tm-gallery { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- Bold: gallery + videos + testimonial avatar ---------- */
+.tb-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.tb-gal { margin: 0; }
+.tb-gal img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255,255,255,0.09); display: block; }
+.tb-gal figcaption { font-size: 12.5px; color: #9298ac; margin-top: 6px; }
+.tb-videos { display: grid; gap: 16px; }
+.tb-video { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.09); }
+.tb-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.tb-cite { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.tb-cite-av { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+@media (max-width: 560px) { .tb-gallery { grid-template-columns: 1fr 1fr; } }

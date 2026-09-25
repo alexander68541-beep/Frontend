@@ -1,5 +1,5 @@
 import type { PublicPortfolio } from "@/lib/publicTypes";
-import { dateRange } from "@/lib/publicTypes";
+import { dateRange, videoEmbed } from "@/lib/publicTypes";
 
 export function BoldTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
@@ -153,6 +153,40 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
+        {data.gallery.length > 0 && (
+          <section className="tb-sec">
+            <h2 className="tb-h2">Gallery</h2>
+            <div className="tb-gallery">
+              {data.gallery.map((g) => (
+                <figure key={g.id} className="tb-gal">
+                  <img src={g.image_url} alt={g.caption || ""} />
+                  {g.caption && <figcaption>{g.caption}</figcaption>}
+                </figure>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {data.videos.length > 0 && (
+          <section className="tb-sec">
+            <h2 className="tb-h2">Videos</h2>
+            <div className="tb-videos">
+              {data.videos.map((v) => {
+                const embed = videoEmbed(v.url);
+                return (
+                  <div key={v.id}>
+                    {embed ? (
+                      <div className="tb-video"><iframe src={embed} title={v.title || "Video"} allowFullScreen /></div>
+                    ) : (
+                      <a className="tb-link" href={v.url} target="_blank" rel="noreferrer">{v.title || v.url}</a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {data.testimonials.length > 0 && (
           <section className="tb-sec">
             <h2 className="tb-h2">Testimonials</h2>
@@ -160,7 +194,10 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
               {data.testimonials.map((t) => (
                 <div key={t.id} className="tb-card">
                   <p className="tb-quote">&ldquo;{t.quote}&rdquo;</p>
-                  <p className="tb-proj-role">{t.author}{t.role ? `, ${t.role}` : ""}</p>
+                  <div className="tb-cite">
+                    {t.avatar_url && <img className="tb-cite-av" src={t.avatar_url} alt={t.author} />}
+                    <p className="tb-proj-role">{t.author}{t.role ? `, ${t.role}` : ""}</p>
+                  </div>
                 </div>
               ))}
             </div>

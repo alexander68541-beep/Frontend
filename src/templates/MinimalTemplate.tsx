@@ -1,5 +1,5 @@
 import type { PublicPortfolio } from "@/lib/publicTypes";
-import { dateRange } from "@/lib/publicTypes";
+import { dateRange, videoEmbed } from "@/lib/publicTypes";
 
 export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
@@ -155,13 +155,51 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
+        {data.gallery.length > 0 && (
+          <section className="tm-sec">
+            <h2>Gallery</h2>
+            <div className="tm-gallery">
+              {data.gallery.map((g) => (
+                <figure key={g.id} className="tm-gal">
+                  <img src={g.image_url} alt={g.caption || ""} />
+                  {g.caption && <figcaption>{g.caption}</figcaption>}
+                </figure>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {data.videos.length > 0 && (
+          <section className="tm-sec">
+            <h2>Videos</h2>
+            <div className="tm-videos">
+              {data.videos.map((v) => {
+                const embed = videoEmbed(v.url);
+                return (
+                  <div key={v.id}>
+                    {embed ? (
+                      <div className="tm-video"><iframe src={embed} title={v.title || "Video"} allowFullScreen /></div>
+                    ) : (
+                      <a href={v.url} target="_blank" rel="noreferrer">{v.title || v.url}</a>
+                    )}
+                    {v.title && <p className="tm-row-sub">{v.title}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {data.testimonials.length > 0 && (
           <section className="tm-sec">
             <h2>Testimonials</h2>
             {data.testimonials.map((t) => (
               <blockquote key={t.id} className="tm-quote">
                 <p>&ldquo;{t.quote}&rdquo;</p>
-                <cite>— {t.author}{t.role ? `, ${t.role}` : ""}</cite>
+                <cite className="tm-cite">
+                  {t.avatar_url && <img className="tm-cite-av" src={t.avatar_url} alt={t.author} />}
+                  <span>— {t.author}{t.role ? `, ${t.role}` : ""}</span>
+                </cite>
               </blockquote>
             ))}
           </section>

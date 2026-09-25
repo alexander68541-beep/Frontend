@@ -17,7 +17,7 @@ export default function ProjectsPage() {
         { name: "role", label: "Your role", half: true, placeholder: "Lead Designer" },
         { name: "url", label: "Link", type: "url", half: true, placeholder: "https://…" },
         { name: "description", label: "Description", type: "textarea", placeholder: "What it is, what you did…" },
-        { name: "image_url", label: "Image URL", type: "url", placeholder: "https://… (uploads arrive in Phase 5)" },
+        { name: "image_url", label: "Cover image", type: "image" },
         { name: "tags", label: "Tags (comma separated)", type: "tags", placeholder: "React, UI, Branding" },
         { name: "start_date", label: "Start", half: true, placeholder: "2023" },
         { name: "end_date", label: "End", half: true, placeholder: "2024 or Present" },

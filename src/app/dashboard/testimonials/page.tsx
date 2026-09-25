@@ -10,7 +10,7 @@ export default function TestimonialsPage() {
         { name: "author", label: "Author", required: true, half: true, placeholder: "Jane Doe" },
         { name: "role", label: "Role / Company", half: true, placeholder: "CEO, Acme" },
         { name: "quote", label: "Quote", type: "textarea", required: true, placeholder: "They were amazing to work with…" },
-        { name: "avatar_url", label: "Avatar URL", type: "url", placeholder: "https://…" },
+        { name: "avatar_url", label: "Author photo", type: "image" },
       ]}
     />
   );

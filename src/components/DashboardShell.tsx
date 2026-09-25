@@ -112,6 +112,16 @@ const I = {
       <circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" />
     </svg>
   ),
+  gallery: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M3 17l5-4 4 3 3-2 6 5" />
+    </svg>
+  ),
+  videos: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <rect x="3" y="5" width="18" height="14" rx="2" /><path d="M10 9l5 3-5 3z" />
+    </svg>
+  ),
 };
 
 const NAV: { section: string; items: NavItem[] }[] = [
@@ -130,6 +140,8 @@ const NAV: { section: string; items: NavItem[] }[] = [
     { href: "/dashboard/achievements", label: "Achievements", icon: I.achievements },
     { href: "/dashboard/testimonials", label: "Testimonials", icon: I.testimonials },
     { href: "/dashboard/publications", label: "Publications", icon: I.publications },
+    { href: "/dashboard/gallery", label: "Gallery", icon: I.gallery },
+    { href: "/dashboard/videos", label: "Videos", icon: I.videos },
   ]},
   { section: "Connect", items: [
     { href: "/dashboard/links", label: "Social links", icon: I.links },

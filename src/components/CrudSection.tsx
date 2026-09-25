@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
+import { ImageUpload } from "@/components/ImageUpload";
 
-export type FieldType = "text" | "textarea" | "url" | "tags" | "checkbox" | "number";
+export type FieldType = "text" | "textarea" | "url" | "tags" | "checkbox" | "number" | "image";
 
 export interface CrudField {
   name: string;
@@ -155,6 +156,16 @@ export function CrudSection(props: Props) {
             <div className="form-grid">
               {fields.map((f) => {
                 const val = form[f.name];
+                if (f.type === "image") {
+                  return (
+                    <ImageUpload
+                      key={f.name}
+                      label={f.label}
+                      value={String(val ?? "")}
+                      onChange={(url) => setField(f.name, url)}
+                    />
+                  );
+                }
                 if (f.type === "checkbox") {
                   return (
                     <label key={f.name} className="check-row full">

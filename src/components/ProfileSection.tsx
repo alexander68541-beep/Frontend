@@ -6,11 +6,12 @@ import { apiFetch, ApiError } from "@/lib/api";
 import type { Portfolio } from "@/lib/types";
 import { usePortfolio } from "@/lib/hooks";
 import { Button } from "@/components/ui/Button";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export interface PField {
   name: string;
   label: string;
-  type?: "text" | "textarea" | "url" | "email";
+  type?: "text" | "textarea" | "url" | "email" | "image";
   placeholder?: string;
   hint?: string;
   half?: boolean;
@@ -96,7 +97,14 @@ function Editor({
           {saved && <div className="alert alert-ok">Saved.</div>}
           <div className="form-grid">
             {fields.map((f) =>
-              f.type === "textarea" ? (
+              f.type === "image" ? (
+                <ImageUpload
+                  key={f.name}
+                  label={f.label}
+                  value={form[f.name] ?? ""}
+                  onChange={(url) => { setSaved(false); setForm((v) => ({ ...v, [f.name]: url })); }}
+                />
+              ) : f.type === "textarea" ? (
                 <div key={f.name} className="field full">
                   <label className="label">{f.label}</label>
                   <textarea
