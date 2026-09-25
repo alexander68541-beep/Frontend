@@ -624,3 +624,10 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 }
 .tpl-bold .tb-row h3 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .tpl-bold .tb-row h3 a::after { content: " ↗"; font-size: 0.78em; opacity: 0.85; }
+
+/* ---------- item reordering ---------- */
+.reorder { display: inline-flex; flex-direction: column; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+.reorder-btn { width: 28px; height: 20px; display: grid; place-items: center; background: rgba(255,255,255,0.04); color: var(--muted); border: none; cursor: pointer; font-size: 12px; line-height: 1; transition: background .12s ease, color .12s ease; }
+.reorder-btn + .reorder-btn { border-top: 1px solid var(--line); }
+.reorder-btn:hover:not(:disabled) { background: rgba(124,108,255,0.16); color: var(--iris-bright); }
+.reorder-btn:disabled { opacity: .35; cursor: not-allowed; }

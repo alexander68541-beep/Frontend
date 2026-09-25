@@ -117,6 +117,22 @@ export function CrudSection(props: Props) {
     onSuccess: () => qc.invalidateQueries({ queryKey: [queryKey] }),
   });
 
+  const reorder = useMutation({
+    mutationFn: (ids: string[]) =>
+      apiFetch(`${endpoint}/reorder`, { method: "POST", body: JSON.stringify({ ids }) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [queryKey] }),
+  });
+
+  function move(index: number, dir: -1 | 1) {
+    const ids = (list.data ?? []).map((it) => it.id);
+    const j = index + dir;
+    if (j < 0 || j >= ids.length) return;
+    const tmp = ids[index];
+    ids[index] = ids[j];
+    ids[j] = tmp;
+    reorder.mutate(ids);
+  }
+
   function submit() {
     setFormError(null);
     for (const f of fields) {
@@ -232,7 +248,7 @@ export function CrudSection(props: Props) {
         </div>
       ) : (
         <div className="crud-list">
-          {items.map((item) => (
+          {items.map((item, idx) => (
             <div key={item.id} className="crud-item">
               <div className="crud-item-main">
                 <div className="crud-item-title">{String(item[primary] ?? "Untitled")}</div>
@@ -248,6 +264,20 @@ export function CrudSection(props: Props) {
                 )}
               </div>
               <div className="row gap-2">
+                <div className="reorder">
+                  <button
+                    className="reorder-btn"
+                    aria-label="Move up"
+                    disabled={idx === 0 || reorder.isPending}
+                    onClick={() => move(idx, -1)}
+                  >↑</button>
+                  <button
+                    className="reorder-btn"
+                    aria-label="Move down"
+                    disabled={idx === items.length - 1 || reorder.isPending}
+                    onClick={() => move(idx, 1)}
+                  >↓</button>
+                </div>
                 <button className="btn btn-sm" onClick={() => startEdit(item)}>Edit</button>
                 <button
                   className="btn btn-sm btn-danger"
