@@ -605,3 +605,22 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .preview-bar { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; background: rgba(10,11,18,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
 .preview-tag { font-size: 13px; color: var(--muted); }
 .preview-body { min-height: calc(100vh - 44px); }
+
+/* ---------- content links inside templates: clearly clickable ---------- */
+/* Minimal: linked titles (certifications, publications) + visit links */
+.tpl-min .tm-row-main h3 a {
+  color: #1a1a1a; text-decoration: underline; text-decoration-color: #c9c4b8;
+  text-underline-offset: 3px; transition: color .15s ease, text-decoration-color .15s ease;
+}
+.tpl-min .tm-row-main h3 a:hover { color: var(--tpl-accent, #1a1a1a); text-decoration-color: currentColor; }
+.tpl-min .tm-row-main h3 a::after { content: " ↗"; font-size: 0.78em; opacity: 0.65; }
+.tpl-min .tm-visit { color: var(--tpl-accent, #55524b); font-weight: 600; }
+.tpl-min .tm-visit:hover { text-decoration: underline; text-underline-offset: 3px; }
+.tpl-min .tm-contact a { color: var(--tpl-accent, #1a1a1a); }
+
+/* Bold: linked titles */
+.tpl-bold .tb-row h3 a {
+  color: var(--tpl-accent, #b9acff); text-decoration: none; transition: color .15s ease;
+}
+.tpl-bold .tb-row h3 a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.tpl-bold .tb-row h3 a::after { content: " ↗"; font-size: 0.78em; opacity: 0.85; }
