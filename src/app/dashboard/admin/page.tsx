@@ -7,13 +7,14 @@ import { useAccount } from "@/lib/hooks";
 import { Button } from "@/components/ui/Button";
 import { AdminSettings } from "@/components/AdminSettings";
 import { AdminPayments } from "@/components/AdminPayments";
+import { AdminMessages } from "@/components/AdminMessages";
 
 interface Stats { users: number; portfolios: number; published: number; }
 interface Row { id: string; username: string | null; status: string; template: string; email: string | null; }
 interface User { id: string; email: string | null; role: string; }
 interface Reserved { name: string; note: string | null; }
 
-const TABS = ["Overview", "Portfolios", "Users", "Payments", "Billing", "Reserved"] as const;
+const TABS = ["Overview", "Portfolios", "Users", "Payments", "Messages", "Billing", "Reserved"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function AdminPage() {
@@ -129,6 +130,7 @@ export default function AdminPage() {
       )}
 
       {tab === "Payments" && <AdminPayments />}
+      {tab === "Messages" && <AdminMessages />}
       {tab === "Billing" && <AdminSettings />}
 
       {tab === "Reserved" && (
