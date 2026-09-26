@@ -9,6 +9,9 @@ interface SignResp {
   timestamp: number;
   signature: string;
   folder: string;
+  account: string;
+  index: number;
+  has_more: boolean;
 }
 
 export function ImageUpload({
@@ -36,21 +39,30 @@ export function ImageUpload({
   async function onFile(file: File) {
     setError(null);
     setBusy(true);
+    let index = 0;
     try {
-      const sign = await apiFetch<SignResp>("/media/sign", { method: "POST" });
-      const form = new FormData();
-      form.append("file", file);
-      form.append("api_key", sign.api_key);
-      form.append("timestamp", String(sign.timestamp));
-      form.append("signature", sign.signature);
-      form.append("folder", sign.folder);
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${sign.cloud_name}/image/upload`,
-        { method: "POST", body: form },
-      );
-      if (!res.ok) throw new Error("upload failed");
-      const data = await res.json();
-      onChange(data.secure_url as string);
+      // Try each configured Cloudinary account in order (fallback A -> B -> C).
+      for (;;) {
+        const sign = await apiFetch<SignResp>(`/media/sign?index=${index}`, { method: "POST" });
+        const form = new FormData();
+        form.append("file", file);
+        form.append("api_key", sign.api_key);
+        form.append("timestamp", String(sign.timestamp));
+        form.append("signature", sign.signature);
+        form.append("folder", sign.folder);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${sign.cloud_name}/image/upload`, { method: "POST", body: form });
+        if (res.ok) {
+          const data = await res.json();
+          onChange(data.secure_url as string);
+          apiFetch("/media/record", { method: "POST", body: JSON.stringify({
+            account: sign.account, public_id: data.public_id, url: data.secure_url,
+            format: data.format, width: data.width, height: data.height, bytes: data.bytes,
+          }) }).catch(() => {});
+          return;
+        }
+        if (!sign.has_more) throw new Error("upload failed");
+        index += 1; // next account
+      }
     } catch {
       setError("Upload failed. Check your connection or paste an image URL instead.");
     } finally {
