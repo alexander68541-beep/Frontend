@@ -6,6 +6,9 @@ export const DEMO_PORTFOLIO: PublicPortfolio = {
   template: "minimal",
   accent: "#7c6cff",
   hide_branding: false,
+  seo_title: null,
+  seo_description: null,
+  seo_image: null,
   profile: {
     display_name: "Arya Sen",
     title: "Product Designer & Developer",
