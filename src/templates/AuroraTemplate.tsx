@@ -148,7 +148,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
                     </div>
                   )}
                   <div className="p-8">
-                    <h3 className="text-2xl font-bold text-white group-hover:text-[#e55b13] transition-colors mb-2" style={{ "--tw-text-opacity": 1, color: "var(--hover-color, white)" }}>{pr.title}</h3>
+                    <h3 className="text-2xl font-bold text-white group-hover:text-[#e55b13] transition-colors mb-2">{pr.title}</h3>
                     {pr.role && <p className="text-sm font-semibold mb-4" style={{ color: accentColor }}>{pr.role}</p>}
                     {pr.description && <p className="text-gray-400 mb-6 line-clamp-3">{pr.description}</p>}
                     {pr.tags.length > 0 && (
