@@ -4,7 +4,7 @@ import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 import React from "react";
 
-export function BoldTemplate({ data }: { data: PublicPortfolio }) {
+export function WowTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const name = p?.display_name || data.username || "Untitled";
   const accentColor = data.accent || "#7c6cff";
