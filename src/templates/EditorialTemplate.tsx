@@ -214,7 +214,7 @@ export function EditorialTemplate({
             </section>
           )}
 
-          <footer className="ed-foot">Made with Folio</footer>
+          {!data.hide_branding && (<footer className="ed-foot">Made with Folio</footer>)}
         </main>
       </div>
     </div>

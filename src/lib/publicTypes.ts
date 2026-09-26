@@ -40,6 +40,7 @@ export interface PublicPortfolio {
   username: string | null;
   template: string;
   accent: string;
+  hide_branding: boolean;
   profile: PublicProfile | null;
   projects: PublicProject[];
   skills: PublicSkill[];

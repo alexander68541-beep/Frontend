@@ -8,6 +8,7 @@ import { useAccount, usePortfolio } from "@/lib/hooks";
 import { TEMPLATES, TEMPLATE_CATEGORIES } from "@/templates";
 import { Button } from "@/components/ui/Button";
 import { portfolioUrl, portfolioLabel } from "@/lib/urls";
+import { useQuery } from "@tanstack/react-query";
 
 const PRESET_ACCENTS = ["#7c6cff", "#38d2c6", "#ff8a6b", "#f0b869", "#4b9fff", "#ff5f9e", "#46d296", "#e0b34d"];
 
@@ -17,6 +18,8 @@ export default function TemplatesPage() {
   const account = useAccount();
   const isAdmin = account.data?.role === "admin";
   const isPro = isAdmin || account.data?.plan === "pro";
+  const billing = useQuery({ queryKey: ["billing-info"], queryFn: () => apiFetch<{ features: { key: string; has: boolean }[] }>("/billing/info") });
+  const customAccentAllowed = billing.data?.features.find((f) => f.key === "custom_accent")?.has ?? true;
   const current = portfolio.data?.template ?? "minimal";
   const accent = portfolio.data?.accent ?? "#7c6cff";
   const published = portfolio.data?.status === "published";
@@ -98,11 +101,15 @@ export default function TemplatesPage() {
             <button key={c} type="button" className={`swatch ${accent.toLowerCase() === c.toLowerCase() ? "is-active" : ""}`} style={{ background: c }} aria-label={c} onClick={() => setAccent.mutate(c)} />
           ))}
         </div>
-        <div className="row gap-3 mt-4 wrap">
-          <input type="color" className="color-input" value={custom} onChange={(e) => setCustom(e.target.value)} />
-          <input className="input" style={{ maxWidth: 140 }} value={custom} onChange={(e) => setCustom(e.target.value)} />
-          <Button className="btn-sm" loading={setAccent.isPending} onClick={() => setAccent.mutate(custom)}>Apply</Button>
-        </div>
+        {customAccentAllowed ? (
+          <div className="row gap-3 mt-4 wrap">
+            <input type="color" className="color-input" value={custom} onChange={(e) => setCustom(e.target.value)} />
+            <input className="input" style={{ maxWidth: 140 }} value={custom} onChange={(e) => setCustom(e.target.value)} />
+            <Button className="btn-sm" loading={setAccent.isPending} onClick={() => setAccent.mutate(custom)}>Apply</Button>
+          </div>
+        ) : (
+          <p className="muted small mt-4">Custom colours are a Pro feature. <a href="/dashboard/billing" style={{ color: "var(--iris-bright)" }}>Upgrade →</a></p>
+        )}
       </div>
 
       {username && (

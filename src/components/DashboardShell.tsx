@@ -193,7 +193,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={it.href}
                   href={it.href}
-                  className={`dash-link ${isActive(it.href) ? "is-active" : ""}`}
+                  className={`dash-link ${isActive(it.href) ? "is-active" : ""} ${it.href === "/dashboard/billing" ? "dash-link-upgrade" : ""}`}
                   onClick={() => setOpen(false)}
                 >
                   <span className="ic">{it.icon}</span>

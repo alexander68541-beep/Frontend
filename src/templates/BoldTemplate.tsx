@@ -218,7 +218,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        <footer className="tb-foot">Made with Folio</footer>
+        {!data.hide_branding && (<footer className="tb-foot">Made with Folio</footer>)}
       </div>
     </div>
   );

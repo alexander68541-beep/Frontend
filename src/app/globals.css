@@ -733,3 +733,16 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .pay-method { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,0.02); }
 .pay-label { font-weight: 600; font-size: 14px; min-width: 120px; }
 .pay-value { flex: 1; min-width: 0; font-family: ui-monospace, monospace; font-size: 13px; color: var(--muted); word-break: break-all; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 7px; }
+
+/* ---------- highlighted Upgrade nav item ---------- */
+.dash-link-upgrade { background: linear-gradient(90deg, rgba(124,108,255,0.18), rgba(56,210,198,0.12)); border: 1px solid rgba(124,108,255,0.4); color: #fff; margin-top: 2px; }
+.dash-link-upgrade .ic { color: var(--iris-bright); }
+.dash-link-upgrade:hover { background: linear-gradient(90deg, rgba(124,108,255,0.28), rgba(56,210,198,0.18)); }
+.dash-link-upgrade.is-active { background: linear-gradient(90deg, rgba(124,108,255,0.32), rgba(56,210,198,0.2)); }
+
+/* ---------- billing: feature list + hero ---------- */
+.upgrade-hero { background: radial-gradient(130% 130% at 100% 0%, rgba(124,108,255,0.14), transparent 60%); border-color: rgba(124,108,255,0.3); }
+.feat-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.feat-list li { display: flex; align-items: center; gap: 12px; }
+.feat-list li > span:nth-child(2) { flex: 1; }
+.feat-mark { width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid var(--line); font-size: 12px; }

@@ -229,7 +229,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        <footer className="tm-foot">Made with Folio</footer>
+        {!data.hide_branding && (<footer className="tm-foot">Made with Folio</footer>)}
       </div>
     </div>
   );
