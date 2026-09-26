@@ -50,6 +50,13 @@ export function AdminSettings() {
     onSuccess: () => { setSecret(""); setResendKey(""); qc.invalidateQueries({ queryKey: ["admin-settings"] }); },
   });
 
+  const [testRes, setTestRes] = useState<{ ok: boolean; detail?: string; error?: string } | null>(null);
+  const testEmail = useMutation({
+    mutationFn: () => apiFetch<{ ok: boolean; detail?: string; error?: string }>("/admin/test-email", { method: "POST" }),
+    onSuccess: (r) => setTestRes(r),
+    onError: () => setTestRes({ ok: false, error: "Request failed." }),
+  });
+
   const togglePro = (k: string) => setPro((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k]));
   const setMethod = (i: number, f: "name" | "value", v: string) => setMethods((ms) => ms.map((m, idx) => (idx === i ? { ...m, [f]: v } : m)));
 
@@ -127,6 +134,15 @@ export function AdminSettings() {
           <div className="field"><label className="label">From address</label><input className="input" value={emailFrom} onChange={(e) => setEmailFrom(e.target.value)} placeholder="noreply@yourdomain.com" /></div>
           <div className="field"><label className="label">Resend API key</label><input className="input" type="password" value={resendKey} onChange={(e) => setResendKey(e.target.value)} placeholder={settings.data?.email_configured ? "•••• (blank = keep)" : "re_..."} /></div>
         </div>
+        <p className="muted small mt-4">Save first, then test. The From address must be on a domain verified in Resend.</p>
+        <div className="row gap-3 mt-2 wrap">
+          <Button className="btn-sm" loading={testEmail.isPending} onClick={() => { setTestRes(null); testEmail.mutate(); }}>Send test email</Button>
+        </div>
+        {testRes && (
+          <div className={`alert mt-4 ${testRes.ok ? "alert-ok" : "alert-error"}`}>
+            {testRes.ok ? "Sent ✓ — check your inbox (and spam)." : (testRes.error || `Failed: ${testRes.detail}`)}
+          </div>
+        )}
       </div>
 
       <div><Button variant="accent" loading={save.isPending} onClick={() => save.mutate()}>{save.isSuccess ? "Saved ✓" : "Save all settings"}</Button></div>
