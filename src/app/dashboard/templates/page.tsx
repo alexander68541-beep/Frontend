@@ -9,6 +9,7 @@ import { hasTemplate } from "@/templates";
 import { Button } from "@/components/ui/Button";
 import { portfolioUrl, portfolioLabel } from "@/lib/urls";
 import { TemplateBuilder } from "@/components/TemplateBuilder";
+import { TemplateThumb } from "@/components/TemplateThumb";
 
 const PRESET_ACCENTS = ["#7c6cff", "#38d2c6", "#ff8a6b", "#f0b869", "#4b9fff", "#ff5f9e", "#46d296", "#e0b34d"];
 
@@ -72,7 +73,7 @@ export default function TemplatesPage() {
                   <div className="tpl-preview">
                     {it.preview_url
                       ? <img src={it.preview_url} alt={it.name} className="tpl-preview-img" />
-                      : <iframe src={`/t/${it.key}`} className="tpl-preview-frame" title={it.name} loading="lazy" tabIndex={-1} />}
+                      : <TemplateThumb src={`/t/${it.key}`} />}
                     <a className="tpl-preview-btn" href={`/t/${it.key}`} target="_blank" rel="noreferrer">Preview ↗</a>
                   </div>
                   <div className="row between">

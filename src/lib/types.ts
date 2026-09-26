@@ -27,6 +27,9 @@ export interface Portfolio {
   status: PortfolioStatus;
   template: string;
   accent: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  seo_image: string | null;
   is_primary: boolean;
   username_change_count: number;
   username_changed_at: string | null;

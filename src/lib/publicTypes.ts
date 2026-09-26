@@ -41,6 +41,9 @@ export interface PublicPortfolio {
   template: string;
   accent: string;
   hide_branding: boolean;
+  seo_title: string | null;
+  seo_description: string | null;
+  seo_image: string | null;
   profile: PublicProfile | null;
   projects: PublicProject[];
   skills: PublicSkill[];
