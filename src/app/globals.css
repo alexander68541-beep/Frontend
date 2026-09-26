@@ -862,3 +862,8 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .bell-dot { position: absolute; top: -6px; right: -6px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; }
 .notif-item { padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .notif-item.unread { border-color: rgba(124,108,255,0.4); background: rgba(124,108,255,0.06); }
+
+/* ---------- public report link ---------- */
+.report-wrap { position: fixed; bottom: 12px; right: 12px; z-index: 50; }
+.report-link { font-size: 12px; padding: 5px 10px; border-radius: 8px; background: rgba(0,0,0,0.5); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.2); cursor: pointer; backdrop-filter: blur(6px); }
+.report-link:hover { color: #fff; background: rgba(0,0,0,0.7); }

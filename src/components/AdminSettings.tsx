@@ -12,6 +12,7 @@ interface Settings {
   payment_methods: Method[];
   cloudinary_cloud_name: string | null; cloudinary_api_key: string | null; cloudinary_folder: string | null; cloudinary_configured: boolean;
   email_from: string | null; email_configured: boolean;
+  flags: Record<string, boolean>;
 }
 
 export function AdminSettings() {
@@ -22,6 +23,7 @@ export function AdminSettings() {
   const [methods, setMethods] = useState<Method[]>([]); const [pro, setPro] = useState<string[]>([]);
   const [cloud, setCloud] = useState(""); const [key, setKey] = useState(""); const [secret, setSecret] = useState(""); const [folder, setFolder] = useState("");
   const [emailFrom, setEmailFrom] = useState(""); const [resendKey, setResendKey] = useState("");
+  const [flags, setFlags] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const d = settings.data; if (!d) return;
@@ -29,6 +31,7 @@ export function AdminSettings() {
     setMethods(d.payment_methods ?? []); setPro(d.pro_features ?? []);
     setCloud(d.cloudinary_cloud_name ?? ""); setKey(d.cloudinary_api_key ?? ""); setFolder(d.cloudinary_folder ?? "");
     setEmailFrom(d.email_from ?? "");
+    setFlags(d.flags ?? {});
   }, [settings.data]);
 
   const save = useMutation({
@@ -40,6 +43,7 @@ export function AdminSettings() {
       };
       if (secret.trim()) body.cloudinary_api_secret = secret.trim();
       body.email_from = emailFrom || null;
+      body.flags = flags;
       if (resendKey.trim()) body.resend_api_key = resendKey.trim();
       return apiFetch("/admin/settings", { method: "PATCH", body: JSON.stringify(body) });
     },
@@ -96,6 +100,23 @@ export function AdminSettings() {
           <div className="field"><label className="label">API key</label><input className="input" value={key} onChange={(e) => setKey(e.target.value)} /></div>
           <div className="field"><label className="label">API secret</label><input className="input" type="password" value={secret} onChange={(e) => setSecret(e.target.value)} placeholder={settings.data?.cloudinary_configured ? "•••• (blank = keep)" : ""} /></div>
           <div className="field"><label className="label">Folder</label><input className="input" value={folder} onChange={(e) => setFolder(e.target.value)} placeholder="folio" /></div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">Feature flags</h2>
+        <p className="muted small">Turn platform features on/off. Unticked = disabled.</p>
+        <div className="stack gap-2 mt-4">
+          {[
+            { key: "enable_registration", label: "Allow new sign-ups" },
+            { key: "enable_public_portfolios", label: "Public portfolios enabled" },
+            { key: "enable_contact", label: "Contact form enabled" },
+          ].map((f) => (
+            <label key={f.key} className="check-row">
+              <input type="checkbox" checked={flags[f.key] !== false} onChange={(e) => setFlags((p) => ({ ...p, [f.key]: e.target.checked }))} />
+              <span>{f.label}</span>
+            </label>
+          ))}
         </div>
       </div>
 
