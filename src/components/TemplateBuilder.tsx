@@ -3,23 +3,27 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
+import { TEMPLATE_KEYS } from "@/templates";
 import { Button } from "@/components/ui/Button";
 
-interface CT { id: string; name: string; category: string; base: string; accent: string; plan: string; is_published: boolean; }
-const BASES = ["minimal", "bold", "editorial", "studio"];
+interface CT { id: string; key: string; name: string; category: string; plan: string; is_published: boolean; }
 
 export function TemplateBuilder() {
   const qc = useQueryClient();
   const list = useQuery({ queryKey: ["admin-templates"], queryFn: () => apiFetch<CT[]>("/admin/templates"), refetchOnWindowFocus: true });
+
+  const [key, setKey] = useState(TEMPLATE_KEYS[0] ?? "");
   const [name, setName] = useState("");
   const [category, setCategory] = useState("Custom");
-  const [base, setBase] = useState("minimal");
-  const [accent, setAccent] = useState("#7c6cff");
   const [plan, setPlan] = useState("free");
 
   const create = useMutation({
-    mutationFn: () => apiFetch("/admin/templates", { method: "POST", body: JSON.stringify({ name, category, base, accent, plan, is_published: true }) }),
+    mutationFn: () => apiFetch("/admin/templates", { method: "POST", body: JSON.stringify({ key, name, category, plan, is_published: true }) }),
     onSuccess: () => { setName(""); qc.invalidateQueries({ queryKey: ["admin-templates"] }); qc.invalidateQueries({ queryKey: ["templates"] }); },
+  });
+  const patch = useMutation({
+    mutationFn: (v: { id: string; body: Record<string, unknown> }) => apiFetch(`/admin/templates/${v.id}`, { method: "PATCH", body: JSON.stringify(v.body) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-templates"] }); qc.invalidateQueries({ queryKey: ["templates"] }); },
   });
   const del = useMutation({
     mutationFn: (id: string) => apiFetch(`/admin/templates/${id}`, { method: "DELETE" }),
@@ -28,35 +32,48 @@ export function TemplateBuilder() {
 
   return (
     <div className="card" style={{ borderColor: "rgba(124,108,255,0.35)" }}>
-      <h2 className="card-title">Create a template (admin)</h2>
-      <p className="muted small">Build presets on any base layout. They appear for users by category.</p>
-      <div className="stack gap-4 mt-4">
-        <div className="form-grid">
-          <div className="field"><label className="label">Name</label><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Aurora" /></div>
-          <div className="field"><label className="label">Category</label><input className="input" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Creative" /></div>
-          <div className="field"><label className="label">Base layout</label>
-            <select className="input" value={base} onChange={(e) => setBase(e.target.value)}>{BASES.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
-          <div className="field"><label className="label">Plan</label>
-            <select className="input" value={plan} onChange={(e) => setPlan(e.target.value)}><option value="free">Free</option><option value="pro">Pro</option></select></div>
-          <div className="field"><label className="label">Accent</label>
-            <div className="row gap-2"><input type="color" className="color-input" value={accent} onChange={(e) => setAccent(e.target.value)} /><input className="input" value={accent} onChange={(e) => setAccent(e.target.value)} /></div></div>
-        </div>
-        <div><Button variant="accent" loading={create.isPending} disabled={!name.trim()} onClick={() => create.mutate()}>Create template</Button></div>
+      <h2 className="card-title">Template listings (admin)</h2>
+      <p className="muted small">
+        Templates are coded in <code>src/templates/</code> and registered by key. Here you list them,
+        set category/plan and turn them on/off. Coded keys available: {TEMPLATE_KEYS.join(", ")}.
+      </p>
+      <div className="form-grid mt-4">
+        <div className="field"><label className="label">Coded key</label>
+          <select className="input" value={key} onChange={(e) => setKey(e.target.value)}>
+            {TEMPLATE_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}
+          </select></div>
+        <div className="field"><label className="label">Name</label><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Aurora" /></div>
+        <div className="field"><label className="label">Category</label><input className="input" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Creative" /></div>
+        <div className="field"><label className="label">Plan</label>
+          <select className="input" value={plan} onChange={(e) => setPlan(e.target.value)}><option value="free">Free</option><option value="pro">Pro</option></select></div>
       </div>
+      <div className="mt-4"><Button variant="accent" loading={create.isPending} disabled={!name.trim() || !key} onClick={() => create.mutate()}>Add listing</Button></div>
 
       {(list.data ?? []).length > 0 && (
         <div className="table-wrap mt-6">
           <table className="tbl">
-            <thead><tr><th>Name</th><th>Category</th><th>Base</th><th>Plan</th><th></th></tr></thead>
+            <thead><tr><th>Name</th><th>Key</th><th>Category</th><th>Plan</th><th>Active</th><th></th></tr></thead>
             <tbody>
-              {(list.data ?? []).map((t) => (
-                <tr key={t.id}>
-                  <td><span className="swatch" style={{ width: 14, height: 14, display: "inline-block", verticalAlign: "middle", marginRight: 8, background: t.accent }} />{t.name}</td>
-                  <td>{t.category}</td><td>{t.base}</td>
-                  <td><span className={`badge ${t.plan === "pro" ? "badge-draft" : "badge-published"}`}>{t.plan}</span></td>
-                  <td><button className="btn btn-sm btn-danger" onClick={() => { if (confirm("Delete template?")) del.mutate(t.id); }}>Delete</button></td>
-                </tr>
-              ))}
+              {(list.data ?? []).map((t) => {
+                const coded = TEMPLATE_KEYS.includes(t.key);
+                return (
+                  <tr key={t.id}>
+                    <td>{t.name}{!coded && <span className="badge badge-error" style={{ marginLeft: 8 }}>no code</span>}</td>
+                    <td>{t.key}</td><td>{t.category}</td>
+                    <td>
+                      <select className="input" style={{ padding: "4px 8px", maxWidth: 100 }} value={t.plan} onChange={(e) => patch.mutate({ id: t.id, body: { plan: e.target.value } })}>
+                        <option value="free">free</option><option value="pro">pro</option>
+                      </select>
+                    </td>
+                    <td>
+                      <button className={`btn btn-sm ${t.is_published ? "btn-accent" : ""}`} onClick={() => patch.mutate({ id: t.id, body: { is_published: !t.is_published } })}>
+                        {t.is_published ? "Active" : "Inactive"}
+                      </button>
+                    </td>
+                    <td><button className="btn btn-sm btn-danger" onClick={() => { if (confirm("Delete listing?")) del.mutate(t.id); }}>Delete</button></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

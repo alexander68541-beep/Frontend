@@ -5,15 +5,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { Portfolio } from "@/lib/types";
 import { useAccount, usePortfolio } from "@/lib/hooks";
-import { TEMPLATES } from "@/templates";
+import { hasTemplate } from "@/templates";
 import { Button } from "@/components/ui/Button";
 import { portfolioUrl, portfolioLabel } from "@/lib/urls";
 import { TemplateBuilder } from "@/components/TemplateBuilder";
 
 const PRESET_ACCENTS = ["#7c6cff", "#38d2c6", "#ff8a6b", "#f0b869", "#4b9fff", "#ff5f9e", "#46d296", "#e0b34d"];
 
-interface CT { id: string; name: string; category: string; base: string; accent: string; plan: string; }
-interface Item { kind: "builtin" | "custom"; id: string; name: string; desc: string; category: string; pro: boolean; base?: string; }
+interface CT { id: string; key: string; name: string; category: string; plan: string; }
 
 export default function TemplatesPage() {
   const qc = useQueryClient();
@@ -27,16 +26,12 @@ export default function TemplatesPage() {
   const username = portfolio.data?.username;
   const [custom, setCustom] = useState(accent);
 
-  const customTpls = useQuery({ queryKey: ["templates"], queryFn: () => apiFetch<CT[]>("/templates"), refetchOnWindowFocus: true });
+  const list = useQuery({ queryKey: ["templates"], queryFn: () => apiFetch<CT[]>("/templates"), refetchOnWindowFocus: true });
   const billing = useQuery({ queryKey: ["billing-info"], queryFn: () => apiFetch<{ features: { key: string; has: boolean }[] }>("/billing/info") });
   const customAccentAllowed = billing.data?.features.find((f) => f.key === "custom_accent")?.has ?? true;
 
   const setTemplate = useMutation({
-    mutationFn: (template: string) => apiFetch<Portfolio>("/portfolio/template", { method: "PATCH", body: JSON.stringify({ template }) }),
-    onSuccess: (d) => qc.setQueryData(["portfolio"], d),
-  });
-  const applyTemplate = useMutation({
-    mutationFn: (id: string) => apiFetch<Portfolio>("/portfolio/apply-template", { method: "POST", body: JSON.stringify({ template_id: id }) }),
+    mutationFn: (key: string) => apiFetch<Portfolio>("/portfolio/template", { method: "PATCH", body: JSON.stringify({ template: key }) }),
     onSuccess: (d) => qc.setQueryData(["portfolio"], d),
   });
   const setAccent = useMutation({
@@ -44,12 +39,10 @@ export default function TemplatesPage() {
     onSuccess: (d) => qc.setQueryData(["portfolio"], d),
   });
 
-  const err = [setTemplate.error, applyTemplate.error, setAccent.error].map((e) => (e instanceof ApiError ? e.message : null)).find(Boolean) || null;
+  const err = [setTemplate.error, setAccent.error].map((e) => (e instanceof ApiError ? e.message : null)).find(Boolean) || null;
 
-  const items: Item[] = [
-    ...TEMPLATES.map((t) => ({ kind: "builtin" as const, id: t.id, name: t.name, desc: t.desc, category: t.category, pro: !!t.pro })),
-    ...(customTpls.data ?? []).map((t) => ({ kind: "custom" as const, id: t.id, name: t.name, desc: `${t.base} base`, category: t.category, pro: t.plan === "pro", base: t.base })),
-  ];
+  // only show listings whose key has a coded component in the registry
+  const items = (list.data ?? []).filter((t) => hasTemplate(t.key));
   const categories = Array.from(new Set(items.map((i) => i.category)));
 
   return (
@@ -64,25 +57,26 @@ export default function TemplatesPage() {
 
       {err && <div className="alert alert-error">{err}</div>}
       {!username && <div className="alert">Claim a username first (Overview) to preview your page.</div>}
+      {items.length === 0 && !list.isLoading && <div className="alert">No templates are active yet.{isAdmin ? " Add one below." : ""}</div>}
 
       {categories.map((cat) => (
         <div key={cat} className="stack gap-3">
           <h2 className="cat-h">{cat}</h2>
           <div className="tpl-grid">
             {items.filter((i) => i.category === cat).map((it) => {
-              const active = it.kind === "builtin" && current === it.id;
-              const locked = it.pro && !isPro;
-              const busy = setTemplate.isPending || applyTemplate.isPending;
+              const active = current === it.key;
+              const pro = it.plan === "pro";
+              const locked = pro && !isPro;
               return (
-                <div key={it.kind + it.id} className={`tpl-card ${active ? "is-active" : ""} ${locked ? "is-locked" : ""}`}>
-                  <div className={`tpl-thumb ${(it.base || it.id) === "bold" || (it.base || it.id) === "studio" ? "thumb-1" : "thumb-0"}`} aria-hidden>
+                <div key={it.id} className={`tpl-card ${active ? "is-active" : ""} ${locked ? "is-locked" : ""}`}>
+                  <div className={`tpl-thumb ${it.key === "bold" || it.key === "studio" ? "thumb-1" : "thumb-0"}`} aria-hidden>
                     <span className="tt-avatar" /><span className="tt-line w60" /><span className="tt-line w40" /><span className="tt-row"><span /><span /></span>
                   </div>
                   <div className="row between">
-                    <div><h3 className="tpl-name">{it.name} {it.pro && <span className="pro-tag">PRO</span>}</h3><p className="muted small">{it.desc}</p></div>
+                    <div><h3 className="tpl-name">{it.name} {pro && <span className="pro-tag">PRO</span>}</h3><p className="muted small">{it.key}</p></div>
                     {active ? <span className="badge badge-published"><span className="dot" />Active</span>
                       : locked ? <span className="badge badge-draft">Pro</span>
-                      : <Button variant="accent" className="btn-sm" loading={busy} onClick={() => it.kind === "builtin" ? setTemplate.mutate(it.id) : applyTemplate.mutate(it.id)}>Use</Button>}
+                      : <Button variant="accent" className="btn-sm" loading={setTemplate.isPending} onClick={() => setTemplate.mutate(it.key)}>Use</Button>}
                   </div>
                 </div>
               );
