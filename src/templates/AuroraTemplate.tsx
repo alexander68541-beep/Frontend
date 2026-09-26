@@ -1,3 +1,4 @@
+import React from "react";
 import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed } from "@/lib/publicTypes";
 import { LinkChip } from "@/components/LinkChip";
@@ -5,142 +6,227 @@ import { ZoomImage } from "@/components/ZoomImage";
 
 export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
-  const name = p?.display_name || data.username || "Untitled";
-  const hasContact = p?.email || p?.phone || p?.website || p?.availability;
+  const name = p?.display_name || data.username || "Portfolio";
+  const hasContact = p?.email || p?.phone || p?.website || p?.availability || p?.resume_url;
+
+  // Custom accent color with amber fallback
+  const accentColor = data.accent || "#ff6b35";
 
   return (
-    <div className="min-h-screen bg-[#080808] text-gray-300 font-sans selection:bg-[#E55B13] selection:text-white pb-20">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 pt-8">
-        
-        {/* Navbar */}
-        <nav className="flex justify-between items-center mb-16 pb-6 border-b border-white/5">
-          <div className="text-2xl font-bold flex items-center gap-2 text-white">
-            <span className="w-2 h-7 bg-[#E55B13] inline-block rounded-sm"></span>
-            {name}
-          </div>
-          
-          <ul className="hidden md:flex gap-8 text-sm font-medium text-gray-400">
-            {p?.about && <li><a href="#about" className="hover:text-white transition-colors">About</a></li>}
-            {data.projects.length > 0 && <li><a href="#portfolio" className="hover:text-white transition-colors">Portfolio</a></li>}
-            {data.testimonials.length > 0 && <li><a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a></li>}
-            {hasContact && <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>}
-          </ul>
+    <div
+      className="relative min-h-screen bg-[#08080a] text-neutral-200 selection:bg-amber-500/30 selection:text-white font-sans antialiased overflow-x-hidden"
+      style={{ ["--brand-accent" as string]: accentColor } as React.CSSProperties}
+    >
+      {/* Background Ambient Glows & Gradients */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div
+          className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[700px] h-[550px] rounded-full blur-[140px] opacity-25"
+          style={{ background: `radial-gradient(circle, ${accentColor} 0%, rgba(255,107,53,0.15) 50%, transparent 80%)` }}
+        />
+        <div
+          className="absolute top-[40%] -left-[200px] w-[500px] h-[500px] rounded-full blur-[150px] opacity-15"
+          style={{ background: `radial-gradient(circle, ${accentColor} 0%, transparent 70%)` }}
+        />
+        <div
+          className="absolute bottom-0 -right-[200px] w-[500px] h-[500px] rounded-full blur-[150px] opacity-15"
+          style={{ background: `radial-gradient(circle, ${accentColor} 0%, transparent 70%)` }}
+        />
+        {/* Subtle dot grid pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:24px_24px] opacity-40" />
+      </div>
 
-          {hasContact && (
-            <a 
-              href={p?.email ? `mailto:${p.email}` : "#contact"} 
-              className="bg-[#E55B13] hover:bg-[#c94b0d] text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all shadow-lg shadow-[#E55B13]/20"
+      {/* Main Container */}
+      <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 py-10 lg:py-16 space-y-28">
+
+        {/* Top Navbar */}
+        <header className="flex items-center justify-between py-4 px-6 rounded-2xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl sticky top-6 z-50 shadow-2xl shadow-black/60">
+          <div className="flex items-center gap-3">
+            <span className="w-2.5 h-2.5 rounded-full animate-ping" style={{ backgroundColor: accentColor }} />
+            <span className="font-semibold tracking-wide text-white text-sm sm:text-base">
+              {name}
+            </span>
+          </div>
+
+          <nav className="hidden md:flex items-center gap-7 text-xs font-medium uppercase tracking-widest text-neutral-400">
+            {p?.about && <a href="#about" className="hover:text-white transition-colors">About</a>}
+            {data.projects.length > 0 && <a href="#work" className="hover:text-white transition-colors">Work</a>}
+            {data.experience.length > 0 && <a href="#experience" className="hover:text-white transition-colors">Experience</a>}
+            {data.services.length > 0 && <a href="#services" className="hover:text-white transition-colors">Services</a>}
+            {hasContact && <a href="#contact" className="hover:text-white transition-colors">Contact</a>}
+          </nav>
+
+          {p?.email && (
+            <a
+              href={`mailto:${p.email}`}
+              className="px-5 py-2 rounded-full text-xs font-semibold tracking-wide text-white transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+              style={{ backgroundColor: accentColor }}
             >
               Let's Talk
             </a>
           )}
-        </nav>
+        </header>
 
         {/* Hero Section */}
-        <header className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-32 pt-4">
-          
-          {/* Left: Avatar/Image */}
-          {p?.avatar_url && (
-            <div className="relative order-2 lg:order-1 flex justify-center">
-              <div className="absolute inset-0 bg-[#E55B13] blur-[120px] opacity-20 rounded-full"></div>
-              <ZoomImage 
-                className="relative z-10 w-full max-w-md rounded-2xl object-cover shadow-2xl border border-white/10 aspect-[4/5]" 
-                src={p.avatar_url} 
-                alt={name} 
-              />
-            </div>
-          )}
-
-          {/* Right: Content */}
-          <div className="order-1 lg:order-2 flex flex-col items-start relative z-20">
+        <section className="pt-6 sm:pt-12 flex flex-col-reverse lg:flex-row items-center justify-between gap-12 lg:gap-16">
+          <div className="flex-1 text-center lg:text-left space-y-6">
             {p?.availability && (
-              <div className="flex items-center gap-2 border border-white/10 bg-[#121212] rounded-full px-4 py-1.5 text-[10px] font-bold text-gray-300 tracking-[0.2em] uppercase mb-8 shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-[#E55B13] animate-pulse"></span>
+              <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full text-xs font-medium uppercase tracking-widest bg-white/[0.04] border border-white/[0.08] text-neutral-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 {p.availability}
               </div>
             )}
-            
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 tracking-tight leading-tight">
-              Hi, I'm <span className="font-serif italic text-[#E55B13]">{name}</span>.
-            </h1>
-            
-            {p?.title && (
-              <h2 className="text-xs md:text-sm tracking-[0.3em] text-gray-400 uppercase mb-6 font-semibold">
-                {p.title} {p?.pronouns ? ` · ${p.pronouns}` : ""}
-              </h2>
-            )}
-            
-            {(p?.bio || p?.tagline) && (
-              <p className="text-gray-400 text-base md:text-lg leading-relaxed max-w-lg mb-10">
-                {p.bio || p.tagline}
+
+            <div className="space-y-3">
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.1]">
+                Hi, I'm <span style={{ color: accentColor }}>{name}.</span>
+              </h1>
+              {p?.title && (
+                <p className="text-xs sm:text-sm font-semibold tracking-[0.25em] text-neutral-400 uppercase">
+                  {p.title} {p?.pronouns && `· (${p.pronouns})`}
+                </p>
+              )}
+            </div>
+
+            {p?.tagline && (
+              <p className="text-lg sm:text-xl text-neutral-300 max-w-xl font-light leading-relaxed">
+                {p.tagline}
               </p>
             )}
-            
-            <div className="flex flex-wrap items-center gap-4 w-full">
+
+            {p?.bio && (
+              <p className="text-sm text-neutral-400 max-w-lg leading-relaxed">
+                {p.bio}
+              </p>
+            )}
+
+            {p?.location && (
+              <p className="text-xs text-neutral-500 font-mono tracking-wider flex items-center justify-center lg:justify-start gap-1.5">
+                <span>📍</span> {p.location}
+              </p>
+            )}
+
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
               {data.projects.length > 0 && (
-                <a 
-                  href="#portfolio" 
-                  className="bg-[#E55B13] hover:bg-[#c94b0d] text-white px-8 py-3.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 hover:scale-105 shadow-lg shadow-[#E55B13]/25"
+                <a
+                  href="#work"
+                  className="px-6 py-3 rounded-xl font-medium text-sm text-white flex items-center gap-2 transition-all transform hover:scale-[1.03] active:scale-[0.98] shadow-xl shadow-black/40"
+                  style={{ backgroundColor: accentColor }}
                 >
-                  View Portfolio <span className="text-lg leading-none">→</span>
+                  View Portfolio <span>→</span>
                 </a>
               )}
-              {hasContact && (
-                <a 
-                  href="#contact" 
-                  className="border border-white/10 hover:border-white/40 text-white px-8 py-3.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 bg-[#151515] hover:bg-[#202020]"
+              {p?.email && (
+                <a
+                  href={`mailto:${p.email}`}
+                  className="px-6 py-3 rounded-xl font-medium text-sm text-neutral-300 bg-white/[0.05] border border-white/[0.1] hover:bg-white/[0.1] hover:text-white transition-all backdrop-blur-md"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                   Contact Me
                 </a>
               )}
             </div>
 
+            {/* Social Links */}
             {data.links.length > 0 && (
-              <div className="flex flex-wrap gap-3 mt-10">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-6">
                 {data.links.map((l) => (
-                  <LinkChip key={l.id} className="bg-[#121212] border border-white/10 hover:border-white/30 text-white" platform={l.platform} url={l.url} label={l.label} />
+                  <LinkChip
+                    key={l.id}
+                    platform={l.platform}
+                    url={l.url}
+                    label={l.label}
+                    className="!bg-white/[0.03] !border-white/[0.08] hover:!bg-white/[0.08] text-neutral-300 text-xs transition-colors"
+                  />
                 ))}
               </div>
             )}
           </div>
-        </header>
+
+          {/* Avatar / Feature Visual */}
+          {p?.avatar_url && (
+            <div className="relative group w-64 h-64 sm:w-80 sm:h-80 lg:w-[420px] lg:h-[420px] flex-shrink-0">
+              <div
+                className="absolute inset-0 rounded-3xl blur-2xl opacity-40 group-hover:opacity-70 transition duration-700"
+                style={{ background: accentColor }}
+              />
+              <div className="relative w-full h-full rounded-3xl overflow-hidden border border-white/10 bg-neutral-900/60 shadow-2xl p-2">
+                <ZoomImage
+                  src={p.avatar_url}
+                  alt={name}
+                  className="w-full h-full object-cover rounded-2xl grayscale-[25%] contrast-105 group-hover:grayscale-0 transition-all duration-500"
+                />
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* About Section */}
         {p?.about && (
-          <section id="about" className="mb-24">
-            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="w-8 h-1 rounded-full bg-[#E55B13]"></span> About
-            </h2>
-            <div className="bg-[#111111] border border-white/5 rounded-3xl p-8 md:p-10 shadow-lg text-gray-300 leading-relaxed text-lg">
-              {p.about}
+          <section id="about" className="space-y-6 pt-10">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">About Me</h2>
+            <div className="p-8 sm:p-12 rounded-3xl bg-white/[0.02] border border-white/[0.07] backdrop-blur-md">
+              <p className="text-lg sm:text-2xl text-neutral-200 font-light leading-relaxed">
+                {p.about}
+              </p>
             </div>
           </section>
         )}
 
-        {/* Work / Portfolio Section */}
+        {/* Projects / Work Section */}
         {data.projects.length > 0 && (
-          <section id="portfolio" className="mb-24">
-            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="w-8 h-1 rounded-full bg-[#E55B13]"></span> Selected Work
-            </h2>
+          <section id="work" className="space-y-10">
+            <div className="flex items-end justify-between border-b border-white/[0.08] pb-5">
+              <div>
+                <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">Featured Work</h2>
+                <p className="text-2xl sm:text-3xl font-bold text-white mt-1">Recent Projects</p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {data.projects.map((pr) => (
-                <a key={pr.id} href={pr.url || undefined} target={pr.url ? "_blank" : undefined} rel="noreferrer" 
-                   className="group block bg-[#111111] border border-white/5 rounded-3xl overflow-hidden hover:border-[#E55B13]/40 transition-all shadow-lg hover:shadow-2xl hover:-translate-y-1">
+                <a
+                  key={pr.id}
+                  href={pr.url || undefined}
+                  target={pr.url ? "_blank" : undefined}
+                  rel="noreferrer"
+                  className="group relative flex flex-col rounded-3xl bg-neutral-900/40 border border-white/[0.06] hover:border-white/20 transition-all duration-300 overflow-hidden hover:-translate-y-1 shadow-xl"
+                >
                   {pr.image_url && (
-                    <div className="overflow-hidden aspect-video relative bg-[#0a0a0a]">
-                      <div className="absolute inset-0 bg-black/30 group-hover:bg-transparent transition-colors z-10 duration-500"></div>
-                      <ZoomImage className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={pr.image_url} alt={pr.title} />
+                    <div className="w-full aspect-[16/10] overflow-hidden bg-black/40">
+                      <ZoomImage
+                        src={pr.image_url}
+                        alt={pr.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
                     </div>
                   )}
-                  <div className="p-8">
-                    <h3 className="text-2xl font-bold text-white group-hover:text-[#E55B13] transition-colors mb-2">{pr.title}</h3>
-                    {pr.role && <p className="text-sm font-semibold text-[#E55B13] mb-4">{pr.role}</p>}
-                    {pr.description && <p className="text-gray-400 mb-6 line-clamp-3">{pr.description}</p>}
+                  <div className="p-7 flex-1 flex flex-col justify-between space-y-4">
+                    <div>
+                      {pr.role && (
+                        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: accentColor }}>
+                          {pr.role}
+                        </p>
+                      )}
+                      <h3 className="text-xl font-bold text-white group-hover:text-white/90">
+                        {pr.title}
+                      </h3>
+                      {pr.description && (
+                        <p className="mt-2 text-sm text-neutral-400 font-light leading-relaxed line-clamp-3">
+                          {pr.description}
+                        </p>
+                      )}
+                    </div>
+
                     {pr.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {pr.tags.map((t) => <span key={t} className="bg-white/5 border border-white/5 text-xs px-3 py-1 rounded-full text-gray-300">{t}</span>)}
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {pr.tags.map((t) => (
+                          <span
+                            key={t}
+                            className="px-2.5 py-1 text-[11px] font-medium tracking-wide rounded-md bg-white/[0.04] text-neutral-300 border border-white/[0.05]"
+                          >
+                            {t}
+                          </span>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -150,129 +236,60 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {/* Experience & Education */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-24">
-          {data.experience.length > 0 && (
-            <section>
-              <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-                <span className="w-8 h-1 rounded-full bg-[#E55B13]"></span> Experience
-              </h2>
-              <div className="space-y-8 border-l-2 border-white/10 pl-6 ml-3">
-                {data.experience.map((x) => (
-                  <div key={x.id} className="relative">
-                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-4 border-[#080808] bg-[#E55B13]"></div>
-                    <h3 className="text-xl font-bold text-white">{x.title || x.company}</h3>
-                    <p className="text-sm text-gray-400 mt-1 mb-3 flex flex-wrap gap-2 items-center">
-                      <span className="font-semibold text-gray-300">{[x.company, x.location].filter(Boolean).join(" · ")}</span>
-                      <span className="bg-white/10 px-2 py-0.5 rounded text-xs">{dateRange(x.start_date, x.end_date, x.is_current)}</span>
-                    </p>
-                    {x.description && <p className="text-gray-400 text-sm leading-relaxed">{x.description}</p>}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {data.education.length > 0 && (
-            <section>
-              <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-                <span className="w-8 h-1 rounded-full bg-[#E55B13]"></span> Education
-              </h2>
-              <div className="space-y-8 border-l-2 border-white/10 pl-6 ml-3">
-                {data.education.map((e) => (
-                  <div key={e.id} className="relative">
-                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-4 border-[#080808] bg-[#E55B13]"></div>
-                    <h3 className="text-xl font-bold text-white">{e.school}</h3>
-                    <p className="text-sm text-gray-400 mt-1 mb-2 flex flex-wrap gap-2 items-center">
-                      <span className="font-semibold text-gray-300">{[e.degree, e.field].filter(Boolean).join(", ")}</span>
-                      <span className="bg-white/10 px-2 py-0.5 rounded text-xs">{dateRange(e.start_date, e.end_date)}</span>
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-
-        {/* Services */}
-        {data.services.length > 0 && (
-          <section className="mb-24">
-            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="w-8 h-1 rounded-full bg-[#E55B13]"></span> Services
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {data.services.map((s) => (
-                <div key={s.id} className="bg-[#111111] border border-white/5 p-8 rounded-3xl hover:border-[#E55B13]/30 transition-colors">
-                  <h3 className="text-xl font-bold text-white mb-3 flex justify-between items-start">
-                    {s.title}
-                    {s.price && <span className="text-sm font-semibold bg-[#E55B13]/10 text-[#E55B13] px-3 py-1 rounded-full">{s.price}</span>}
-                  </h3>
-                  {s.description && <p className="text-gray-400 text-sm leading-relaxed">{s.description}</p>}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Testimonials */}
-        {data.testimonials.length > 0 && (
-          <section id="testimonials" className="mb-24">
-            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="w-8 h-1 rounded-full bg-[#E55B13]"></span> Testimonials
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {data.testimonials.map((t) => (
-                <div key={t.id} className="bg-[#111111] border border-white/5 p-8 rounded-3xl relative">
-                  <svg className="absolute top-6 right-6 w-10 h-10 text-white/5" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" /></svg>
-                  <p className="text-gray-300 italic mb-6 relative z-10">&ldquo;{t.quote}&rdquo;</p>
-                  <div className="flex items-center gap-4">
-                    {t.avatar_url && <ZoomImage className="w-12 h-12 rounded-full object-cover border border-white/10" src={t.avatar_url} alt={t.author} />}
-                    <div>
-                      <span className="block font-bold text-white">{t.author}</span>
-                      {t.role && <span className="block text-xs text-[#E55B13] uppercase tracking-wider mt-0.5">{t.role}</span>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Certifications & Achievements */}
-        {(data.certifications.length > 0 || data.achievements.length > 0) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-24">
-            {data.certifications.length > 0 && (
-              <section>
-                <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-                  <span className="w-6 h-1 rounded-full bg-[#E55B13]"></span> Certifications
-                </h2>
-                <div className="space-y-6 border-l-2 border-white/10 pl-6 ml-3">
-                  {data.certifications.map((c) => (
-                    <div key={c.id} className="relative">
-                      <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-4 border-[#080808] bg-[#E55B13]"></div>
-                      <h3 className="text-lg font-bold text-white">
-                        {c.url ? <a href={c.url} target="_blank" rel="noreferrer" className="hover:text-[#E55B13] transition-colors">{c.name}</a> : c.name}
-                      </h3>
-                      <p className="text-sm text-gray-400 mt-1">{c.issuer} <span className="ml-2 bg-white/10 px-2 py-0.5 rounded text-xs">{c.issue_date}</span></p>
+        {/* Experience & Education Section */}
+        {(data.experience.length > 0 || data.education.length > 0) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-6">
+            {/* Experience */}
+            {data.experience.length > 0 && (
+              <section id="experience" className="space-y-6">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">Career</h2>
+                <h3 className="text-2xl font-bold text-white">Experience</h3>
+                <div className="space-y-4">
+                  {data.experience.map((x) => (
+                    <div
+                      key={x.id}
+                      className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] transition duration-200"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <h4 className="text-base font-semibold text-white">{x.title || x.company}</h4>
+                        <span className="text-xs font-mono text-neutral-400 whitespace-nowrap bg-white/[0.04] px-2.5 py-1 rounded">
+                          {dateRange(x.start_date, x.end_date, x.is_current)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-neutral-400 mt-1 font-medium">
+                        {[x.company, x.location].filter(Boolean).join(" · ")}
+                      </p>
+                      {x.description && (
+                        <p className="text-sm text-neutral-300/80 mt-3 font-light leading-relaxed">
+                          {x.description}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
               </section>
             )}
 
-            {data.achievements.length > 0 && (
-              <section>
-                <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-                  <span className="w-6 h-1 rounded-full bg-[#E55B13]"></span> Achievements
-                </h2>
-                <div className="space-y-6 border-l-2 border-white/10 pl-6 ml-3">
-                  {data.achievements.map((a) => (
-                    <div key={a.id} className="relative">
-                      <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-4 border-[#080808] bg-[#E55B13]"></div>
-                      <h3 className="text-lg font-bold text-white flex items-center gap-3">
-                        {a.title} <span className="bg-white/10 px-2 py-0.5 rounded text-xs font-normal text-gray-300">{a.date}</span>
-                      </h3>
-                      {a.description && <p className="text-sm text-gray-400 mt-2">{a.description}</p>}
+            {/* Education */}
+            {data.education.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">Background</h2>
+                <h3 className="text-2xl font-bold text-white">Education</h3>
+                <div className="space-y-4">
+                  {data.education.map((e) => (
+                    <div
+                      key={e.id}
+                      className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.04] transition duration-200"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <h4 className="text-base font-semibold text-white">{e.school}</h4>
+                        <span className="text-xs font-mono text-neutral-400 whitespace-nowrap bg-white/[0.04] px-2.5 py-1 rounded">
+                          {dateRange(e.start_date, e.end_date)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-neutral-400 mt-1">
+                        {[e.degree, e.field].filter(Boolean).join(" — ")}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -281,35 +298,49 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </div>
         )}
 
-        {/* Publications */}
-        {data.publications.length > 0 && (
-          <section className="mb-24">
-            <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="w-6 h-1 rounded-full bg-[#E55B13]"></span> Publications
-            </h2>
-            <div className="space-y-6">
-              {data.publications.map((pub) => (
-                <div key={pub.id} className="bg-[#111111] border border-white/5 p-6 rounded-2xl">
-                  <h3 className="text-lg font-bold text-white">
-                    {pub.url ? <a href={pub.url} target="_blank" rel="noreferrer" className="hover:text-[#E55B13] transition-colors">{pub.title}</a> : pub.title}
-                  </h3>
-                  <p className="text-sm text-[#E55B13] mt-1 mb-2 font-semibold">{pub.publisher} <span className="text-gray-500 font-normal ml-2">{pub.date}</span></p>
-                  {pub.description && <p className="text-gray-400 text-sm">{pub.description}</p>}
+        {/* Services Section */}
+        {data.services.length > 0 && (
+          <section id="services" className="space-y-8">
+            <div>
+              <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">What I Offer</h2>
+              <p className="text-2xl sm:text-3xl font-bold text-white mt-1">Services</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {data.services.map((s) => (
+                <div
+                  key={s.id}
+                  className="p-8 rounded-3xl bg-neutral-900/30 border border-white/[0.07] hover:border-amber-500/30 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1"
+                >
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-white">{s.title}</h3>
+                    {s.description && (
+                      <p className="text-sm text-neutral-400 font-light leading-relaxed">{s.description}</p>
+                    )}
+                  </div>
+                  {s.price && (
+                    <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between">
+                      <span className="text-xs text-neutral-500 uppercase tracking-wider">Pricing</span>
+                      <span className="text-sm font-semibold text-white" style={{ color: accentColor }}>
+                        {s.price}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* Skills */}
+        {/* Skills Section */}
         {data.skills.length > 0 && (
-          <section className="mb-24">
-            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="w-8 h-1 rounded-full bg-[#E55B13]"></span> Skills
-            </h2>
-            <div className="flex flex-wrap gap-3">
+          <section className="space-y-6">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">Capabilities</h2>
+            <div className="flex flex-wrap gap-2.5">
               {data.skills.map((s) => (
-                <span key={s.id} className="bg-[#151515] border border-white/10 hover:border-[#E55B13]/50 text-gray-300 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-default">
+                <span
+                  key={s.id}
+                  className="px-4 py-2 rounded-xl text-xs font-medium tracking-wide bg-white/[0.03] border border-white/[0.08] text-neutral-200 hover:border-white/20 transition-all"
+                >
                   {s.name}
                 </span>
               ))}
@@ -317,18 +348,88 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
+        {/* Testimonials */}
+        {data.testimonials.length > 0 && (
+          <section className="space-y-8">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">Endorsements</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {data.testimonials.map((t) => (
+                <div
+                  key={t.id}
+                  className="p-8 rounded-3xl bg-white/[0.02] border border-white/[0.06] flex flex-col justify-between space-y-6"
+                >
+                  <p className="text-neutral-300 font-light leading-relaxed text-base italic">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    {t.avatar_url && (
+                      <ZoomImage src={t.avatar_url} alt={t.author} className="w-10 h-10 rounded-full object-cover" />
+                    )}
+                    <div>
+                      <p className="text-sm font-semibold text-white">{t.author}</p>
+                      {t.role && <p className="text-xs text-neutral-500">{t.role}</p>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Certifications & Achievements & Publications */}
+        {(data.certifications.length > 0 || data.achievements.length > 0 || data.publications.length > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
+            {data.certifications.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Certifications</h3>
+                {data.certifications.map((c) => (
+                  <div key={c.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <p className="text-sm font-medium text-white">
+                      {c.url ? <a href={c.url} target="_blank" rel="noreferrer" className="hover:underline">{c.name}</a> : c.name}
+                    </p>
+                    <p className="text-xs text-neutral-400 mt-1">{c.issuer} {c.issue_date && `· ${c.issue_date}`}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {data.achievements.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Achievements</h3>
+                {data.achievements.map((a) => (
+                  <div key={a.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <p className="text-sm font-medium text-white">{a.title}</p>
+                    <p className="text-xs text-neutral-500 mt-1">{a.date}</p>
+                    {a.description && <p className="text-xs text-neutral-400 mt-2">{a.description}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+            {data.publications.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Publications</h3>
+                {data.publications.map((pub) => (
+                  <div key={pub.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <p className="text-sm font-medium text-white">
+                      {pub.url ? <a href={pub.url} target="_blank" rel="noreferrer" className="hover:underline">{pub.title}</a> : pub.title}
+                    </p>
+                    <p className="text-xs text-neutral-400 mt-1">{pub.publisher} {pub.date && `· ${pub.date}`}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Gallery */}
         {data.gallery.length > 0 && (
-          <section className="mb-24">
-            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="w-8 h-1 rounded-full bg-[#E55B13]"></span> Gallery
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <section className="space-y-6">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">Visuals</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {data.gallery.map((g) => (
-                <figure key={g.id} className="relative group rounded-xl overflow-hidden bg-[#111]">
-                  <ZoomImage src={g.image_url} alt={g.caption || ""} className="w-full aspect-square object-cover group-hover:scale-110 transition-transform duration-500" />
+                <figure key={g.id} className="group relative rounded-2xl overflow-hidden bg-neutral-900 border border-white/[0.08]">
+                  <ZoomImage src={g.image_url} alt={g.caption || ""} className="w-full h-48 object-cover group-hover:scale-105 transition duration-300" />
                   {g.caption && (
-                    <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-4 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                    <figcaption className="p-2 text-center text-xs text-neutral-400 bg-neutral-950/80 backdrop-blur border-t border-white/[0.04]">
                       {g.caption}
                     </figcaption>
                   )}
@@ -340,56 +441,60 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
 
         {/* Videos */}
         {data.videos.length > 0 && (
-          <section className="mb-24">
-            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="w-8 h-1 rounded-full bg-[#E55B13]"></span> Videos
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {data.videos.map((v) => { 
-                const embed = videoEmbed(v.url); 
+          <section className="space-y-6">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">Media</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {data.videos.map((v) => {
+                const embed = videoEmbed(v.url);
                 return (
-                  <div key={v.id} className="bg-[#111] border border-white/5 rounded-2xl overflow-hidden p-2">
+                  <div key={v.id} className="rounded-2xl overflow-hidden border border-white/[0.08] bg-black">
                     {embed ? (
-                      <div className="aspect-video w-full rounded-xl overflow-hidden">
-                        <iframe src={embed} title={v.title || "Video"} className="w-full h-full" allowFullScreen />
+                      <div className="aspect-video w-full">
+                        <iframe src={embed} title={v.title || "Video"} allowFullScreen className="w-full h-full border-0" />
                       </div>
                     ) : (
-                      <div className="p-6 text-center">
-                        <a className="text-[#E55B13] hover:underline font-semibold" href={v.url} target="_blank" rel="noreferrer">{v.title || v.url}</a>
-                      </div>
+                      <a href={v.url} target="_blank" rel="noreferrer" className="p-6 block hover:text-amber-400 transition">
+                        {v.title || v.url} ↗
+                      </a>
                     )}
                   </div>
-                ); 
+                );
               })}
             </div>
           </section>
         )}
 
-        {/* Contact Footer Area */}
+        {/* Contact Footer Section */}
         {hasContact && (
-          <section id="contact" className="mb-24 border-t border-white/10 pt-20 mt-16 text-center bg-gradient-to-b from-transparent to-[#E55B13]/5 rounded-b-3xl">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to collaborate?</h2>
-            {p?.availability && <p className="text-lg mb-10 text-[#E55B13]">{p.availability}</p>}
-            
-            <div className="flex flex-col items-center gap-4">
-              {p?.email && (
-                <a href={`mailto:${p.email}`} className="text-2xl md:text-3xl font-bold text-white hover:text-[#E55B13] underline underline-offset-8 decoration-white/20 hover:decoration-[#E55B13] transition-all">
+          <section id="contact" className="pt-10 border-t border-white/[0.08] text-center space-y-6">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.3em] text-neutral-400">Get in Touch</h2>
+            <h3 className="text-3xl sm:text-5xl font-bold text-white tracking-tight">Let's work together.</h3>
+            {p?.email && (
+              <p className="text-lg sm:text-xl font-mono text-neutral-300">
+                <a href={`mailto:${p.email}`} className="hover:underline" style={{ color: accentColor }}>
                   {p.email}
                 </a>
+              </p>
+            )}
+            <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+              {p?.phone && <span className="text-sm font-mono text-neutral-400 px-4 py-2 rounded-lg bg-white/[0.03] border border-white/[0.08]">{p.phone}</span>}
+              {p?.website && (
+                <a href={p.website} target="_blank" rel="noreferrer" className="text-sm px-5 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-white transition">
+                  Website ↗
+                </a>
               )}
-              {p?.phone && <span className="text-xl font-medium text-gray-400 mt-4">{p.phone}</span>}
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-4 mt-12 pb-10">
-              {p?.website && <a href={p.website} target="_blank" rel="noreferrer" className="bg-[#151515] hover:bg-[#222] border border-white/10 px-6 py-2.5 rounded-full text-white text-sm font-medium transition-colors shadow-lg">Website ↗</a>}
-              {p?.resume_url && <a href={p.resume_url} target="_blank" rel="noreferrer" className="bg-[#151515] hover:bg-[#222] border border-white/10 px-6 py-2.5 rounded-full text-white text-sm font-medium transition-colors shadow-lg">Résumé ↗</a>}
+              {p?.resume_url && (
+                <a href={p.resume_url} target="_blank" rel="noreferrer" className="text-sm px-5 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-white transition">
+                  Résumé ↗
+                </a>
+              )}
             </div>
           </section>
         )}
 
         {/* Branding Footer */}
         {!data.hide_branding && (
-          <footer className="text-center text-gray-600 text-sm pb-10">
+          <footer className="text-center py-6 text-xs text-neutral-600 tracking-wider">
             Made with Folio
           </footer>
         )}
