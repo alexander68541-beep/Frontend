@@ -17,8 +17,8 @@ interface Payment { id: string; method: string; amount: string | null; tx_id: st
 
 export default function BillingPage() {
   const qc = useQueryClient();
-  const info = useQuery({ queryKey: ["billing-info"], queryFn: () => apiFetch<Info>("/billing/info") });
-  const mine = useQuery({ queryKey: ["billing-my"], queryFn: () => apiFetch<Payment[]>("/billing/my") });
+  const info = useQuery({ queryKey: ["billing-info"], queryFn: () => apiFetch<Info>("/billing/info"), refetchInterval: 8000, refetchOnWindowFocus: true });
+  const mine = useQuery({ queryKey: ["billing-my"], queryFn: () => apiFetch<Payment[]>("/billing/my"), refetchInterval: 8000, refetchOnWindowFocus: true });
 
   const [method, setMethod] = useState("");
   const [amount, setAmount] = useState("");

@@ -746,3 +746,9 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .feat-list li { display: flex; align-items: center; gap: 12px; }
 .feat-list li > span:nth-child(2) { flex: 1; }
 .feat-mark { width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid var(--line); font-size: 12px; }
+
+/* ---------- tabs (admin) ---------- */
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 0; }
+.tab { appearance: none; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); font: inherit; font-size: 14.5px; font-weight: 500; padding: 10px 14px; cursor: pointer; transition: color .15s ease, border-color .15s ease; margin-bottom: -1px; }
+.tab:hover { color: var(--text); }
+.tab.is-active { color: var(--text); border-bottom-color: var(--iris); }
