@@ -25,7 +25,8 @@ export const TEMPLATE_COMPONENTS: Record<string, TemplateComponent> = {
   bold: ({ data }) => <BoldTemplate data={data} />,
   editorial: ({ data }) => <EditorialTemplate data={data} variant="editorial" />,
   studio: ({ data }) => <EditorialTemplate data={data} variant="studio" />,
-
+  aurora: ({ data }) => <AuroraTemplate data={data} />,
+  
   // 👉 Add your coded templates here:
   // aurora: ({ data }) => <AuroraTemplate data={data} />,
 };
