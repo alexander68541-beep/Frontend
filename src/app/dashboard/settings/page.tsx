@@ -47,6 +47,25 @@ export default function SettingsPage() {
   const delErr = del.error instanceof ApiError ? del.error.message : null;
 
   async function signOut() { await createClient().auth.signOut(); router.push("/login"); router.refresh(); }
+  async function signOutEverywhere() { await createClient().auth.signOut({ scope: "global" }); router.push("/login"); router.refresh(); }
+
+  const setVisibility = useMutation({
+    mutationFn: (v: string) => apiFetch<Portfolio>("/portfolio/visibility", { method: "PATCH", body: JSON.stringify({ visibility: v }) }),
+    onSuccess: (d) => qc.setQueryData(["portfolio"], d),
+  });
+
+  const [exporting, setExporting] = useState(false);
+  async function exportData() {
+    setExporting(true);
+    try {
+      const data = await apiFetch<unknown>("/portfolio/export");
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "folio-portfolio.json"; a.click();
+      URL.revokeObjectURL(url);
+    } finally { setExporting(false); }
+  }
 
   return (
     <div className="stack gap-6">
@@ -79,9 +98,32 @@ export default function SettingsPage() {
       </div>
 
       <div className="card">
+        <h2 className="card-title">Privacy</h2>
+        <p className="muted small">Control who can find your portfolio.</p>
+        <div className="stack gap-2 mt-4">
+          {[
+            { v: "public", label: "Public — anyone can find it (listed in sitemap/search)" },
+            { v: "unlisted", label: "Unlisted — only people with the link can view" },
+            { v: "private", label: "Private — nobody can view the public page" },
+          ].map((o) => (
+            <label key={o.v} className="check-row">
+              <input type="radio" name="visibility" checked={(portfolio.data?.visibility ?? "public") === o.v} onChange={() => setVisibility.mutate(o.v)} />
+              <span>{o.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">Export</h2>
+        <p className="muted small">Download all your portfolio data as JSON. Your data is always yours.</p>
+        <div className="mt-4"><Button loading={exporting} onClick={exportData}>Export my data (JSON)</Button></div>
+      </div>
+
+      <div className="card">
         <h2 className="card-title">Session</h2>
-        <p className="muted small">Sign out on this device.</p>
-        <div className="mt-4"><Button onClick={signOut}>Sign out</Button></div>
+        <p className="muted small">Sign out on this device, or everywhere.</p>
+        <div className="row gap-3 mt-4 wrap"><Button onClick={signOut}>Sign out</Button><Button onClick={signOutEverywhere}>Sign out all devices</Button></div>
       </div>
 
       <div className="card danger-zone">

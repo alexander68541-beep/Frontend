@@ -1,3 +1,4 @@
+import Link from "next/link";
 "use client";
 
 import { useState } from "react";
@@ -76,6 +77,9 @@ export function CrudSection(props: Props) {
   const qc = useQueryClient();
 
   const list = useQuery({ queryKey: [queryKey], queryFn: () => apiFetch<Item[]>(endpoint) });
+  const limitsQ = useQuery({ queryKey: ["portfolio-limits"], queryFn: () => apiFetch<{ plan: string; limits: Record<string, number> }>("/portfolio/limits"), staleTime: 60000 });
+  const entityKey = endpoint.split("/").filter(Boolean).pop() ?? "";
+  const limit = limitsQ.data?.limits?.[entityKey];
 
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -149,6 +153,7 @@ export function CrudSection(props: Props) {
   }
 
   const items = list.data ?? [];
+  const atLimit = typeof limit === "number" && items.length >= limit;
 
   return (
     <div className="stack gap-6">
@@ -158,9 +163,19 @@ export function CrudSection(props: Props) {
           {subtitle && <p className="muted">{subtitle}</p>}
         </div>
         {!open && (
-          <Button variant="accent" onClick={startAdd}>
-            {addLabel ?? `Add ${title.replace(/s$/, "").toLowerCase()}`}
-          </Button>
+          <div className="stack gap-1" style={{ alignItems: "flex-end" }}>
+            {typeof limit === "number" && <span className="muted small">{items.length} / {limit}</span>}
+            {atLimit ? (
+              <div className="row gap-2 wrap" style={{ alignItems: "center" }}>
+                <span className="muted small">Plan limit reached</span>
+                <Link href="/dashboard/billing" className="btn btn-sm btn-accent">Upgrade</Link>
+              </div>
+            ) : (
+              <Button variant="accent" onClick={startAdd}>
+                {addLabel ?? `Add ${title.replace(/s$/, "").toLowerCase()}`}
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
