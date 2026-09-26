@@ -11,10 +11,24 @@ const bricolage = Bricolage_Grotesque({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || undefined;
+
 export const metadata: Metadata = {
-  title: "Folio — a portfolio you own",
+  metadataBase: APP_URL ? new URL(APP_URL) : undefined,
+  title: {
+    default: "Folio — a portfolio you own",
+    template: "%s · Folio",
+  },
   description:
     "Enter your work once, then dress it in any template. Your data never moves, never breaks, never gets locked to a design.",
+  openGraph: {
+    title: "Folio — a portfolio you own",
+    description: "Build a professional portfolio from beautiful templates. Your data stays yours.",
+    type: "website",
+    url: APP_URL,
+    siteName: "Folio",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

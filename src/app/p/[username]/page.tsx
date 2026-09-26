@@ -26,7 +26,23 @@ export async function generateMetadata({
   const data = await getData(username);
   const name = data?.profile?.display_name || username;
   const title = data ? `${name} — Portfolio` : "Portfolio not found";
-  return { title, description: data?.profile?.bio ?? undefined };
+  const description = data?.profile?.bio || data?.profile?.tagline || `${name}'s portfolio`;
+  const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+  const url = root ? `https://${username}.${root}` : undefined;
+  const image = data?.profile?.avatar_url || undefined;
+  return {
+    title,
+    description,
+    alternates: url ? { canonical: url } : undefined,
+    openGraph: {
+      title, description, url, type: "profile",
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: "summary", title, description,
+      images: image ? [image] : undefined,
+    },
+  };
 }
 
 export default async function PublicPortfolioPage({

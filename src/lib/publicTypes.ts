@@ -83,3 +83,11 @@ export function videoEmbed(url: string): string | null {
   }
   return null;
 }
+
+
+export function ext(url: string | null | undefined): string {
+  if (!url) return "#";
+  const u = url.trim();
+  if (/^(https?:|mailto:|tel:|\/)/i.test(u)) return u;
+  return "https://" + u;
+}

@@ -1,5 +1,5 @@
 import type { PublicPortfolio } from "@/lib/publicTypes";
-import { dateRange, videoEmbed } from "@/lib/publicTypes";
+import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 
@@ -34,7 +34,7 @@ export function EditorialTemplate({
               {p?.availability && <p className="ed-avail">{p.availability}</p>}
               {p?.email && <a className="ed-c" href={`mailto:${p.email}`}>{p.email}</a>}
               {p?.phone && <span className="ed-c">{p.phone}</span>}
-              {p?.website && <a className="ed-c" href={p.website} target="_blank" rel="noreferrer">{p.website}</a>}
+              {p?.website && <a className="ed-c" href={ext(p.website)} target="_blank" rel="noreferrer">{p.website}</a>}
             </div>
           )}
 
@@ -59,7 +59,7 @@ export function EditorialTemplate({
           )}
 
           {p?.resume_url && (
-            <a className="ed-resume" href={p.resume_url} target="_blank" rel="noreferrer">Download résumé ↗</a>
+            <a className="ed-resume" href={ext(p.resume_url)} target="_blank" rel="noreferrer">Download résumé ↗</a>
           )}
         </aside>
 
@@ -78,7 +78,7 @@ export function EditorialTemplate({
                     <div className="ed-proj-body">
                       <div className="ed-proj-top">
                         <h3>{pr.title}</h3>
-                        {pr.url && <a className="ed-visit" href={pr.url} target="_blank" rel="noreferrer">Visit ↗</a>}
+                        {pr.url && <a className="ed-visit" href={ext(pr.url)} target="_blank" rel="noreferrer">Visit ↗</a>}
                       </div>
                       {pr.role && <p className="ed-muted">{pr.role}</p>}
                       {pr.description && <p className="ed-desc">{pr.description}</p>}
@@ -133,7 +133,7 @@ export function EditorialTemplate({
               <h2 className="ed-h2">Certifications</h2>
               {data.certifications.map((c) => (
                 <div key={c.id} className="ed-row">
-                  <h3>{c.url ? <a href={c.url} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</h3>
+                  <h3>{c.url ? <a href={ext(c.url)} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</h3>
                   <p className="ed-rowsub">{c.issuer}<span className="ed-when">{c.issue_date}</span></p>
                 </div>
               ))}
@@ -157,7 +157,7 @@ export function EditorialTemplate({
               <h2 className="ed-h2">Publications</h2>
               {data.publications.map((pub) => (
                 <div key={pub.id} className="ed-row">
-                  <h3>{pub.url ? <a href={pub.url} target="_blank" rel="noreferrer">{pub.title}</a> : pub.title}</h3>
+                  <h3>{pub.url ? <a href={ext(pub.url)} target="_blank" rel="noreferrer">{pub.title}</a> : pub.title}</h3>
                   <p className="ed-rowsub">{pub.publisher}<span className="ed-when">{pub.date}</span></p>
                   {pub.description && <p className="ed-desc">{pub.description}</p>}
                 </div>
@@ -205,7 +205,7 @@ export function EditorialTemplate({
                       {embed ? (
                         <div className="ed-video"><iframe src={embed} title={v.title || "Video"} allowFullScreen /></div>
                       ) : (
-                        <a href={v.url} target="_blank" rel="noreferrer">{v.title || v.url}</a>
+                        <a href={ext(v.url)} target="_blank" rel="noreferrer">{v.title || v.url}</a>
                       )}
                     </div>
                   );

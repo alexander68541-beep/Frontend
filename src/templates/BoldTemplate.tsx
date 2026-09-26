@@ -1,5 +1,5 @@
 import type { PublicPortfolio } from "@/lib/publicTypes";
-import { dateRange, videoEmbed } from "@/lib/publicTypes";
+import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 
@@ -41,7 +41,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
                 <a
                   key={pr.id}
                   className="tb-project"
-                  href={pr.url || undefined}
+                  href={pr.url ? ext(pr.url) : undefined}
                   target={pr.url ? "_blank" : undefined}
                   rel="noreferrer"
                 >
@@ -121,7 +121,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
             <h2 className="tb-h2">Certifications</h2>
             {data.certifications.map((c) => (
               <div key={c.id} className="tb-row">
-                <h3>{c.url ? <a href={c.url} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</h3>
+                <h3>{c.url ? <a href={ext(c.url)} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</h3>
                 <p className="tb-row-sub">{c.issuer}<span className="tb-when">{c.issue_date}</span></p>
               </div>
             ))}
@@ -146,7 +146,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
             <h2 className="tb-h2">Publications</h2>
             {data.publications.map((pub) => (
               <div key={pub.id} className="tb-row">
-                <h3>{pub.url ? <a href={pub.url} target="_blank" rel="noreferrer">{pub.title}</a> : pub.title}</h3>
+                <h3>{pub.url ? <a href={ext(pub.url)} target="_blank" rel="noreferrer">{pub.title}</a> : pub.title}</h3>
                 <p className="tb-row-sub">{pub.publisher}<span className="tb-when">{pub.date}</span></p>
                 {pub.description && <p className="tb-row-desc">{pub.description}</p>}
               </div>
@@ -179,7 +179,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
                     {embed ? (
                       <div className="tb-video"><iframe src={embed} title={v.title || "Video"} allowFullScreen /></div>
                     ) : (
-                      <a className="tb-link" href={v.url} target="_blank" rel="noreferrer">{v.title || v.url}</a>
+                      <a className="tb-link" href={ext(v.url)} target="_blank" rel="noreferrer">{v.title || v.url}</a>
                     )}
                   </div>
                 );
@@ -212,8 +212,8 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
             <div className="tb-links">
               {p?.email && <a className="tb-link" href={`mailto:${p.email}`}>{p.email}</a>}
               {p?.phone && <span className="tb-link">{p.phone}</span>}
-              {p?.website && <a className="tb-link" href={p.website} target="_blank" rel="noreferrer">Website</a>}
-              {p?.resume_url && <a className="tb-link" href={p.resume_url} target="_blank" rel="noreferrer">Résumé ↗</a>}
+              {p?.website && <a className="tb-link" href={ext(p.website)} target="_blank" rel="noreferrer">Website</a>}
+              {p?.resume_url && <a className="tb-link" href={ext(p.resume_url)} target="_blank" rel="noreferrer">Résumé ↗</a>}
             </div>
           </section>
         )}

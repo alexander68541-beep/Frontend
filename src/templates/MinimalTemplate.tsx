@@ -1,5 +1,5 @@
 import type { PublicPortfolio } from "@/lib/publicTypes";
-import { dateRange, videoEmbed } from "@/lib/publicTypes";
+import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 
@@ -45,7 +45,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
                   <div className="tm-proj-body">
                     <div className="tm-proj-top">
                       <h3>{pr.title}</h3>
-                      {pr.url && <a href={pr.url} target="_blank" rel="noreferrer" className="tm-visit">Visit ↗</a>}
+                      {pr.url && <a href={ext(pr.url)} target="_blank" rel="noreferrer" className="tm-visit">Visit ↗</a>}
                     </div>
                     {pr.role && <p className="tm-proj-role">{pr.role}</p>}
                     {pr.description && <p className="tm-proj-desc">{pr.description}</p>}
@@ -122,7 +122,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
               <div key={c.id} className="tm-row">
                 <div className="tm-row-when">{c.issue_date || ""}</div>
                 <div className="tm-row-main">
-                  <h3>{c.url ? <a href={c.url} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</h3>
+                  <h3>{c.url ? <a href={ext(c.url)} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</h3>
                   {c.issuer && <p className="tm-row-sub">{c.issuer}</p>}
                 </div>
               </div>
@@ -152,7 +152,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
               <div key={pub.id} className="tm-row">
                 <div className="tm-row-when">{pub.date || ""}</div>
                 <div className="tm-row-main">
-                  <h3>{pub.url ? <a href={pub.url} target="_blank" rel="noreferrer">{pub.title}</a> : pub.title}</h3>
+                  <h3>{pub.url ? <a href={ext(pub.url)} target="_blank" rel="noreferrer">{pub.title}</a> : pub.title}</h3>
                   {pub.publisher && <p className="tm-row-sub">{pub.publisher}</p>}
                   {pub.description && <p className="tm-row-desc">{pub.description}</p>}
                 </div>
@@ -186,7 +186,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
                     {embed ? (
                       <div className="tm-video"><iframe src={embed} title={v.title || "Video"} allowFullScreen /></div>
                     ) : (
-                      <a href={v.url} target="_blank" rel="noreferrer">{v.title || v.url}</a>
+                      <a href={ext(v.url)} target="_blank" rel="noreferrer">{v.title || v.url}</a>
                     )}
                     {v.title && <p className="tm-row-sub">{v.title}</p>}
                   </div>
@@ -218,14 +218,14 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
               {p?.availability && <p className="tm-avail">{p.availability}</p>}
               {p?.email && <a href={`mailto:${p.email}`}>{p.email}</a>}
               {p?.phone && <span>{p.phone}</span>}
-              {p?.website && <a href={p.website} target="_blank" rel="noreferrer">{p.website}</a>}
+              {p?.website && <a href={ext(p.website)} target="_blank" rel="noreferrer">{p.website}</a>}
             </div>
           </section>
         )}
 
         {p?.resume_url && (
           <section className="tm-sec">
-            <a className="tm-resume" href={p.resume_url} target="_blank" rel="noreferrer">Download résumé ↗</a>
+            <a className="tm-resume" href={ext(p.resume_url)} target="_blank" rel="noreferrer">Download résumé ↗</a>
           </section>
         )}
 

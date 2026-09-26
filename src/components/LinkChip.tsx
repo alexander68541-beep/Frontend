@@ -1,3 +1,4 @@
+import { ext } from "@/lib/publicTypes";
 // Renders a clickable link with an auto-detected platform icon.
 // Server-safe (no client hooks) so templates can use it directly.
 
@@ -68,7 +69,7 @@ export function LinkChip({
   className?: string;
 }) {
   return (
-    <a className={className} href={url} target="_blank" rel="noreferrer">
+    <a className={className} href={ext(url)} target="_blank" rel="noreferrer">
       <span className="lc-ic"><Icon k={detect(platform, url)} /></span>
       <span>{label || platform}</span>
     </a>
