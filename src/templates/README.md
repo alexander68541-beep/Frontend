@@ -33,3 +33,10 @@ panel controls listing (name, category, free/pro, active) — no runtime code ev
   anyone already on it falls back to Minimal).
 - Set a listing to **Pro** to gate it to Pro users (enforced on the backend).
 - A listing whose key has no component shows a "no code" flag in admin and is ignored.
+
+## Styling: Tailwind CSS is available
+This project has Tailwind set up (`tailwind.config.ts`, `postcss.config.mjs`, and the
+`@tailwind` directives in `src/app/globals.css`). So advanced templates that use Tailwind
+utility classes (`flex`, `grid`, `text-4xl`, `bg-zinc-900`, …) work out of the box — just
+drop the component in `src/templates/` and register it. You can also use plain CSS or CSS
+modules. After adding new deps run `npm install` once; Tailwind scans `src/**` automatically.
