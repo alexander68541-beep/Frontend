@@ -2,6 +2,7 @@ import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
+import { ContactForm } from "@/components/ContactForm";
 
 export function BoldTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
@@ -215,6 +216,13 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
               {p?.website && <a className="tb-link" href={ext(p.website)} target="_blank" rel="noreferrer">Website</a>}
               {p?.resume_url && <a className="tb-link" href={ext(p.resume_url)} target="_blank" rel="noreferrer">Résumé ↗</a>}
             </div>
+          </section>
+        )}
+
+        {data.username && (
+          <section className="tb-sec">
+            <h2 className="tb-h2">Get in touch</h2>
+            <ContactForm username={data.username} />
           </section>
         )}
 

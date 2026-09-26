@@ -2,6 +2,7 @@ import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
+import { ContactForm } from "@/components/ContactForm";
 
 // Example coded template. Copy this file to make your own, then register it in registry.tsx.
 export function AuroraTemplate({ data }: { data: PublicPortfolio }) {

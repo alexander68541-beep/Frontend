@@ -2,6 +2,7 @@ import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
+import { ContactForm } from "@/components/ContactForm";
 
 export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
@@ -226,6 +227,13 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         {p?.resume_url && (
           <section className="tm-sec">
             <a className="tm-resume" href={ext(p.resume_url)} target="_blank" rel="noreferrer">Download résumé ↗</a>
+          </section>
+        )}
+
+        {data.username && (
+          <section className="tm-sec">
+            <h2>Get in touch</h2>
+            <ContactForm username={data.username} />
           </section>
         )}
 

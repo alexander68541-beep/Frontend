@@ -2,6 +2,7 @@ import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
+import { ContactForm } from "@/components/ContactForm";
 
 export function EditorialTemplate({
   data,
@@ -211,6 +212,13 @@ export function EditorialTemplate({
                   );
                 })}
               </div>
+            </section>
+          )}
+
+          {data.username && (
+            <section className="ed-sec">
+              <h2 className="ed-h2">Get in touch</h2>
+              <ContactForm username={data.username} />
             </section>
           )}
 

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 import { useAccount, usePortfolio } from "@/lib/hooks";
 import { portfolioLabel } from "@/lib/urls";
@@ -148,6 +150,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
     { href: "/dashboard/contact", label: "Contact", icon: I.contact },
     { href: "/dashboard/resume", label: "Resume / CV", icon: I.resume },
     { href: "/dashboard/messages", label: "Messages", icon: I.testimonials },
+    { href: "/dashboard/inbox", label: "Contact inbox", icon: I.contact },
   ]},
   { section: "Optional", items: [
     { href: "/dashboard/templates", label: "Templates", icon: I.appearance },
@@ -166,6 +169,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const account = useAccount();
   const portfolio = usePortfolio();
   const isAdmin = account.data?.role === "admin";
+  const unread = useQuery({ queryKey: ["notif-unread"], queryFn: () => apiFetch<{ count: number }>("/notifications/unread-count"), refetchInterval: 20000, refetchOnWindowFocus: true });
 
   const pf = portfolio.data;
   const published = pf?.status === "published";
@@ -232,6 +236,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <span className="muted small">No username yet</span>
             )}
           </div>
+          <Link href="/dashboard/notifications" className="bell" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>
+            {unread.data && unread.data.count > 0 ? <span className="bell-dot">{unread.data.count > 9 ? "9+" : unread.data.count}</span> : null}
+          </Link>
           <span className={`badge ${published ? "badge-published" : "badge-draft"}`}>
             <span className="dot" />
             {published ? "Published" : "Draft"}

@@ -843,3 +843,22 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .chart-col { flex: 1; height: 100%; display: flex; align-items: flex-end; }
 .chart-bar { width: 100%; min-height: 2px; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, var(--iris-bright), var(--iris-deep)); transition: height .3s ease; }
 .chart-col:hover .chart-bar { background: linear-gradient(180deg, var(--teal), var(--iris)); }
+
+/* ---------- public contact form (works on light & dark templates) ---------- */
+.pubcontact { display: flex; flex-direction: column; gap: 12px; max-width: 540px; margin: 0 auto; }
+.pubcontact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pubcontact-in { font: inherit; font-size: 15px; color: inherit; padding: 11px 13px; border: 1px solid rgba(128,128,128,0.35); border-radius: 10px; background: rgba(128,128,128,0.08); width: 100%; }
+.pubcontact-in:focus { outline: none; border-color: var(--tpl-accent, #7c6cff); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tpl-accent, #7c6cff) 25%, transparent); }
+.pubcontact-btn { align-self: flex-start; font: inherit; font-weight: 600; color: #fff; background: var(--tpl-accent, #7c6cff); border: none; padding: 11px 22px; border-radius: 10px; cursor: pointer; }
+.pubcontact-btn:disabled { opacity: .55; cursor: not-allowed; }
+.pubcontact-done { color: var(--tpl-accent, #1f8a5b); font-weight: 600; text-align: center; }
+.pubcontact-err { color: #d05656; font-size: 13px; }
+@media (max-width: 480px) { .pubcontact-row { grid-template-columns: 1fr; } }
+
+/* ---------- dashboard notification bell ---------- */
+.bell { position: relative; background: transparent; border: 1px solid var(--line-strong); border-radius: 9px; padding: 7px; color: var(--muted); cursor: pointer; display: inline-flex; }
+.bell:hover { color: var(--text); }
+.bell svg { width: 18px; height: 18px; display: block; }
+.bell-dot { position: absolute; top: -6px; right: -6px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; }
+.notif-item { padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.notif-item.unread { border-color: rgba(124,108,255,0.4); background: rgba(124,108,255,0.06); }
