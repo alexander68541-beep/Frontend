@@ -2,20 +2,18 @@ import type { PublicPortfolio } from "@/lib/publicTypes";
 import { MinimalTemplate } from "./MinimalTemplate";
 import { BoldTemplate } from "./BoldTemplate";
 import { EditorialTemplate } from "./EditorialTemplate";
+import { AuroraTemplate } from "./AuroraTemplate";
 
 // ============================================================================
-// TEMPLATE REGISTRY
-// This is the ONE place you register a coded template. Each entry maps a unique
-// "key" to a React component that receives the portfolio data.
+// TEMPLATE REGISTRY — the ONE place to register a coded template.
+// Each entry maps a unique "key" to a React component that receives portfolio data.
+// See ./README.md for the full how-to.
 //
-// To add your own Next.js/React template:
-//   1. Create a component, e.g. src/templates/AuroraTemplate.tsx
-//        export function AuroraTemplate({ data }: { data: PublicPortfolio }) { ... }
-//      It receives `data` (name, projects, skills, links, gallery, accent, hide_branding …
-//      see src/lib/publicTypes.ts). Render only sections that have data.
-//   2. Import it here and add a line to TEMPLATE_COMPONENTS below with a unique key.
-//   3. Deploy. Then in Dashboard → Admin → Templates, add a listing with that key,
-//      give it a name/category/plan and toggle it active. Users can now use it.
+// To add your own:
+//   1. Create src/templates/MyTemplate.tsx (copy AuroraTemplate.tsx as a starter).
+//   2. import { MyTemplate } from "./MyTemplate";
+//   3. Add a line below:  mykey: ({ data }) => <MyTemplate data={data} />,
+//   4. Deploy, then list it in Dashboard → Templates (admin) with key "mykey".
 // ============================================================================
 
 export type TemplateComponent = (props: { data: PublicPortfolio }) => React.ReactNode;
@@ -26,9 +24,6 @@ export const TEMPLATE_COMPONENTS: Record<string, TemplateComponent> = {
   editorial: ({ data }) => <EditorialTemplate data={data} variant="editorial" />,
   studio: ({ data }) => <EditorialTemplate data={data} variant="studio" />,
   aurora: ({ data }) => <AuroraTemplate data={data} />,
-  
-  // 👉 Add your coded templates here:
-  // aurora: ({ data }) => <AuroraTemplate data={data} />,
 };
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATE_COMPONENTS);
