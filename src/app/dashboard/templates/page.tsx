@@ -12,7 +12,7 @@ import { TemplateBuilder } from "@/components/TemplateBuilder";
 
 const PRESET_ACCENTS = ["#7c6cff", "#38d2c6", "#ff8a6b", "#f0b869", "#4b9fff", "#ff5f9e", "#46d296", "#e0b34d"];
 
-interface CT { id: string; key: string; name: string; category: string; plan: string; }
+interface CT { id: string; key: string; name: string; category: string; plan: string; preview_url: string | null; }
 
 export default function TemplatesPage() {
   const qc = useQueryClient();
@@ -69,8 +69,11 @@ export default function TemplatesPage() {
               const locked = pro && !isPro;
               return (
                 <div key={it.id} className={`tpl-card ${active ? "is-active" : ""} ${locked ? "is-locked" : ""}`}>
-                  <div className={`tpl-thumb ${it.key === "bold" || it.key === "studio" ? "thumb-1" : "thumb-0"}`} aria-hidden>
-                    <span className="tt-avatar" /><span className="tt-line w60" /><span className="tt-line w40" /><span className="tt-row"><span /><span /></span>
+                  <div className="tpl-preview">
+                    {it.preview_url
+                      ? <img src={it.preview_url} alt={it.name} className="tpl-preview-img" />
+                      : <iframe src={`/t/${it.key}`} className="tpl-preview-frame" title={it.name} loading="lazy" tabIndex={-1} />}
+                    <a className="tpl-preview-btn" href={`/t/${it.key}`} target="_blank" rel="noreferrer">Preview ↗</a>
                   </div>
                   <div className="row between">
                     <div><h3 className="tpl-name">{it.name} {pro && <span className="pro-tag">PRO</span>}</h3><p className="muted small">{it.key}</p></div>

@@ -821,3 +821,10 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .au-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .au-foot { text-align: center; color: #565c72; font-size: 12.5px; padding-top: 26px; }
 @media (max-width: 620px) { .au-projects, .au-gallery { grid-template-columns: 1fr; column-count: 1; } }
+
+/* ---------- template card live preview ---------- */
+.tpl-preview { position: relative; height: 168px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #0a0b12; margin-bottom: 12px; }
+.tpl-preview-frame { width: 1200px; height: 900px; border: 0; transform: scale(0.32); transform-origin: top left; pointer-events: none; background: #0a0b12; }
+.tpl-preview-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tpl-preview-btn { position: absolute; right: 8px; bottom: 8px; font-size: 12px; padding: 5px 10px; border-radius: 8px; background: rgba(10,11,18,0.82); border: 1px solid var(--line-strong); color: #fff; backdrop-filter: blur(6px); }
+.tpl-preview-btn:hover { background: rgba(124,108,255,0.4); }
