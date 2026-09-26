@@ -25,7 +25,7 @@ export const TEMPLATE_COMPONENTS: Record<string, TemplateComponent> = {
   editorial: ({ data }) => <EditorialTemplate data={data} variant="editorial" />,
   studio: ({ data }) => <EditorialTemplate data={data} variant="studio" />,
   aurora: ({ data }) => <AuroraTemplate data={data} />,
-  wow: ({ data }) => <WowTemplate data={data} /> };
+  wow: ({ data }) => <WowTemplate data={data} />,
 };
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATE_COMPONENTS);
