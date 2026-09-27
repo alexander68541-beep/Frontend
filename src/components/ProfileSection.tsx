@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { Portfolio } from "@/lib/types";
@@ -64,6 +64,33 @@ function Editor({
     return v;
   });
   const [saved, setSaved] = useState(false);
+  const draftKey = `folio_draft_${title.replace(/\s+/g, "_").toLowerCase()}`;
+  const [restored, setRestored] = useState(false);
+
+  // Restore an unsaved draft (once) after refresh / crash.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const d = JSON.parse(raw) as Record<string, string>;
+        const differs = fields.some((f) => (d[f.name] ?? "") !== (form[f.name] ?? ""));
+        if (differs) { setForm((v) => ({ ...v, ...d })); setRestored(true); }
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist the working draft on every change.
+  useEffect(() => {
+    try { localStorage.setItem(draftKey, JSON.stringify(form)); } catch { /* ignore */ }
+  }, [form, draftKey]);
+
+  function discardDraft() {
+    const v: Record<string, string> = {};
+    for (const f of fields) v[f.name] = prof[f.name] == null ? "" : String(prof[f.name]);
+    setForm(v); setRestored(false);
+    try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
+  }
 
   const save = useMutation({
     mutationFn: () => {
@@ -80,6 +107,8 @@ function Editor({
     onSuccess: (data) => {
       onSaved(data);
       setSaved(true);
+      setRestored(false);
+      try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
     },
   });
 
@@ -95,6 +124,12 @@ function Editor({
         <div className="stack gap-4">
           {err && <div className="alert alert-error">{err}</div>}
           {saved && <div className="alert alert-ok">Saved.</div>}
+          {restored && (
+            <div className="alert alert-info row between wrap gap-2">
+              <span>Unsaved draft restored from your last session.</span>
+              <button className="btn btn-sm" onClick={discardDraft}>Discard draft</button>
+            </div>
+          )}
           <div className="form-grid">
             {fields.map((f) =>
               f.type === "image" ? (

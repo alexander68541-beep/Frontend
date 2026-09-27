@@ -907,3 +907,10 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .social-btn { font-size: 13px; padding: 7px 12px; border-radius: 10px; background: rgba(10,11,18,0.72); border: 1px solid rgba(255,255,255,0.18); color: #fff; cursor: pointer; backdrop-filter: blur(8px); display: inline-flex; align-items: center; gap: 5px; }
 .social-btn:hover { background: rgba(124,108,255,0.4); }
 .social-btn.on { border-color: var(--iris); }
+
+/* draft-restored notice */
+.alert-info { background: rgba(124,108,255,0.1); border: 1px solid rgba(124,108,255,0.35); color: var(--text); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+
+/* language switcher */
+.dash-lang { padding: 0 4px 8px; }
+.lang-select { width: 100%; padding: 7px 10px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); font-size: 13px; cursor: pointer; }
