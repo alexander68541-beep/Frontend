@@ -999,3 +999,12 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .pricing-list { list-style: none; padding: 0; margin: 16px 0 22px; display: flex; flex-direction: column; gap: 9px; font-size: 14px; flex: 1; }
 .pricing-list li { color: var(--text); }
 .pricing-list li.off { color: var(--muted); opacity: 0.55; }
+
+/* feature locked + pricing page */
+.feature-locked { padding: 48px 24px; }
+.feature-locked-ic { font-size: 40px; margin-bottom: 8px; }
+.pricing-page { padding: 40px 0 90px; }
+.pricing-hero { text-align: center; max-width: 640px; margin: 0 auto 44px; }
+.pricing-hero .display { font-size: clamp(30px, 5vw, 46px); }
+.pricing-hero .lede { color: var(--muted); margin-top: 12px; }
+.dash-brand-inner { display: inline-flex; align-items: center; gap: 8px; }

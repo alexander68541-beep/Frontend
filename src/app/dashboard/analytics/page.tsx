@@ -2,6 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
+import { useFeatures } from "@/lib/hooks";
+import { FeatureLocked } from "@/components/FeatureLocked";
 
 interface Point { day: string; count: number; }
 interface Item { name: string; count: number; }
@@ -27,8 +29,16 @@ function Bars({ items, empty }: { items: Item[]; empty: string }) {
 }
 
 export default function AnalyticsPage() {
+  const feat = useFeatures();
   const q = useQuery({ queryKey: ["analytics"], queryFn: () => apiFetch<Analytics>("/portfolio/analytics"), refetchInterval: 30000, refetchOnWindowFocus: true });
 
+  if (feat.isLoading) return <p className="muted">Loading…</p>;
+  if (!feat.has("analytics")) return (
+    <div className="stack gap-6">
+      <div><h1 className="page-title">Analytics</h1></div>
+      <FeatureLocked title="Analytics" desc="Upgrade to a plan that includes Analytics to see your visitor and view stats." />
+    </div>
+  );
   if (q.isLoading) return <p className="muted">Loading…</p>;
   if (q.isError || !q.data) return <div className="alert alert-error">{q.error instanceof ApiError ? q.error.message : "Couldn't load analytics."}</div>;
 

@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
   if (app) {
     entries.push({ url: app, changeFrequency: "weekly", priority: 1 });
-    for (const path of ["/explore", "/faq", "/privacy", "/terms"]) {
+    for (const path of ["/pricing", "/explore", "/contact-us", "/faq", "/privacy", "/terms"]) {
       entries.push({ url: `${app}${path}`, changeFrequency: "monthly", priority: 0.5 });
     }
   }

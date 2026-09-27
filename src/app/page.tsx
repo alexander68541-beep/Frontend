@@ -135,6 +135,7 @@ export default function Home() {
         <div className="container foot-base">
           <span className="muted small">© {new Date().getFullYear()} Folio — part of assetprim.</span>
           <nav className="foot-links">
+            <a href="/pricing">Pricing</a>
             <a href="/explore">Explore</a>
             <a href="/contact-us">Contact</a>
             <a href="/faq">FAQ</a>
