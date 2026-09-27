@@ -9,11 +9,17 @@ import { Button } from "@/components/ui/Button";
 interface Method { name: string; value: string; }
 interface EmailAcct { name?: string; from: string; api_key: string; active?: boolean; }
 interface CloudAcct { name?: string; cloud_name: string; api_key: string; api_secret: string; folder?: string; active?: boolean; }
+interface Plan { key: string; name: string; highlight?: boolean; features?: string[]; periods?: Record<string, string>; }
 interface Settings {
   pro_price: string | null; currency: string | null; pro_features: string[]; payment_note: string | null;
   payment_methods: Method[]; flags: Record<string, boolean>;
   email_enabled: boolean; email_accounts: EmailAcct[]; cloudinary_accounts: CloudAcct[];
+  plan_limits: Record<string, Record<string, number>>;
+  plans: Plan[];
 }
+
+const LIMIT_ENTITIES = ["projects","gallery","skills","experience","education","services","certifications","achievements","testimonials","publications","videos","links"];
+const DEFAULT_FREE: Record<string, number> = { projects: 6, gallery: 12, skills: 30, experience: 10, education: 8, services: 8, certifications: 15, achievements: 15, testimonials: 10, publications: 15, videos: 6, links: 12 };
 
 const FLAGS = [
   { key: "enable_registration", label: "Allow new sign-ups" },
@@ -31,6 +37,8 @@ export function AdminSettings() {
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [emailAccounts, setEmailAccounts] = useState<EmailAcct[]>([]);
   const [cloudAccounts, setCloudAccounts] = useState<CloudAcct[]>([]);
+  const [freeLimits, setFreeLimits] = useState<Record<string, number>>({});
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [testRes, setTestRes] = useState<{ ok: boolean; detail?: string; error?: string } | null>(null);
 
   useEffect(() => {
@@ -39,6 +47,8 @@ export function AdminSettings() {
     setMethods(d.payment_methods ?? []); setPro(d.pro_features ?? []); setFlags(d.flags ?? {});
     setEmailEnabled(d.email_enabled ?? true);
     setEmailAccounts(d.email_accounts ?? []); setCloudAccounts(d.cloudinary_accounts ?? []);
+    setFreeLimits({ ...DEFAULT_FREE, ...(d.plan_limits?.free ?? {}) });
+    setPlans(d.plans ?? []);
   }, [settings.data]);
 
   const save = useMutation({
@@ -48,6 +58,8 @@ export function AdminSettings() {
       email_enabled: emailEnabled,
       email_accounts: emailAccounts.filter((a) => a.from?.trim() && a.api_key?.trim()),
       cloudinary_accounts: cloudAccounts.filter((a) => a.cloud_name?.trim() && a.api_key?.trim() && a.api_secret?.trim()),
+      plan_limits: { free: freeLimits },
+      plans: plans.filter((p) => p.key?.trim() && p.name?.trim()),
     }) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-settings"] }),
   });
@@ -57,6 +69,9 @@ export function AdminSettings() {
   });
 
   const togglePro = (k: string) => setPro((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k]));
+  const setPlan = (i: number, patch: Partial<Plan>) => setPlans((ps) => ps.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+  const setPlanPeriod = (i: number, per: string, val: string) => setPlans((ps) => ps.map((p, idx) => (idx === i ? { ...p, periods: { ...(p.periods ?? {}), [per]: val } } : p)));
+  const togglePlanFeature = (i: number, k: string) => setPlans((ps) => ps.map((p, idx) => { if (idx !== i) return p; const f = p.features ?? []; return { ...p, features: f.includes(k) ? f.filter((x) => x !== k) : [...f, k] }; }));
   const setMethod = (i: number, f: "name" | "value", v: string) => setMethods((ms) => ms.map((m, idx) => (idx === i ? { ...m, [f]: v } : m)));
   const setEA = (i: number, f: keyof EmailAcct, v: string | boolean) => setEmailAccounts((a) => a.map((x, idx) => (idx === i ? { ...x, [f]: v } : x)));
   const setCA = (i: number, f: keyof CloudAcct, v: string | boolean) => setCloudAccounts((a) => a.map((x, idx) => (idx === i ? { ...x, [f]: v } : x)));
@@ -75,6 +90,35 @@ export function AdminSettings() {
               <label key={f.key} className="check-row"><input type="checkbox" checked={pro.includes(f.key)} onChange={() => togglePro(f.key)} /><span><strong>{f.label}</strong> — <span className="muted">{f.desc}</span></span></label>
             ))}</div>
           </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">Plans (Pro / Max / …)</h2>
+        <p className="muted small">Define tiers, their monthly/yearly/lifetime prices, and which features they advertise. Any paid plan unlocks the pro-gated features above.</p>
+        <div className="stack gap-4 mt-4">
+          {plans.map((pl, i) => (
+            <div key={i} className="card" style={{ background: "var(--surface-2, rgba(255,255,255,0.02))" }}>
+              <div className="row gap-2 wrap">
+                <input className="input" style={{ maxWidth: 110 }} placeholder="key (pro)" value={pl.key} onChange={(e) => setPlan(i, { key: e.target.value })} />
+                <input className="input" style={{ maxWidth: 150 }} placeholder="Name (Pro)" value={pl.name} onChange={(e) => setPlan(i, { name: e.target.value })} />
+                <label className="check-row"><input type="checkbox" checked={!!pl.highlight} onChange={(e) => setPlan(i, { highlight: e.target.checked })} /><span>Highlight</span></label>
+                <button className="btn btn-sm btn-danger" onClick={() => setPlans((ps) => ps.filter((_, idx) => idx !== i))}>Remove</button>
+              </div>
+              <div className="form-grid mt-3">
+                {["monthly", "yearly", "lifetime"].map((per) => (
+                  <div key={per} className="field"><label className="label" style={{ textTransform: "capitalize" }}>{per} price</label>
+                    <input className="input" value={pl.periods?.[per] ?? ""} onChange={(e) => setPlanPeriod(i, per, e.target.value)} placeholder="—" /></div>
+                ))}
+              </div>
+              <div className="mt-3"><label className="label">Advertised features</label>
+                <div className="stack gap-1 mt-2">{FEATURE_CATALOG.map((f) => (
+                  <label key={f.key} className="check-row"><input type="checkbox" checked={(pl.features ?? []).includes(f.key)} onChange={() => togglePlanFeature(i, f.key)} /><span>{f.label}</span></label>
+                ))}</div>
+              </div>
+            </div>
+          ))}
+          <div><button className="btn btn-sm" onClick={() => setPlans((ps) => [...ps, { key: "", name: "", features: [], periods: {} }])}>+ Add plan</button></div>
         </div>
       </div>
 
@@ -132,6 +176,19 @@ export function AdminSettings() {
             </div>
           ))}
           <div><button className="btn btn-sm" onClick={() => setCloudAccounts((x) => [...x, { name: "", cloud_name: "", api_key: "", api_secret: "", active: true }])}>+ Add Cloudinary account</button></div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">Free plan limits</h2>
+        <p className="muted small">Max items a Free user can add per section. Pro/Max are unlimited. Set 0 to block a section on Free.</p>
+        <div className="form-grid mt-4">
+          {LIMIT_ENTITIES.map((k) => (
+            <div key={k} className="field">
+              <label className="label" style={{ textTransform: "capitalize" }}>{k}</label>
+              <input className="input" type="number" min={0} value={freeLimits[k] ?? DEFAULT_FREE[k]} onChange={(e) => setFreeLimits((p) => ({ ...p, [k]: Math.max(0, Number(e.target.value) || 0) }))} />
+            </div>
+          ))}
         </div>
       </div>
 

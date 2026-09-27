@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 
-interface Pay { id: string; method: string; amount: string | null; tx_id: string | null; screenshot_url: string | null; status: string; email: string | null; }
+interface Pay { id: string; method: string; plan?: string; period?: string; amount: string | null; tx_id: string | null; screenshot_url: string | null; status: string; email: string | null; }
 
 export function AdminPayments() {
   const qc = useQueryClient();
@@ -28,11 +28,11 @@ export function AdminPayments() {
       </div>
       <div className="table-wrap mt-4">
         <table className="tbl">
-          <thead><tr><th>Email</th><th>Method</th><th>Amount</th><th>Tx ID</th><th>Proof</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Email</th><th>Plan</th><th>Period</th><th>Method</th><th>Amount</th><th>Tx ID</th><th>Proof</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
             {(payments.data ?? []).map((p) => (
               <tr key={p.id}>
-                <td>{p.email ?? "—"}</td><td>{p.method}</td><td>{p.amount ?? "—"}</td><td>{p.tx_id ?? "—"}</td>
+                <td>{p.email ?? "—"}</td><td>{p.plan ?? "—"}</td><td>{p.period ?? "—"}</td><td>{p.method}</td><td>{p.amount ?? "—"}</td><td>{p.tx_id ?? "—"}</td>
                 <td>{p.screenshot_url ? <a href={p.screenshot_url} target="_blank" rel="noreferrer">View</a> : "—"}</td>
                 <td><span className={`badge ${p.status === "approved" ? "badge-published" : p.status === "rejected" ? "badge-error" : "badge-draft"}`}>{p.status}</span></td>
                 <td>{p.status === "pending" && (

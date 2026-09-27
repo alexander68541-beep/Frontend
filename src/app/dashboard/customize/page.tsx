@@ -50,9 +50,18 @@ export default function CustomizePage() {
         <p className="muted small">Applies to your public portfolio.</p>
         <div className="tpl-grid mt-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}>
           {FONT_OPTIONS.map((o) => (
-            <button key={o.key} className={`card ${font === o.key ? "tpl-card-active" : ""}`} onClick={() => setFont(o.key)} style={{ textAlign: "left", cursor: "pointer", fontFamily: o.stack || undefined }}>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>Aa</div>
-              <div className="muted small mt-2">{o.label}</div>
+            <button
+              key={o.key}
+              onClick={() => setFont(o.key)}
+              className="card"
+              style={{
+                textAlign: "left", cursor: "pointer", fontFamily: o.stack || undefined,
+                borderColor: font === o.key ? "var(--iris)" : undefined,
+                boxShadow: font === o.key ? "0 0 0 2px var(--iris) inset" : undefined,
+              }}
+            >
+              <div style={{ fontSize: 22, fontWeight: 700 }}>Ag</div>
+              <div className="muted small mt-2">{o.label}{font === o.key ? " ✓" : ""}</div>
             </button>
           ))}
         </div>

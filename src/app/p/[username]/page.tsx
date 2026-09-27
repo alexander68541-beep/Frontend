@@ -5,6 +5,7 @@ import { TemplateRenderer } from "@/templates";
 import { ViewBeacon } from "@/components/ViewBeacon";
 import { ReportLink } from "@/components/ReportLink";
 import { SectionReorder } from "@/components/SectionReorder";
+import { fontStack } from "@/lib/fonts";
 
 async function getData(username: string): Promise<PublicPortfolio | null> {
   const base = process.env.NEXT_PUBLIC_API_URL;
@@ -56,11 +57,15 @@ export default async function PublicPortfolioPage({
   const { username } = await params;
   const data = await getData(username);
   if (!data) notFound();
+  const stack = fontStack(data.settings?.font);
   return (
     <>
+      {stack && (
+        <style dangerouslySetInnerHTML={{ __html: `#folio-font, #folio-font * { font-family: ${stack} !important; }` }} />
+      )}
       <ViewBeacon username={data.username ?? ""} />
       <SectionReorder order={data.settings?.section_order} />
-      <TemplateRenderer data={data} />
+      <div id="folio-font"><TemplateRenderer data={data} /></div>
       <div className="report-wrap"><ReportLink username={data.username ?? ""} /></div>
     </>
   );
