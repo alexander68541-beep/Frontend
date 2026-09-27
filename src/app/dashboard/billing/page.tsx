@@ -149,9 +149,9 @@ export default function BillingPage() {
                     <option value="">Select…</option>
                     {d.payment_methods.map((m) => <option key={m.name} value={m.name}>{m.name}</option>)}
                   </select></div>
-                <div className="field"><label className="label">Transaction ID</label><input className="input" value={txId} onChange={(e) => setTxId(e.target.value)} placeholder="TxID / TrxID" /></div>
-                <ImageUpload label="Payment screenshot" value={shot} onChange={setShot} />
-                <div><Button variant="accent" loading={submit.isPending} disabled={!method} onClick={() => submit.mutate()}>Submit for review</Button></div>
+                <div className="field"><label className="label">Transaction ID (optional)</label><input className="input" value={txId} onChange={(e) => setTxId(e.target.value)} placeholder="TxID / TrxID" /></div>
+                <ImageUpload label="Payment screenshot (optional)" value={shot} onChange={setShot} />
+                <div><Button variant="accent" loading={submit.isPending} disabled={!method || submit.isPending} onClick={() => submit.mutate()}>Submit for review</Button></div>
               </div>
             </div>
           )}

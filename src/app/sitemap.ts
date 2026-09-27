@@ -18,7 +18,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const entries: MetadataRoute.Sitemap = [];
-  if (app) entries.push({ url: app, changeFrequency: "weekly", priority: 1 });
+  if (app) {
+    entries.push({ url: app, changeFrequency: "weekly", priority: 1 });
+    for (const path of ["/explore", "/faq", "/privacy", "/terms"]) {
+      entries.push({ url: `${app}${path}`, changeFrequency: "monthly", priority: 0.5 });
+    }
+  }
   for (const u of usernames) {
     const url = root ? `https://${u}.${root}` : app ? `${app}/p/${u}` : `/p/${u}`;
     entries.push({ url, changeFrequency: "weekly", priority: 0.8 });

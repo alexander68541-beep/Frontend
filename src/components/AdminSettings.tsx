@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { FEATURE_CATALOG } from "@/lib/features";
 import { Button } from "@/components/ui/Button";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface Method { name: string; value: string; }
 interface EmailAcct { name?: string; from: string; api_key: string; active?: boolean; }
@@ -16,6 +17,8 @@ interface Settings {
   email_enabled: boolean; email_accounts: EmailAcct[]; cloudinary_accounts: CloudAcct[];
   plan_limits: Record<string, Record<string, number>>;
   plans: Plan[];
+  site_name: string | null; logo_url: string | null; favicon_url: string | null;
+  google_site_verification: string | null; seo_keywords: string | null; seo_description: string | null; footer_text: string | null;
 }
 
 const LIMIT_ENTITIES = ["projects","gallery","skills","experience","education","services","certifications","achievements","testimonials","publications","videos","links"];
@@ -39,6 +42,7 @@ export function AdminSettings() {
   const [cloudAccounts, setCloudAccounts] = useState<CloudAcct[]>([]);
   const [freeLimits, setFreeLimits] = useState<Record<string, number>>({});
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [brand, setBrand] = useState<Record<string, string>>({});
   const [testRes, setTestRes] = useState<{ ok: boolean; detail?: string; error?: string } | null>(null);
 
   useEffect(() => {
@@ -49,6 +53,11 @@ export function AdminSettings() {
     setEmailAccounts(d.email_accounts ?? []); setCloudAccounts(d.cloudinary_accounts ?? []);
     setFreeLimits({ ...DEFAULT_FREE, ...(d.plan_limits?.free ?? {}) });
     setPlans(d.plans ?? []);
+    setBrand({
+      site_name: d.site_name ?? "", logo_url: d.logo_url ?? "", favicon_url: d.favicon_url ?? "",
+      google_site_verification: d.google_site_verification ?? "", seo_keywords: d.seo_keywords ?? "",
+      seo_description: d.seo_description ?? "", footer_text: d.footer_text ?? "",
+    });
   }, [settings.data]);
 
   const save = useMutation({
@@ -60,6 +69,9 @@ export function AdminSettings() {
       cloudinary_accounts: cloudAccounts.filter((a) => a.cloud_name?.trim() && a.api_key?.trim() && a.api_secret?.trim()),
       plan_limits: { free: freeLimits },
       plans: plans.filter((p) => p.key?.trim() && p.name?.trim()),
+      site_name: brand.site_name || null, logo_url: brand.logo_url || null, favicon_url: brand.favicon_url || null,
+      google_site_verification: brand.google_site_verification || null, seo_keywords: brand.seo_keywords || null,
+      seo_description: brand.seo_description || null, footer_text: brand.footer_text || null,
     }) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-settings"] }),
   });
@@ -71,6 +83,7 @@ export function AdminSettings() {
   const togglePro = (k: string) => setPro((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k]));
   const setPlan = (i: number, patch: Partial<Plan>) => setPlans((ps) => ps.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
   const setPlanPeriod = (i: number, per: string, val: string) => setPlans((ps) => ps.map((p, idx) => (idx === i ? { ...p, periods: { ...(p.periods ?? {}), [per]: val } } : p)));
+  const setB = (k: string, v: string) => setBrand((b) => ({ ...b, [k]: v }));
   const togglePlanFeature = (i: number, k: string) => setPlans((ps) => ps.map((p, idx) => { if (idx !== i) return p; const f = p.features ?? []; return { ...p, features: f.includes(k) ? f.filter((x) => x !== k) : [...f, k] }; }));
   const setMethod = (i: number, f: "name" | "value", v: string) => setMethods((ms) => ms.map((m, idx) => (idx === i ? { ...m, [f]: v } : m)));
   const setEA = (i: number, f: keyof EmailAcct, v: string | boolean) => setEmailAccounts((a) => a.map((x, idx) => (idx === i ? { ...x, [f]: v } : x)));
@@ -81,6 +94,24 @@ export function AdminSettings() {
 
   return (
     <div className="stack gap-6">
+      <div className="card">
+        <h2 className="card-title">Site branding &amp; SEO</h2>
+        <p className="muted small">Controls your site name, logo, favicon and how it appears on Google.</p>
+        <div className="form-grid mt-4">
+          <div className="field"><label className="label">Site name</label><input className="input" value={brand.site_name ?? ""} onChange={(e) => setB("site_name", e.target.value)} placeholder="Folio" /></div>
+          <div className="field"><label className="label">SEO keywords</label><input className="input" value={brand.seo_keywords ?? ""} onChange={(e) => setB("seo_keywords", e.target.value)} placeholder="portfolio, resume, personal site" /></div>
+        </div>
+        <div className="field mt-3"><label className="label">SEO description</label><textarea className="textarea" value={brand.seo_description ?? ""} onChange={(e) => setB("seo_description", e.target.value)} placeholder="Short description shown in Google results." /></div>
+        <div className="form-grid mt-3">
+          <ImageUpload label="Logo" value={brand.logo_url ?? ""} onChange={(u) => setB("logo_url", u)} />
+          <ImageUpload label="Favicon (square, e.g. 512×512)" value={brand.favicon_url ?? ""} onChange={(u) => setB("favicon_url", u)} />
+        </div>
+        <div className="form-grid mt-3">
+          <div className="field"><label className="label">Google Search Console verification</label><input className="input" value={brand.google_site_verification ?? ""} onChange={(e) => setB("google_site_verification", e.target.value)} placeholder="content value of the meta tag" /></div>
+          <div className="field"><label className="label">Footer text</label><input className="input" value={brand.footer_text ?? ""} onChange={(e) => setB("footer_text", e.target.value)} placeholder="© 2026 Folio" /></div>
+        </div>
+      </div>
+
       <div className="card">
         <div className="row between wrap gap-3">
           <h2 className="card-title">Plans (Pro / Max / …)</h2>

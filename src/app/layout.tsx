@@ -13,23 +13,40 @@ const bricolage = Bricolage_Grotesque({
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || undefined;
 
-export const metadata: Metadata = {
-  metadataBase: APP_URL ? new URL(APP_URL) : undefined,
-  title: {
-    default: "Folio — a portfolio you own",
-    template: "%s · Folio",
-  },
-  description:
-    "Enter your work once, then dress it in any template. Your data never moves, never breaks, never gets locked to a design.",
-  openGraph: {
-    title: "Folio — a portfolio you own",
-    description: "Build a professional portfolio from beautiful templates. Your data stays yours.",
-    type: "website",
-    url: APP_URL,
-    siteName: "Folio",
-  },
-  twitter: { card: "summary_large_image" },
-};
+interface Branding {
+  site_name?: string | null; favicon_url?: string | null; seo_keywords?: string | null;
+  seo_description?: string | null; google_site_verification?: string | null;
+}
+
+async function getBranding(): Promise<Branding> {
+  const api = process.env.NEXT_PUBLIC_API_URL;
+  if (!api) return {};
+  try {
+    const r = await fetch(`${api}/api/v1/public/branding`, { next: { revalidate: 300 } });
+    if (r.ok) return (await r.json()) as Branding;
+  } catch { /* ignore */ }
+  return {};
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const b = await getBranding();
+  const siteName = b.site_name || "Folio";
+  const description = b.seo_description ||
+    "Enter your work once, then dress it in any template. Your data never moves, never breaks, never gets locked to a design.";
+  const title = `${siteName} — a portfolio you own`;
+  return {
+    metadataBase: APP_URL ? new URL(APP_URL) : undefined,
+    title: { default: title, template: `%s · ${siteName}` },
+    description,
+    keywords: b.seo_keywords || undefined,
+    icons: b.favicon_url ? { icon: b.favicon_url } : undefined,
+    verification: b.google_site_verification ? { google: b.google_site_verification } : undefined,
+    alternates: APP_URL ? { canonical: APP_URL } : undefined,
+    openGraph: { title, description, type: "website", url: APP_URL, siteName },
+    twitter: { card: "summary_large_image", title, description },
+    robots: { index: true, follow: true },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#0a0b12",

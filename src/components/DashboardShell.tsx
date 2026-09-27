@@ -7,7 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 import { useAccount, usePortfolio } from "@/lib/hooks";
-import { useLang, useT } from "@/lib/i18n";
 import { portfolioLabel } from "@/lib/urls";
 
 type NavItem = { href: string; label: string; icon: React.ReactNode; soon?: string; adminOnly?: boolean };
@@ -169,8 +168,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const account = useAccount();
-  const t = useT();
-  const { lang, setLang } = useLang();
   const portfolio = usePortfolio();
   const isAdmin = account.data?.role === "admin";
   const unread = useQuery({ queryKey: ["notif-unread"], queryFn: () => apiFetch<{ count: number }>("/notifications/unread-count"), refetchInterval: 20000, refetchOnWindowFocus: true });
@@ -198,7 +195,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <nav className="dash-nav">
           {NAV.map((group) => (
             <div key={group.section} className="dash-group">
-              <span className="dash-group-label">{t(group.section)}</span>
+              <span className="dash-group-label">{group.section}</span>
               {group.items.filter((it) => !it.adminOnly || isAdmin).map((it) => (
                 <Link
                   key={it.href}
@@ -207,7 +204,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   onClick={() => setOpen(false)}
                 >
                   <span className="ic">{it.icon}</span>
-                  <span>{t(it.label)}</span>
+                  <span>{it.label}</span>
                   {it.soon && <span className="soon">{it.soon}</span>}
                 </Link>
               ))}
@@ -224,13 +221,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               {account.data?.email ?? "…"}
             </span>
           </div>
-          <div className="dash-lang">
-            <select className="lang-select" value={lang} onChange={(e) => setLang(e.target.value as "en" | "bn")} aria-label={t("Language")}>
-              <option value="en">English</option>
-              <option value="bn">বাংলা</option>
-            </select>
-          </div>
-          <button className="btn btn-ghost btn-sm" onClick={signOut}>{t("Sign out")}</button>
+          <button className="btn btn-ghost btn-sm" onClick={signOut}>Sign out</button>
         </div>
       </aside>
 

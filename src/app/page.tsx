@@ -135,6 +135,25 @@ export default function Home() {
         </div>
         <div className="container foot-base muted small">© {new Date().getFullYear()} Folio — part of assetprim.</div>
       </footer>
+      <footer className="site-footer">
+        <div className="site-footer-inner">
+          <span className="muted small">Made with Folio</span>
+          <nav className="site-footer-nav">
+            <a href="/explore">Explore</a>
+            <a href="/faq">FAQ</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+          </nav>
+        </div>
+      </footer>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org", "@type": "WebSite",
+          name: "Folio", url: process.env.NEXT_PUBLIC_APP_URL || undefined,
+          potentialAction: { "@type": "SearchAction", target: `${process.env.NEXT_PUBLIC_APP_URL || ""}/explore?q={query}`, "query-input": "required name=query" },
+        }) }}
+      />
     </>
   );
 }
