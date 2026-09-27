@@ -34,14 +34,14 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         </header>
 
         {sv("about") && p?.about && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="about">
             <h2>About</h2>
             <p className="tm-about">{p.about}</p>
           </section>
         )}
 
         {sv("projects") && data.projects.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="projects">
             <h2>Projects</h2>
             <div className="tm-projects">
               {data.projects.map((pr) => (
@@ -65,7 +65,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("experience") && data.experience.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="experience">
             <h2>Experience</h2>
             {data.experience.map((x) => (
               <div key={x.id} className="tm-row">
@@ -81,7 +81,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("education") && data.education.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="education">
             <h2>Education</h2>
             {data.education.map((ed) => (
               <div key={ed.id} className="tm-row">
@@ -97,7 +97,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("skills") && data.skills.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="skills">
             <h2>Skills</h2>
             <div className="tm-skills">
               {data.skills.map((s) => <span key={s.id} className="tm-skill">{s.name}</span>)}
@@ -106,7 +106,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("services") && data.services.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="services">
             <h2>Services</h2>
             {data.services.map((s) => (
               <div key={s.id} className="tm-row">
@@ -121,7 +121,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("certifications") && data.certifications.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="certifications">
             <h2>Certifications</h2>
             {data.certifications.map((c) => (
               <div key={c.id} className="tm-row">
@@ -136,7 +136,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("achievements") && data.achievements.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="achievements">
             <h2>Achievements</h2>
             {data.achievements.map((a) => (
               <div key={a.id} className="tm-row">
@@ -151,7 +151,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("publications") && data.publications.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="publications">
             <h2>Publications</h2>
             {data.publications.map((pub) => (
               <div key={pub.id} className="tm-row">
@@ -167,7 +167,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("gallery") && data.gallery.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="gallery">
             <h2>Gallery</h2>
             <div className="tm-gallery">
               {data.gallery.map((g) => (
@@ -181,7 +181,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("videos") && data.videos.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="videos">
             <h2>Videos</h2>
             <div className="tm-videos">
               {data.videos.map((v) => {
@@ -202,7 +202,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("testimonials") && data.testimonials.length > 0 && (
-          <section className="tm-sec">
+          <section className="tm-sec" data-sec="testimonials">
             <h2>Testimonials</h2>
             {data.testimonials.map((t) => (
               <blockquote key={t.id} className="tm-quote">

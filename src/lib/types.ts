@@ -25,6 +25,7 @@ export interface Portfolio {
   id: string;
   username: string | null;
   status: PortfolioStatus;
+  visibility: string;
   template: string;
   accent: string;
   seo_title: string | null;

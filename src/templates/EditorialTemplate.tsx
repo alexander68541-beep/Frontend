@@ -70,11 +70,11 @@ export function EditorialTemplate({
 
         <main className="ed-main">
           {sv("about") && p?.about && (
-            <section className="ed-sec"><h2 className="ed-h2">About</h2><p className="ed-about">{p.about}</p></section>
+            <section className="ed-sec" data-sec="skills" data-sec="about"><h2 className="ed-h2">About</h2><p className="ed-about">{p.about}</p></section>
           )}
 
           {sv("projects") && data.projects.length > 0 && (
-            <section className="ed-sec">
+            <section className="ed-sec" data-sec="projects">
               <h2 className="ed-h2">Projects</h2>
               <div className="ed-projects">
                 {data.projects.map((pr) => (
@@ -96,7 +96,7 @@ export function EditorialTemplate({
           )}
 
           {sv("experience") && data.experience.length > 0 && (
-            <section className="ed-sec">
+            <section className="ed-sec" data-sec="experience">
               <h2 className="ed-h2">Experience</h2>
               {data.experience.map((x) => (
                 <div key={x.id} className="ed-row">
@@ -109,7 +109,7 @@ export function EditorialTemplate({
           )}
 
           {sv("education") && data.education.length > 0 && (
-            <section className="ed-sec">
+            <section className="ed-sec" data-sec="education">
               <h2 className="ed-h2">Education</h2>
               {data.education.map((e) => (
                 <div key={e.id} className="ed-row">
@@ -122,7 +122,7 @@ export function EditorialTemplate({
           )}
 
           {sv("services") && data.services.length > 0 && (
-            <section className="ed-sec">
+            <section className="ed-sec" data-sec="services">
               <h2 className="ed-h2">Services</h2>
               {data.services.map((s) => (
                 <div key={s.id} className="ed-row">
@@ -134,7 +134,7 @@ export function EditorialTemplate({
           )}
 
           {sv("certifications") && data.certifications.length > 0 && (
-            <section className="ed-sec">
+            <section className="ed-sec" data-sec="certifications">
               <h2 className="ed-h2">Certifications</h2>
               {data.certifications.map((c) => (
                 <div key={c.id} className="ed-row">
@@ -146,7 +146,7 @@ export function EditorialTemplate({
           )}
 
           {sv("achievements") && data.achievements.length > 0 && (
-            <section className="ed-sec">
+            <section className="ed-sec" data-sec="achievements">
               <h2 className="ed-h2">Achievements</h2>
               {data.achievements.map((a) => (
                 <div key={a.id} className="ed-row">
@@ -158,7 +158,7 @@ export function EditorialTemplate({
           )}
 
           {sv("publications") && data.publications.length > 0 && (
-            <section className="ed-sec">
+            <section className="ed-sec" data-sec="publications">
               <h2 className="ed-h2">Publications</h2>
               {data.publications.map((pub) => (
                 <div key={pub.id} className="ed-row">
@@ -171,7 +171,7 @@ export function EditorialTemplate({
           )}
 
           {sv("testimonials") && data.testimonials.length > 0 && (
-            <section className="ed-sec">
+            <section className="ed-sec" data-sec="testimonials">
               <h2 className="ed-h2">Testimonials</h2>
               {data.testimonials.map((t) => (
                 <blockquote key={t.id} className="ed-quote">
@@ -186,7 +186,7 @@ export function EditorialTemplate({
           )}
 
           {sv("gallery") && data.gallery.length > 0 && (
-            <section className="ed-sec">
+            <section className="ed-sec" data-sec="gallery">
               <h2 className="ed-h2">Gallery</h2>
               <div className="ed-gallery">
                 {data.gallery.map((g) => (
@@ -200,7 +200,7 @@ export function EditorialTemplate({
           )}
 
           {sv("videos") && data.videos.length > 0 && (
-            <section className="ed-sec">
+            <section className="ed-sec" data-sec="videos">
               <h2 className="ed-h2">Videos</h2>
               <div className="ed-videos">
                 {data.videos.map((v) => {

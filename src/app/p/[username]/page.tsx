@@ -4,6 +4,7 @@ import type { PublicPortfolio } from "@/lib/publicTypes";
 import { TemplateRenderer } from "@/templates";
 import { ViewBeacon } from "@/components/ViewBeacon";
 import { ReportLink } from "@/components/ReportLink";
+import { SectionReorder } from "@/components/SectionReorder";
 
 async function getData(username: string): Promise<PublicPortfolio | null> {
   const base = process.env.NEXT_PUBLIC_API_URL;
@@ -58,6 +59,7 @@ export default async function PublicPortfolioPage({
   return (
     <>
       <ViewBeacon username={data.username ?? ""} />
+      <SectionReorder order={data.settings?.section_order} />
       <TemplateRenderer data={data} />
       <div className="report-wrap"><ReportLink username={data.username ?? ""} /></div>
     </>

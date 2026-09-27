@@ -32,14 +32,14 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         </header>
 
         {sv("about") && p?.about && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="about">
             <h2 className="tb-h2">About</h2>
             <p className="tb-about">{p.about}</p>
           </section>
         )}
 
         {sv("projects") && data.projects.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="projects">
             <h2 className="tb-h2">Selected Work</h2>
             <div className="tb-projects">
               {data.projects.map((pr) => (
@@ -66,7 +66,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("experience") && data.experience.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="experience">
             <h2 className="tb-h2">Experience</h2>
             {data.experience.map((x) => (
               <div key={x.id} className="tb-row">
@@ -82,7 +82,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("education") && data.education.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="education">
             <h2 className="tb-h2">Education</h2>
             {data.education.map((ed) => (
               <div key={ed.id} className="tb-row">
@@ -98,7 +98,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("skills") && data.skills.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="skills">
             <h2 className="tb-h2">Skills</h2>
             <div className="tb-skills">
               {data.skills.map((s) => <span key={s.id} className="tb-skill">{s.name}</span>)}
@@ -107,7 +107,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("services") && data.services.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="services">
             <h2 className="tb-h2">Services</h2>
             <div className="tb-cards">
               {data.services.map((s) => (
@@ -122,7 +122,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("certifications") && data.certifications.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="certifications">
             <h2 className="tb-h2">Certifications</h2>
             {data.certifications.map((c) => (
               <div key={c.id} className="tb-row">
@@ -134,7 +134,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("achievements") && data.achievements.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="achievements">
             <h2 className="tb-h2">Achievements</h2>
             {data.achievements.map((a) => (
               <div key={a.id} className="tb-row">
@@ -147,7 +147,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("publications") && data.publications.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="publications">
             <h2 className="tb-h2">Publications</h2>
             {data.publications.map((pub) => (
               <div key={pub.id} className="tb-row">
@@ -160,7 +160,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("gallery") && data.gallery.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="gallery">
             <h2 className="tb-h2">Gallery</h2>
             <div className="tb-gallery">
               {data.gallery.map((g) => (
@@ -174,7 +174,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("videos") && data.videos.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="videos">
             <h2 className="tb-h2">Videos</h2>
             <div className="tb-videos">
               {data.videos.map((v) => {
@@ -194,7 +194,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("testimonials") && data.testimonials.length > 0 && (
-          <section className="tb-sec">
+          <section className="tb-sec" data-sec="testimonials">
             <h2 className="tb-h2">Testimonials</h2>
             <div className="tb-cards">
               {data.testimonials.map((t) => (

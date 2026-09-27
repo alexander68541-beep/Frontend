@@ -32,6 +32,14 @@ export function TemplateBuilder() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-templates"] }); qc.invalidateQueries({ queryKey: ["templates"] }); },
   });
 
+  const [fromKey, setFromKey] = useState(TEMPLATE_KEYS[0] ?? "");
+  const [toKey, setToKey] = useState(TEMPLATE_KEYS[1] ?? TEMPLATE_KEYS[0] ?? "");
+  const [migrated, setMigrated] = useState<number | null>(null);
+  const migrate = useMutation({
+    mutationFn: () => apiFetch<{ migrated: number }>("/admin/templates/migrate", { method: "POST", body: JSON.stringify({ from_key: fromKey, to_key: toKey }) }),
+    onSuccess: (r) => { setMigrated(r.migrated); qc.invalidateQueries({ queryKey: ["admin-portfolios"] }); },
+  });
+
   return (
     <div className="card" style={{ borderColor: "rgba(124,108,255,0.35)" }}>
       <h2 className="card-title">Template listings (admin)</h2>
@@ -83,6 +91,18 @@ export function TemplateBuilder() {
           </table>
         </div>
       )}
+
+      <div className="mt-6" style={{ borderTop: "1px solid var(--line)", paddingTop: 20 }}>
+        <h3 className="card-title">Migrate portfolios</h3>
+        <p className="muted small">Move every portfolio on one template to another (e.g. when retiring a template).</p>
+        <div className="row gap-2 wrap mt-3" style={{ alignItems: "center" }}>
+          <select className="input" style={{ maxWidth: 150 }} value={fromKey} onChange={(e) => setFromKey(e.target.value)}>{TEMPLATE_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}</select>
+          <span className="muted">→</span>
+          <select className="input" style={{ maxWidth: 150 }} value={toKey} onChange={(e) => setToKey(e.target.value)}>{TEMPLATE_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}</select>
+          <Button className="btn-sm" loading={migrate.isPending} disabled={fromKey === toKey} onClick={() => { setMigrated(null); if (confirm(`Move all "${fromKey}" portfolios to "${toKey}"?`)) migrate.mutate(); }}>Migrate</Button>
+          {migrated !== null && <span className="badge badge-published">{migrated} moved</span>}
+        </div>
+      </div>
     </div>
   );
 }

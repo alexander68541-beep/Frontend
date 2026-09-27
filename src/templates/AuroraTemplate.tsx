@@ -33,7 +33,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
         {p?.about && <section className="au-sec"><h2 className="au-h2">About</h2><p className="au-about">{p.about}</p></section>}
 
         {sv("projects") && data.projects.length > 0 && (
-          <section className="au-sec">
+          <section className="au-sec" data-sec="projects">
             <h2 className="au-h2">Work</h2>
             <div className="au-projects">
               {data.projects.map((pr) => (
@@ -52,7 +52,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("experience") && data.experience.length > 0 && (
-          <section className="au-sec"><h2 className="au-h2">Experience</h2>
+          <section className="au-sec" data-sec="experience"><h2 className="au-h2">Experience</h2>
             {data.experience.map((x) => (
               <div key={x.id} className="au-row"><h3>{x.title || x.company}</h3>
                 <p className="au-rowsub">{[x.company, x.location].filter(Boolean).join(" · ")}<span className="au-when">{dateRange(x.start_date, x.end_date, x.is_current)}</span></p>
@@ -62,7 +62,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("education") && data.education.length > 0 && (
-          <section className="au-sec"><h2 className="au-h2">Education</h2>
+          <section className="au-sec" data-sec="education"><h2 className="au-h2">Education</h2>
             {data.education.map((e) => (
               <div key={e.id} className="au-row"><h3>{e.school}</h3>
                 <p className="au-rowsub">{[e.degree, e.field].filter(Boolean).join(", ")}<span className="au-when">{dateRange(e.start_date, e.end_date)}</span></p></div>
@@ -71,7 +71,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("services") && data.services.length > 0 && (
-          <section className="au-sec"><h2 className="au-h2">Services</h2>
+          <section className="au-sec" data-sec="services"><h2 className="au-h2">Services</h2>
             <div className="au-projects">{data.services.map((s) => (
               <div key={s.id} className="au-card"><div className="au-card-body"><h3>{s.title}{s.price ? <span className="au-when">{s.price}</span> : null}</h3>{s.description && <p className="au-muted">{s.description}</p>}</div></div>
             ))}</div>
@@ -79,7 +79,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("certifications") && data.certifications.length > 0 && (
-          <section className="au-sec"><h2 className="au-h2">Certifications</h2>
+          <section className="au-sec" data-sec="certifications"><h2 className="au-h2">Certifications</h2>
             {data.certifications.map((c) => (
               <div key={c.id} className="au-row"><h3>{c.url ? <a href={ext(c.url)} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</h3>
                 <p className="au-rowsub">{c.issuer}<span className="au-when">{c.issue_date}</span></p></div>
@@ -88,7 +88,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("achievements") && data.achievements.length > 0 && (
-          <section className="au-sec"><h2 className="au-h2">Achievements</h2>
+          <section className="au-sec" data-sec="achievements"><h2 className="au-h2">Achievements</h2>
             {data.achievements.map((a) => (
               <div key={a.id} className="au-row"><h3>{a.title}<span className="au-when">{a.date}</span></h3>{a.description && <p className="au-muted">{a.description}</p>}</div>
             ))}
@@ -96,7 +96,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("publications") && data.publications.length > 0 && (
-          <section className="au-sec"><h2 className="au-h2">Publications</h2>
+          <section className="au-sec" data-sec="publications"><h2 className="au-h2">Publications</h2>
             {data.publications.map((pub) => (
               <div key={pub.id} className="au-row"><h3>{pub.url ? <a href={ext(pub.url)} target="_blank" rel="noreferrer">{pub.title}</a> : pub.title}</h3>
                 <p className="au-rowsub">{pub.publisher}<span className="au-when">{pub.date}</span></p>{pub.description && <p className="au-muted">{pub.description}</p>}</div>
@@ -105,7 +105,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("testimonials") && data.testimonials.length > 0 && (
-          <section className="au-sec"><h2 className="au-h2">Testimonials</h2>
+          <section className="au-sec" data-sec="testimonials"><h2 className="au-h2">Testimonials</h2>
             <div className="au-projects">{data.testimonials.map((t) => (
               <div key={t.id} className="au-card"><div className="au-card-body">
                 <p className="au-quote">&ldquo;{t.quote}&rdquo;</p>
@@ -116,13 +116,13 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("skills") && data.skills.length > 0 && (
-          <section className="au-sec"><h2 className="au-h2">Skills</h2>
+          <section className="au-sec" data-sec="skills"><h2 className="au-h2">Skills</h2>
             <div className="au-skills">{data.skills.map((s) => <span key={s.id} className="au-skill">{s.name}</span>)}</div>
           </section>
         )}
 
         {sv("gallery") && data.gallery.length > 0 && (
-          <section className="au-sec"><h2 className="au-h2">Gallery</h2>
+          <section className="au-sec" data-sec="gallery"><h2 className="au-h2">Gallery</h2>
             <div className="au-gallery">{data.gallery.map((g) => (
               <figure key={g.id} className="au-gal"><ZoomImage src={g.image_url} alt={g.caption || ""} />{g.caption && <figcaption>{g.caption}</figcaption>}</figure>
             ))}</div>
@@ -130,7 +130,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("videos") && data.videos.length > 0 && (
-          <section className="au-sec"><h2 className="au-h2">Videos</h2>
+          <section className="au-sec" data-sec="videos"><h2 className="au-h2">Videos</h2>
             <div className="au-videos">{data.videos.map((v) => { const embed = videoEmbed(v.url); return (
               <div key={v.id}>{embed ? <div className="au-video"><iframe src={embed} title={v.title || "Video"} allowFullScreen /></div> : <a className="au-link" href={ext(v.url)} target="_blank" rel="noreferrer">{v.title || v.url}</a>}</div>
             ); })}</div>
