@@ -69,6 +69,7 @@ export default function Home() {
               exactly where it is, never locked to a design, never rebuilt from scratch.
             </p>
             <HeroCta />
+            <div style={{ marginTop: 16 }}><a href="/explore" className="btn">Explore portfolios →</a></div>
             <p className="assure rise d3">Free to start. No code, no lock-in.</p>
           </div>
           <TemplatePreview />
