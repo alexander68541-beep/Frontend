@@ -70,7 +70,7 @@ export function EditorialTemplate({
 
         <main className="ed-main">
           {sv("about") && p?.about && (
-            <section className="ed-sec" data-sec="skills" data-sec="about"><h2 className="ed-h2">About</h2><p className="ed-about">{p.about}</p></section>
+            <section className="ed-sec" data-sec="about"><h2 className="ed-h2">About</h2><p className="ed-about">{p.about}</p></section>
           )}
 
           {sv("projects") && data.projects.length > 0 && (

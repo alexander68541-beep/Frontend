@@ -30,10 +30,10 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           )}
         </header>
 
-        {p?.about && <section className="au-sec"><h2 className="au-h2">About</h2><p className="au-about">{p.about}</p></section>}
+        {p?.about && <section className="au-sec" data-sec="about"><h2 className="au-h2">About</h2><p className="au-about">{p.about}</p></section>}
 
         {sv("projects") && data.projects.length > 0 && (
-          <section className="au-sec" data-sec="projects">
+          <section className="au-sec">
             <h2 className="au-h2">Work</h2>
             <div className="au-projects">
               {data.projects.map((pr) => (

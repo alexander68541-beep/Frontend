@@ -39,7 +39,7 @@ export function BoldTemplate({ data }: { data: PublicPortfolio }) {
         )}
 
         {sv("projects") && data.projects.length > 0 && (
-          <section className="tb-sec" data-sec="projects">
+          <section className="tb-sec">
             <h2 className="tb-h2">Selected Work</h2>
             <div className="tb-projects">
               {data.projects.map((pr) => (
