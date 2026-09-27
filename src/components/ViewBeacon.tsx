@@ -14,7 +14,7 @@ export function ViewBeacon({ username }: { username: string }) {
     }
     const base = process.env.NEXT_PUBLIC_API_URL;
     if (!base) return;
-    fetch(`${base}/api/v1/public/${encodeURIComponent(username)}/view`, { method: "POST", keepalive: true }).catch(() => {});
+    fetch(`${base}/api/v1/public/${encodeURIComponent(username)}/view`, { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ referrer: document.referrer || null }) }).catch(() => {});
   }, [username]);
   return null;
 }

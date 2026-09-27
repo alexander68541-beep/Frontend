@@ -870,3 +870,12 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 
 /* customize section reorder rows */
 .reorder-row { padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+
+/* ---------- analytics breakdown bars ---------- */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
+.hbar-row { display: grid; grid-template-columns: 130px 1fr 44px; align-items: center; gap: 10px; }
+.hbar-label { font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hbar-track { height: 10px; background: rgba(128,128,128,0.15); border-radius: 999px; overflow: hidden; }
+.hbar-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--iris), var(--teal)); }
+.hbar-count { font-size: 12px; color: var(--muted); text-align: right; }
