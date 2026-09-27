@@ -12,7 +12,7 @@ async function getData(username: string): Promise<PublicPortfolio | null> {
   if (!base) return null;
   try {
     const res = await fetch(`${base}/api/v1/public/${encodeURIComponent(username)}`, {
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     if (!res.ok) return null;
     return (await res.json()) as PublicPortfolio;
@@ -46,6 +46,7 @@ export async function generateMetadata({
       card: "summary", title, description,
       images: image ? [image] : undefined,
     },
+    icons: image ? { icon: image } : undefined,
   };
 }
 
@@ -58,11 +59,27 @@ export default async function PublicPortfolioPage({
   const data = await getData(username);
   if (!data) notFound();
   const stack = fontStack(data.settings?.font);
+  const p = data.profile;
+  const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+  const pageUrl = root ? `https://${username}.${root}` : undefined;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: p?.display_name || username,
+    jobTitle: p?.title || undefined,
+    description: p?.bio || p?.tagline || undefined,
+    image: p?.avatar_url || undefined,
+    email: p?.email ? `mailto:${p.email}` : undefined,
+    address: p?.location || undefined,
+    url: pageUrl,
+    sameAs: (data.links || []).map((l) => l.url).filter(Boolean),
+  };
   return (
     <>
       {stack && (
         <style dangerouslySetInnerHTML={{ __html: `#folio-font, #folio-font * { font-family: ${stack} !important; }` }} />
       )}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <ViewBeacon username={data.username ?? ""} />
       <SectionReorder order={data.settings?.section_order} />
       <div id="folio-font"><TemplateRenderer data={data} /></div>
