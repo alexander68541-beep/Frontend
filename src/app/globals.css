@@ -1024,3 +1024,10 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .pricing-limits span { color: var(--muted); }
 .legal ol { padding-left: 20px; }
 .legal ol li { margin: 8px 0; }
+
+/* pricing period toggle */
+.pricing-wrap { display: flex; flex-direction: column; gap: 24px; }
+.period-toggle { display: inline-flex; align-self: center; gap: 4px; padding: 4px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); }
+.period-btn { border: none; background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }
+.period-btn.on { background: linear-gradient(90deg, var(--iris), var(--teal)); color: #fff; }
+.period-btn:hover:not(.on) { color: var(--text); }
