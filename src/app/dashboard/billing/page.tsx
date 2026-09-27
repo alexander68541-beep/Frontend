@@ -10,7 +10,7 @@ interface Method { name: string; value: string; }
 interface Feature { key: string; label: string; desc: string; pro: boolean; has: boolean; }
 interface Plan { key: string; name: string; features?: string[]; periods?: Record<string, string>; highlight?: boolean; }
 interface Info {
-  plan: string; is_pro: boolean; currency: string | null; payment_note: string | null;
+  plan: string; is_pro: boolean; plan_expires_at: string | null; currency: string | null; payment_note: string | null;
   payment_methods: Method[]; features: Feature[]; plans: Plan[];
 }
 interface Payment { id: string; method: string; plan?: string; period?: string; amount: string | null; tx_id: string | null; status: string; }
@@ -69,6 +69,13 @@ export default function BillingPage() {
           <div>
             <h2 className="card-title">You&apos;re on {current === "free" ? "Free" : (plans.find((p) => p.key === current)?.name || current)}</h2>
             <p className="muted small mt-1">You can upgrade or switch plans below{current !== "free" ? ", or downgrade to Free" : ""}.</p>
+            {current !== "free" && (
+              d.plan_expires_at ? (() => {
+                const ms = new Date(d.plan_expires_at).getTime() - Date.now();
+                const days = Math.max(0, Math.ceil(ms / 86400000));
+                return <p className="small mt-1" style={{ color: days <= 5 ? "#e0a458" : "var(--muted)" }}>⏳ Expires {new Date(d.plan_expires_at!).toLocaleDateString()} — {days} day{days === 1 ? "" : "s"} left</p>;
+              })() : <p className="muted small mt-1">♾️ Lifetime — never expires</p>
+            )}
           </div>
           <span className={`badge ${current !== "free" ? "badge-published" : ""}`}><span className="dot" />{current}</span>
         </div>
