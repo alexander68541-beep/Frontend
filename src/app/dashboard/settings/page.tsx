@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { apiFetch, ApiError } from "@/lib/api";
-import type { Account } from "@/lib/types";
+import type { Account, Portfolio } from "@/lib/types";
 import { useAccount, usePortfolio } from "@/lib/hooks";
 import { portfolioLabel } from "@/lib/urls";
 import { Button } from "@/components/ui/Button";
