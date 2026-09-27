@@ -8,8 +8,11 @@ type Limits = Record<string, Record<string, number>>;
 
 const LIMIT_LABELS: { key: string; label: string }[] = [
   { key: "projects", label: "Projects" }, { key: "skills", label: "Skills" },
-  { key: "experience", label: "Experience" }, { key: "gallery", label: "Gallery" },
-  { key: "services", label: "Services" }, { key: "videos", label: "Videos" },
+  { key: "experience", label: "Experience" }, { key: "education", label: "Education" },
+  { key: "gallery", label: "Gallery" }, { key: "services", label: "Services" },
+  { key: "certifications", label: "Certifications" }, { key: "achievements", label: "Achievements" },
+  { key: "testimonials", label: "Testimonials" }, { key: "publications", label: "Publications" },
+  { key: "videos", label: "Videos" }, { key: "links", label: "Links" },
 ];
 const PERIODS = ["monthly", "yearly", "lifetime"] as const;
 const SUFFIX: Record<string, string> = { monthly: "/mo", yearly: "/yr", lifetime: " lifetime" };
