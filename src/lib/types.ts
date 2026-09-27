@@ -32,6 +32,7 @@ export interface Portfolio {
   seo_description: string | null;
   seo_image: string | null;
   settings?: { font?: string; hidden?: string[]; section_order?: string[] };
+  published_at?: string | null;
   is_primary: boolean;
   username_change_count: number;
   username_changed_at: string | null;

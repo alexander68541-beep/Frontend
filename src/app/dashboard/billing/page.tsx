@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
@@ -34,6 +34,21 @@ export default function BillingPage() {
     d?.features.forEach((f) => { m[f.key] = f.label; });
     return m;
   }, [d?.features]);
+
+  const availablePeriods = useMemo(
+    () => PERIODS.filter((per) => (d?.plans ?? []).some((pl) => pl.periods?.[per])),
+    [d?.plans],
+  );
+  useEffect(() => {
+    if (availablePeriods.length && !availablePeriods.includes(period as typeof PERIODS[number])) {
+      setPeriod(availablePeriods[0]);
+    }
+  }, [availablePeriods, period]);
+  // auto-select the only plan
+  useEffect(() => {
+    const ps = d?.plans ?? [];
+    if (!planKey && ps.length === 1) setPlanKey(ps[0].key);
+  }, [d?.plans, planKey]);
 
   const selectedPlan = d?.plans.find((p) => p.key === planKey);
   const price = selectedPlan?.periods?.[period] ?? "";
@@ -73,11 +88,13 @@ export default function BillingPage() {
       ) : (
         <>
           {/* period toggle */}
-          <div className="row gap-2 wrap">
-            {PERIODS.map((p) => (
-              <button key={p} className={`btn btn-sm ${period === p ? "btn-accent" : ""}`} onClick={() => setPeriod(p)} style={{ textTransform: "capitalize" }}>{p}</button>
-            ))}
-          </div>
+          {availablePeriods.length > 1 && (
+            <div className="row gap-2 wrap">
+              {availablePeriods.map((p) => (
+                <button key={p} className={`btn btn-sm ${period === p ? "btn-accent" : ""}`} onClick={() => setPeriod(p)} style={{ textTransform: "capitalize" }}>{p}</button>
+              ))}
+            </div>
+          )}
 
           {/* plan cards */}
           <div className="tpl-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>

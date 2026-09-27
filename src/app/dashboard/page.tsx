@@ -76,14 +76,25 @@ export default function OverviewPage() {
                 ? portfolioLabel(pf.username)
                 : "Claim a username below to be able to publish."}
             </p>
+            {published && (
+              <p className="muted small mt-1">
+                Public page shows your last published version{pf.published_at ? ` (${new Date(pf.published_at).toLocaleString()})` : ""}. Edit freely, then click <strong>Publish changes</strong> to update it.
+              </p>
+            )}
             {statusErr && <div className="alert alert-error mt-2">{statusErr}</div>}
+            {setStatus.isSuccess && published && <div className="alert alert-ok mt-2">Public page updated ✓</div>}
           </div>
-          <div className="row gap-3">
-            <a className="btn" href="/preview" target="_blank" rel="noreferrer">Preview</a>
+          <div className="row gap-3 wrap">
+            <a className="btn" href="/preview" target="_blank" rel="noreferrer">Preview draft</a>
             {published ? (
-              <Button loading={setStatus.isPending} onClick={() => setStatus.mutate("unpublished")}>
-                Unpublish
-              </Button>
+              <>
+                <Button variant="accent" loading={setStatus.isPending} onClick={() => setStatus.mutate("published")}>
+                  Publish changes
+                </Button>
+                <Button loading={setStatus.isPending} onClick={() => setStatus.mutate("unpublished")}>
+                  Unpublish
+                </Button>
+              </>
             ) : (
               <Button
                 variant="accent"
