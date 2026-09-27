@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 import { useAccount, usePortfolio } from "@/lib/hooks";
+import { Brand } from "@/components/Brand";
 import { portfolioLabel } from "@/lib/urls";
 
 type NavItem = { href: string; label: string; icon: React.ReactNode; soon?: string; adminOnly?: boolean };
@@ -188,8 +189,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <div className={`dash ${open ? "is-open" : ""}`}>
       <aside className="dash-side">
         <Link href="/" className="dash-brand">
-          <span className="mark" aria-hidden />
-          Folio
+          <Brand className="dash-brand-inner" />
         </Link>
 
         <nav className="dash-nav">
