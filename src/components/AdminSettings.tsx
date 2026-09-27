@@ -76,26 +76,17 @@ export function AdminSettings() {
   const setEA = (i: number, f: keyof EmailAcct, v: string | boolean) => setEmailAccounts((a) => a.map((x, idx) => (idx === i ? { ...x, [f]: v } : x)));
   const setCA = (i: number, f: keyof CloudAcct, v: string | boolean) => setCloudAccounts((a) => a.map((x, idx) => (idx === i ? { ...x, [f]: v } : x)));
 
+  if (settings.isLoading) return <p className="muted">Loading settings…</p>;
+  if (settings.isError) return <div className="alert alert-error">Couldn&apos;t load settings. Make sure the latest DB migrations are applied, then retry.</div>;
+
   return (
     <div className="stack gap-6">
       <div className="card">
-        <h2 className="card-title">Pricing &amp; features</h2>
-        <div className="stack gap-4 mt-4">
-          <div className="form-grid">
-            <div className="field"><label className="label">Pro price</label><input className="input" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="10" /></div>
-            <div className="field"><label className="label">Currency</label><input className="input" value={currency} onChange={(e) => setCurrency(e.target.value)} placeholder="USD" /></div>
-          </div>
-          <div><label className="label">Which features are Pro?</label>
-            <div className="stack gap-2 mt-2">{FEATURE_CATALOG.map((f) => (
-              <label key={f.key} className="check-row"><input type="checkbox" checked={pro.includes(f.key)} onChange={() => togglePro(f.key)} /><span><strong>{f.label}</strong> — <span className="muted">{f.desc}</span></span></label>
-            ))}</div>
-          </div>
+        <div className="row between wrap gap-3">
+          <h2 className="card-title">Plans (Pro / Max / …)</h2>
+          <div className="field" style={{ maxWidth: 130 }}><label className="label">Currency</label><input className="input" value={currency} onChange={(e) => setCurrency(e.target.value)} placeholder="USD" /></div>
         </div>
-      </div>
-
-      <div className="card">
-        <h2 className="card-title">Plans (Pro / Max / …)</h2>
-        <p className="muted small">Define tiers, their monthly/yearly/lifetime prices, and which features they advertise. Any paid plan unlocks the pro-gated features above.</p>
+        <p className="muted small">Define tiers, their monthly/yearly/lifetime prices, and which features they advertise. Any paid plan unlocks all premium features.</p>
         <div className="stack gap-4 mt-4">
           {plans.map((pl, i) => (
             <div key={i} className="card" style={{ background: "var(--surface-2, rgba(255,255,255,0.02))" }}>
@@ -170,7 +161,7 @@ export function AdminSettings() {
               <input className="input" style={{ maxWidth: 110 }} placeholder="Label" value={a.name ?? ""} onChange={(e) => setCA(i, "name", e.target.value)} />
               <input className="input" style={{ maxWidth: 150 }} placeholder="Cloud name" value={a.cloud_name ?? ""} onChange={(e) => setCA(i, "cloud_name", e.target.value)} />
               <input className="input" style={{ maxWidth: 150 }} placeholder="API key" value={a.api_key ?? ""} onChange={(e) => setCA(i, "api_key", e.target.value)} />
-              <input className="input" style={{ flex: 1, minWidth: 150 }} type="password" placeholder="API secret" value={a.api_secret ?? ""} onChange={(e) => setCA(i, "api_secret", e.target.value)} />
+              <input className="input" style={{ flex: 1, minWidth: 150 }} placeholder="API secret" value={a.api_secret ?? ""} onChange={(e) => setCA(i, "api_secret", e.target.value)} />
               <label className="check-row"><input type="checkbox" checked={a.active !== false} onChange={(e) => setCA(i, "active", e.target.checked)} /><span>on</span></label>
               <button className="btn btn-sm btn-danger" onClick={() => setCloudAccounts((x) => x.filter((_, idx) => idx !== i))}>Remove</button>
             </div>
