@@ -1,0 +1,108 @@
+"use client";
+
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
+import { TEMPLATE_KEYS } from "@/templates";
+import { Button } from "@/components/ui/Button";
+import { ImageUpload } from "@/components/ImageUpload";
+
+interface CT { id: string; key: string; name: string; category: string; plan: string; is_published: boolean; preview_url: string | null; }
+
+export function TemplateBuilder() {
+  const qc = useQueryClient();
+  const list = useQuery({ queryKey: ["admin-templates"], queryFn: () => apiFetch<CT[]>("/admin/templates"), refetchOnWindowFocus: true });
+
+  const [key, setKey] = useState(TEMPLATE_KEYS[0] ?? "");
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("Custom");
+  const [plan, setPlan] = useState("free");
+  const [preview, setPreview] = useState("");
+
+  const create = useMutation({
+    mutationFn: () => apiFetch("/admin/templates", { method: "POST", body: JSON.stringify({ key, name, category, plan, is_published: true, preview_url: preview || null }) }),
+    onSuccess: () => { setName(""); setPreview(""); qc.invalidateQueries({ queryKey: ["admin-templates"] }); qc.invalidateQueries({ queryKey: ["templates"] }); },
+  });
+  const patch = useMutation({
+    mutationFn: (v: { id: string; body: Record<string, unknown> }) => apiFetch(`/admin/templates/${v.id}`, { method: "PATCH", body: JSON.stringify(v.body) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-templates"] }); qc.invalidateQueries({ queryKey: ["templates"] }); },
+  });
+  const del = useMutation({
+    mutationFn: (id: string) => apiFetch(`/admin/templates/${id}`, { method: "DELETE" }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-templates"] }); qc.invalidateQueries({ queryKey: ["templates"] }); },
+  });
+
+  const [fromKey, setFromKey] = useState(TEMPLATE_KEYS[0] ?? "");
+  const [toKey, setToKey] = useState(TEMPLATE_KEYS[1] ?? TEMPLATE_KEYS[0] ?? "");
+  const [migrated, setMigrated] = useState<number | null>(null);
+  const migrate = useMutation({
+    mutationFn: () => apiFetch<{ migrated: number }>("/admin/templates/migrate", { method: "POST", body: JSON.stringify({ from_key: fromKey, to_key: toKey }) }),
+    onSuccess: (r) => { setMigrated(r.migrated); qc.invalidateQueries({ queryKey: ["admin-portfolios"] }); },
+  });
+
+  return (
+    <div className="card" style={{ borderColor: "rgba(124,108,255,0.35)" }}>
+      <h2 className="card-title">Template listings (admin)</h2>
+      <p className="muted small">
+        Templates are coded in <code>src/templates/</code> and registered by key. List them here,
+        set category/plan, add an optional preview image, and turn on/off.
+        Coded keys: {TEMPLATE_KEYS.join(", ")}.
+      </p>
+      <div className="form-grid mt-4">
+        <div className="field"><label className="label">Coded key</label>
+          <select className="input" value={key} onChange={(e) => setKey(e.target.value)}>{TEMPLATE_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}</select></div>
+        <div className="field"><label className="label">Name</label><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Aurora" /></div>
+        <div className="field"><label className="label">Category</label><input className="input" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Creative" /></div>
+        <div className="field"><label className="label">Plan</label>
+          <select className="input" value={plan} onChange={(e) => setPlan(e.target.value)}><option value="free">Free</option><option value="pro">Pro</option></select></div>
+      </div>
+      <div className="mt-4"><ImageUpload label="Preview image (optional — else a live preview is shown)" value={preview} onChange={setPreview} /></div>
+      <div className="mt-4"><Button variant="accent" loading={create.isPending} disabled={!name.trim() || !key} onClick={() => create.mutate()}>Add listing</Button></div>
+
+      {(list.data ?? []).length > 0 && (
+        <div className="table-wrap mt-6">
+          <table className="tbl">
+            <thead><tr><th>Name</th><th>Key</th><th>Category</th><th>Plan</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {(list.data ?? []).map((t) => {
+                const coded = TEMPLATE_KEYS.includes(t.key);
+                return (
+                  <tr key={t.id}>
+                    <td>{t.name}{!coded && <span className="badge badge-error" style={{ marginLeft: 8 }}>no code</span>}</td>
+                    <td>{t.key}</td><td>{t.category}</td>
+                    <td>
+                      <select className="input" style={{ padding: "4px 8px", maxWidth: 96 }} value={t.plan} onChange={(e) => patch.mutate({ id: t.id, body: { plan: e.target.value } })}>
+                        <option value="free">free</option><option value="pro">pro</option>
+                      </select>
+                    </td>
+                    <td><span className={`badge ${t.is_published ? "badge-published" : "badge-draft"}`}>{t.is_published ? "Active" : "Inactive"}</span></td>
+                    <td>
+                      <div className="row gap-2 wrap">
+                        <button className="btn btn-sm" onClick={() => patch.mutate({ id: t.id, body: { is_published: !t.is_published } })}>
+                          {t.is_published ? "Deactivate" : "Activate"}
+                        </button>
+                        <button className="btn btn-sm btn-danger" onClick={() => { if (confirm("Delete listing?")) del.mutate(t.id); }}>Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="mt-6" style={{ borderTop: "1px solid var(--line)", paddingTop: 20 }}>
+        <h3 className="card-title">Migrate portfolios</h3>
+        <p className="muted small">Move every portfolio on one template to another (e.g. when retiring a template).</p>
+        <div className="row gap-2 wrap mt-3" style={{ alignItems: "center" }}>
+          <select className="input" style={{ maxWidth: 150 }} value={fromKey} onChange={(e) => setFromKey(e.target.value)}>{TEMPLATE_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}</select>
+          <span className="muted">→</span>
+          <select className="input" style={{ maxWidth: 150 }} value={toKey} onChange={(e) => setToKey(e.target.value)}>{TEMPLATE_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}</select>
+          <Button className="btn-sm" loading={migrate.isPending} disabled={fromKey === toKey} onClick={() => { setMigrated(null); if (confirm(`Move all "${fromKey}" portfolios to "${toKey}"?`)) migrate.mutate(); }}>Migrate</Button>
+          {migrated !== null && <span className="badge badge-published">{migrated} moved</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
