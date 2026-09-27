@@ -41,7 +41,8 @@ export function AdminSettings() {
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [emailAccounts, setEmailAccounts] = useState<EmailAcct[]>([]);
   const [cloudAccounts, setCloudAccounts] = useState<CloudAcct[]>([]);
-  const [freeLimits, setFreeLimits] = useState<Record<string, number>>({});
+  const [planLimits, setPlanLimits] = useState<Record<string, Record<string, number>>>({});
+  const [limitsPlan, setLimitsPlan] = useState<string>("free");
   const [plans, setPlans] = useState<Plan[]>([]);
   const [brand, setBrand] = useState<Record<string, string>>({});
   const [testRes, setTestRes] = useState<{ ok: boolean; detail?: string; error?: string } | null>(null);
@@ -52,7 +53,7 @@ export function AdminSettings() {
     setMethods(d.payment_methods ?? []); setPro(d.pro_features ?? []); setFlags(d.flags ?? {});
     setEmailEnabled(d.email_enabled ?? true);
     setEmailAccounts(d.email_accounts ?? []); setCloudAccounts(d.cloudinary_accounts ?? []);
-    setFreeLimits({ ...DEFAULT_FREE, ...(d.plan_limits?.free ?? {}) });
+    setPlanLimits(d.plan_limits ?? {});
     setPlans(d.plans ?? []);
     setBrand({
       site_name: d.site_name ?? "", logo_url: d.logo_url ?? "", favicon_url: d.favicon_url ?? "",
@@ -70,7 +71,7 @@ export function AdminSettings() {
       email_enabled: emailEnabled,
       email_accounts: emailAccounts.filter((a) => a.from?.trim() && a.api_key?.trim()),
       cloudinary_accounts: cloudAccounts.filter((a) => a.cloud_name?.trim() && a.api_key?.trim() && a.api_secret?.trim()),
-      plan_limits: { free: freeLimits },
+      plan_limits: planLimits,
       plans: plans.filter((p) => p.key?.trim() && p.name?.trim()),
       site_name: brand.site_name || null, logo_url: brand.logo_url || null, favicon_url: brand.favicon_url || null,
       google_site_verification: brand.google_site_verification || null, seo_keywords: brand.seo_keywords || null,
@@ -89,6 +90,16 @@ export function AdminSettings() {
   const setPlan = (i: number, patch: Partial<Plan>) => setPlans((ps) => ps.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
   const setPlanPeriod = (i: number, per: string, val: string) => setPlans((ps) => ps.map((p, idx) => (idx === i ? { ...p, periods: { ...(p.periods ?? {}), [per]: val } } : p)));
   const setB = (k: string, v: string) => setBrand((b) => ({ ...b, [k]: v }));
+  const setLimit = (entity: string, v: string) => setPlanLimits((pl) => {
+    const cur = { ...(pl[limitsPlan] || {}) };
+    if (v.trim() === "") delete cur[entity]; else cur[entity] = Math.max(0, Number(v) || 0);
+    return { ...pl, [limitsPlan]: cur };
+  });
+  const limitVal = (entity: string): string => {
+    const v = planLimits[limitsPlan]?.[entity];
+    if (v !== undefined) return String(v);
+    return limitsPlan === "free" ? String(DEFAULT_FREE[entity] ?? "") : "";
+  };
   const togglePlanFeature = (i: number, k: string) => setPlans((ps) => ps.map((p, idx) => { if (idx !== i) return p; const f = p.features ?? []; return { ...p, features: f.includes(k) ? f.filter((x) => x !== k) : [...f, k] }; }));
   const setMethod = (i: number, f: "name" | "value", v: string) => setMethods((ms) => ms.map((m, idx) => (idx === i ? { ...m, [f]: v } : m)));
   const setEA = (i: number, f: keyof EmailAcct, v: string | boolean) => setEmailAccounts((a) => a.map((x, idx) => (idx === i ? { ...x, [f]: v } : x)));
@@ -219,13 +230,21 @@ export function AdminSettings() {
       </div>
 
       <div className="card">
-        <h2 className="card-title">Free plan limits</h2>
-        <p className="muted small">Max items a Free user can add per section. Pro/Max are unlimited. Set 0 to block a section on Free.</p>
+        <div className="row between wrap gap-3">
+          <h2 className="card-title">Plan limits</h2>
+          <div className="field" style={{ maxWidth: 160 }}><label className="label">Editing plan</label>
+            <select className="input" value={limitsPlan} onChange={(e) => setLimitsPlan(e.target.value)}>
+              <option value="free">free</option>
+              {plans.filter((p) => p.key?.trim()).map((p) => <option key={p.key} value={p.key}>{p.key}</option>)}
+            </select>
+          </div>
+        </div>
+        <p className="muted small">Max items per section for the selected plan. Leave blank = unlimited. Set 0 to block a section. (Free defaults shown; edit to override.)</p>
         <div className="form-grid mt-4">
           {LIMIT_ENTITIES.map((k) => (
             <div key={k} className="field">
               <label className="label" style={{ textTransform: "capitalize" }}>{k}</label>
-              <input className="input" type="number" min={0} value={freeLimits[k] ?? DEFAULT_FREE[k]} onChange={(e) => setFreeLimits((p) => ({ ...p, [k]: Math.max(0, Number(e.target.value) || 0) }))} />
+              <input className="input" type="number" min={0} placeholder="unlimited" value={limitVal(k)} onChange={(e) => setLimit(k, e.target.value)} />
             </div>
           ))}
         </div>

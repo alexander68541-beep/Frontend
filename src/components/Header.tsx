@@ -46,6 +46,9 @@ export function Header() {
               <Link href="/pricing" className="btn btn-ghost btn-sm">
                 Pricing
               </Link>
+              <Link href="/docs" className="btn btn-ghost btn-sm">
+                Docs
+              </Link>
               <Link href="/explore" className="btn btn-ghost btn-sm">
                 Explore
               </Link>
