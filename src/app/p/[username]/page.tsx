@@ -5,6 +5,7 @@ import { TemplateRenderer } from "@/templates";
 import { ViewBeacon } from "@/components/ViewBeacon";
 import { ReportLink } from "@/components/ReportLink";
 import { SectionReorder } from "@/components/SectionReorder";
+import { SocialBar } from "@/components/SocialBar";
 import { fontStack } from "@/lib/fonts";
 
 async function getData(username: string): Promise<PublicPortfolio | null> {
@@ -83,6 +84,7 @@ export default async function PublicPortfolioPage({
       <ViewBeacon username={data.username ?? ""} />
       <SectionReorder order={data.settings?.section_order} />
       <div id="folio-font"><TemplateRenderer data={data} /></div>
+      <SocialBar username={data.username ?? ""} />
       <div className="report-wrap"><ReportLink username={data.username ?? ""} /></div>
     </>
   );
