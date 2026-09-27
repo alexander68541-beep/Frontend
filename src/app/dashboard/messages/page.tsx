@@ -18,7 +18,7 @@ export default function MessagesPage() {
 
   return (
     <div className="stack gap-6">
-      <div><h1 className="page-title">Messages</h1><p className="muted">Chat with the Folio team — e.g. request a custom template.</p></div>
+      <div><h1 className="page-title">Support</h1><p className="muted">Chat with our team — questions, help, or request a custom-designed portfolio.</p></div>
       <div className="card">
         <div className="chat">
           {(thread.data ?? []).length === 0 ? (

@@ -19,6 +19,7 @@ interface Settings {
   plans: Plan[];
   site_name: string | null; logo_url: string | null; favicon_url: string | null;
   google_site_verification: string | null; seo_keywords: string | null; seo_description: string | null; footer_text: string | null;
+  contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_address: string | null; contact_note: string | null;
 }
 
 const LIMIT_ENTITIES = ["projects","gallery","skills","experience","education","services","certifications","achievements","testimonials","publications","videos","links"];
@@ -57,6 +58,8 @@ export function AdminSettings() {
       site_name: d.site_name ?? "", logo_url: d.logo_url ?? "", favicon_url: d.favicon_url ?? "",
       google_site_verification: d.google_site_verification ?? "", seo_keywords: d.seo_keywords ?? "",
       seo_description: d.seo_description ?? "", footer_text: d.footer_text ?? "",
+      contact_email: d.contact_email ?? "", contact_phone: d.contact_phone ?? "", contact_whatsapp: d.contact_whatsapp ?? "",
+      contact_address: d.contact_address ?? "", contact_note: d.contact_note ?? "",
     });
   }, [settings.data]);
 
@@ -72,6 +75,8 @@ export function AdminSettings() {
       site_name: brand.site_name || null, logo_url: brand.logo_url || null, favicon_url: brand.favicon_url || null,
       google_site_verification: brand.google_site_verification || null, seo_keywords: brand.seo_keywords || null,
       seo_description: brand.seo_description || null, footer_text: brand.footer_text || null,
+      contact_email: brand.contact_email || null, contact_phone: brand.contact_phone || null, contact_whatsapp: brand.contact_whatsapp || null,
+      contact_address: brand.contact_address || null, contact_note: brand.contact_note || null,
     }) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-settings"] }),
   });
@@ -110,6 +115,18 @@ export function AdminSettings() {
           <div className="field"><label className="label">Google Search Console verification</label><input className="input" value={brand.google_site_verification ?? ""} onChange={(e) => setB("google_site_verification", e.target.value)} placeholder="content value of the meta tag" /></div>
           <div className="field"><label className="label">Footer text</label><input className="input" value={brand.footer_text ?? ""} onChange={(e) => setB("footer_text", e.target.value)} placeholder="© 2026 Folio" /></div>
         </div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">Contact details</h2>
+        <p className="muted small">Shown on your public Contact page and linked from the home page &amp; templates.</p>
+        <div className="form-grid mt-4">
+          <div className="field"><label className="label">Email</label><input className="input" value={brand.contact_email ?? ""} onChange={(e) => setB("contact_email", e.target.value)} placeholder="hello@yoursite.com" /></div>
+          <div className="field"><label className="label">Phone</label><input className="input" value={brand.contact_phone ?? ""} onChange={(e) => setB("contact_phone", e.target.value)} placeholder="+880 1XXXXXXXXX" /></div>
+          <div className="field"><label className="label">WhatsApp</label><input className="input" value={brand.contact_whatsapp ?? ""} onChange={(e) => setB("contact_whatsapp", e.target.value)} placeholder="+880 1XXXXXXXXX" /></div>
+          <div className="field"><label className="label">Address</label><input className="input" value={brand.contact_address ?? ""} onChange={(e) => setB("contact_address", e.target.value)} placeholder="City, Country" /></div>
+        </div>
+        <div className="field mt-3"><label className="label">Contact note</label><textarea className="textarea" value={brand.contact_note ?? ""} onChange={(e) => setB("contact_note", e.target.value)} placeholder="Optional message shown on the contact page." /></div>
       </div>
 
       <div className="card">

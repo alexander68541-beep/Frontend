@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
+import { Brand } from "@/components/Brand";
 
 export function Header() {
   const router = useRouter();
@@ -29,10 +30,7 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="container inner">
-        <Link href="/" className="brand" aria-label="Folio home">
-          <span className="mark" aria-hidden />
-          Folio
-        </Link>
+        <Link href="/" className="brand" aria-label="Home"><Brand /></Link>
         <nav className="row">
           {signedIn === null ? null : signedIn ? (
             <>
@@ -45,6 +43,9 @@ export function Header() {
             </>
           ) : (
             <>
+              <Link href="/explore" className="btn btn-ghost btn-sm">
+                Explore
+              </Link>
               <Link href="/login" className="btn btn-ghost btn-sm">
                 Log in
               </Link>

@@ -48,6 +48,10 @@ export default function TemplatesPage() {
 
   return (
     <div className="stack gap-6">
+      <div className="custom-portfolio card">
+        <div><strong>Want a custom-designed portfolio?</strong><p className="muted small mt-1">Tell us what you need — our team can build a bespoke design for you.</p></div>
+        <a href="/dashboard/messages" className="btn btn-accent btn-sm">Contact support</a>
+      </div>
       <div className="row between wrap gap-3">
         <div><h1 className="page-title">Templates</h1><p className="muted">Pick a template and accent. Your data never changes.</p></div>
         <div className="row gap-2 wrap">

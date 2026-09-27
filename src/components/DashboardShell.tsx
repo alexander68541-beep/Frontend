@@ -149,7 +149,6 @@ const NAV: { section: string; items: NavItem[] }[] = [
     { href: "/dashboard/links", label: "Social links", icon: I.links },
     { href: "/dashboard/contact", label: "Contact", icon: I.contact },
     { href: "/dashboard/resume", label: "Resume / CV", icon: I.resume },
-    { href: "/dashboard/messages", label: "Messages", icon: I.testimonials },
     { href: "/dashboard/inbox", label: "Contact inbox", icon: I.contact },
   ]},
   { section: "Optional", items: [
@@ -160,6 +159,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
     { href: "/dashboard/billing", label: "Upgrade", icon: I.appearance },
     { href: "/dashboard/settings", label: "Settings", icon: I.settings },
     { href: "/dashboard/admin", label: "Admin", icon: I.settings, adminOnly: true },
+    { href: "/dashboard/messages", label: "Support", icon: I.testimonials },
   ]},
 ];
 
