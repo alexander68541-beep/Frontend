@@ -154,6 +154,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
   ]},
   { section: "Optional", items: [
     { href: "/dashboard/templates", label: "Templates", icon: I.appearance },
+    { href: "/dashboard/customize", label: "Customize", icon: I.appearance },
     { href: "/dashboard/analytics", label: "Analytics", icon: I.analytics },
     { href: "/dashboard/seo", label: "SEO / Sharing", icon: I.seo },
     { href: "/dashboard/billing", label: "Upgrade", icon: I.appearance },

@@ -1,5 +1,6 @@
 import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
+import { fontStack } from "@/lib/fonts";
 import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 import { ContactForm } from "@/components/ContactForm";
@@ -12,13 +13,16 @@ export function EditorialTemplate({
   variant?: "editorial" | "studio";
 }) {
   const p = data.profile;
+  const hidden = new Set(data.settings?.hidden ?? []);
+  const sv = (k: string) => !hidden.has(k);
+  const fontFam = fontStack(data.settings?.font);
   const name = p?.display_name || data.username || "Untitled";
   const hasContact = p?.email || p?.phone || p?.website || p?.availability;
 
   return (
     <div
       className={`tpl-ed ${variant === "studio" ? "tpl-ed--studio" : ""}`}
-      style={{ ["--tpl-accent" as string]: data.accent || "#7c6cff" } as React.CSSProperties}
+      style={{ ["--tpl-accent" as string]: data.accent || "#7c6cff", ...(fontFam ? { fontFamily: fontFam } : {}) } as React.CSSProperties}
     >
       <div className="ed-grid">
         <aside className="ed-rail">
@@ -50,7 +54,7 @@ export function EditorialTemplate({
             </div>
           )}
 
-          {data.skills.length > 0 && (
+          {sv("skills") && data.skills.length > 0 && (
             <div className="ed-block">
               <h3 className="ed-h">Skills</h3>
               <div className="ed-skills">
@@ -65,11 +69,11 @@ export function EditorialTemplate({
         </aside>
 
         <main className="ed-main">
-          {p?.about && (
+          {sv("about") && p?.about && (
             <section className="ed-sec"><h2 className="ed-h2">About</h2><p className="ed-about">{p.about}</p></section>
           )}
 
-          {data.projects.length > 0 && (
+          {sv("projects") && data.projects.length > 0 && (
             <section className="ed-sec">
               <h2 className="ed-h2">Projects</h2>
               <div className="ed-projects">
@@ -91,7 +95,7 @@ export function EditorialTemplate({
             </section>
           )}
 
-          {data.experience.length > 0 && (
+          {sv("experience") && data.experience.length > 0 && (
             <section className="ed-sec">
               <h2 className="ed-h2">Experience</h2>
               {data.experience.map((x) => (
@@ -104,7 +108,7 @@ export function EditorialTemplate({
             </section>
           )}
 
-          {data.education.length > 0 && (
+          {sv("education") && data.education.length > 0 && (
             <section className="ed-sec">
               <h2 className="ed-h2">Education</h2>
               {data.education.map((e) => (
@@ -117,7 +121,7 @@ export function EditorialTemplate({
             </section>
           )}
 
-          {data.services.length > 0 && (
+          {sv("services") && data.services.length > 0 && (
             <section className="ed-sec">
               <h2 className="ed-h2">Services</h2>
               {data.services.map((s) => (
@@ -129,7 +133,7 @@ export function EditorialTemplate({
             </section>
           )}
 
-          {data.certifications.length > 0 && (
+          {sv("certifications") && data.certifications.length > 0 && (
             <section className="ed-sec">
               <h2 className="ed-h2">Certifications</h2>
               {data.certifications.map((c) => (
@@ -141,7 +145,7 @@ export function EditorialTemplate({
             </section>
           )}
 
-          {data.achievements.length > 0 && (
+          {sv("achievements") && data.achievements.length > 0 && (
             <section className="ed-sec">
               <h2 className="ed-h2">Achievements</h2>
               {data.achievements.map((a) => (
@@ -153,7 +157,7 @@ export function EditorialTemplate({
             </section>
           )}
 
-          {data.publications.length > 0 && (
+          {sv("publications") && data.publications.length > 0 && (
             <section className="ed-sec">
               <h2 className="ed-h2">Publications</h2>
               {data.publications.map((pub) => (
@@ -166,7 +170,7 @@ export function EditorialTemplate({
             </section>
           )}
 
-          {data.testimonials.length > 0 && (
+          {sv("testimonials") && data.testimonials.length > 0 && (
             <section className="ed-sec">
               <h2 className="ed-h2">Testimonials</h2>
               {data.testimonials.map((t) => (
@@ -181,7 +185,7 @@ export function EditorialTemplate({
             </section>
           )}
 
-          {data.gallery.length > 0 && (
+          {sv("gallery") && data.gallery.length > 0 && (
             <section className="ed-sec">
               <h2 className="ed-h2">Gallery</h2>
               <div className="ed-gallery">
@@ -195,7 +199,7 @@ export function EditorialTemplate({
             </section>
           )}
 
-          {data.videos.length > 0 && (
+          {sv("videos") && data.videos.length > 0 && (
             <section className="ed-sec">
               <h2 className="ed-h2">Videos</h2>
               <div className="ed-videos">

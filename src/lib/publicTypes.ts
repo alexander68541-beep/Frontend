@@ -36,6 +36,12 @@ export interface PublicPublication { id: string; title: string; publisher: strin
 export interface PublicGalleryItem { id: string; image_url: string; caption: string | null; }
 export interface PublicVideo { id: string; title: string | null; url: string; }
 
+export interface PortfolioSettings {
+  font?: string;
+  hidden?: string[];
+  section_order?: string[];
+}
+
 export interface PublicPortfolio {
   username: string | null;
   template: string;
@@ -44,6 +50,7 @@ export interface PublicPortfolio {
   seo_title: string | null;
   seo_description: string | null;
   seo_image: string | null;
+  settings?: PortfolioSettings;
   profile: PublicProfile | null;
   projects: PublicProject[];
   skills: PublicSkill[];

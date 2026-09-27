@@ -1,5 +1,6 @@
 import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
+import { fontStack } from "@/lib/fonts";
 import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 import { ContactForm } from "@/components/ContactForm";
@@ -7,11 +8,14 @@ import { ContactForm } from "@/components/ContactForm";
 // Example coded template. Copy this file to make your own, then register it in registry.tsx.
 export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
+  const hidden = new Set(data.settings?.hidden ?? []);
+  const sv = (k: string) => !hidden.has(k);
+  const fontFam = fontStack(data.settings?.font);
   const name = p?.display_name || data.username || "Untitled";
   const hasContact = p?.email || p?.phone || p?.website || p?.availability;
 
   return (
-    <div className="tpl-aurora" style={{ ["--tpl-accent" as string]: data.accent || "#7c6cff" } as React.CSSProperties}>
+    <div className="tpl-aurora" style={{ ["--tpl-accent" as string]: data.accent || "#7c6cff", ...(fontFam ? { fontFamily: fontFam } : {}) } as React.CSSProperties}>
       <div className="au-bg" aria-hidden><span /><span /><span /></div>
       <div className="au-wrap">
         <header className="au-hero">
@@ -28,7 +32,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
 
         {p?.about && <section className="au-sec"><h2 className="au-h2">About</h2><p className="au-about">{p.about}</p></section>}
 
-        {data.projects.length > 0 && (
+        {sv("projects") && data.projects.length > 0 && (
           <section className="au-sec">
             <h2 className="au-h2">Work</h2>
             <div className="au-projects">
@@ -47,7 +51,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.experience.length > 0 && (
+        {sv("experience") && data.experience.length > 0 && (
           <section className="au-sec"><h2 className="au-h2">Experience</h2>
             {data.experience.map((x) => (
               <div key={x.id} className="au-row"><h3>{x.title || x.company}</h3>
@@ -57,7 +61,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.education.length > 0 && (
+        {sv("education") && data.education.length > 0 && (
           <section className="au-sec"><h2 className="au-h2">Education</h2>
             {data.education.map((e) => (
               <div key={e.id} className="au-row"><h3>{e.school}</h3>
@@ -66,7 +70,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.services.length > 0 && (
+        {sv("services") && data.services.length > 0 && (
           <section className="au-sec"><h2 className="au-h2">Services</h2>
             <div className="au-projects">{data.services.map((s) => (
               <div key={s.id} className="au-card"><div className="au-card-body"><h3>{s.title}{s.price ? <span className="au-when">{s.price}</span> : null}</h3>{s.description && <p className="au-muted">{s.description}</p>}</div></div>
@@ -74,7 +78,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.certifications.length > 0 && (
+        {sv("certifications") && data.certifications.length > 0 && (
           <section className="au-sec"><h2 className="au-h2">Certifications</h2>
             {data.certifications.map((c) => (
               <div key={c.id} className="au-row"><h3>{c.url ? <a href={ext(c.url)} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</h3>
@@ -83,7 +87,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.achievements.length > 0 && (
+        {sv("achievements") && data.achievements.length > 0 && (
           <section className="au-sec"><h2 className="au-h2">Achievements</h2>
             {data.achievements.map((a) => (
               <div key={a.id} className="au-row"><h3>{a.title}<span className="au-when">{a.date}</span></h3>{a.description && <p className="au-muted">{a.description}</p>}</div>
@@ -91,7 +95,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.publications.length > 0 && (
+        {sv("publications") && data.publications.length > 0 && (
           <section className="au-sec"><h2 className="au-h2">Publications</h2>
             {data.publications.map((pub) => (
               <div key={pub.id} className="au-row"><h3>{pub.url ? <a href={ext(pub.url)} target="_blank" rel="noreferrer">{pub.title}</a> : pub.title}</h3>
@@ -100,7 +104,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.testimonials.length > 0 && (
+        {sv("testimonials") && data.testimonials.length > 0 && (
           <section className="au-sec"><h2 className="au-h2">Testimonials</h2>
             <div className="au-projects">{data.testimonials.map((t) => (
               <div key={t.id} className="au-card"><div className="au-card-body">
@@ -111,13 +115,13 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.skills.length > 0 && (
+        {sv("skills") && data.skills.length > 0 && (
           <section className="au-sec"><h2 className="au-h2">Skills</h2>
             <div className="au-skills">{data.skills.map((s) => <span key={s.id} className="au-skill">{s.name}</span>)}</div>
           </section>
         )}
 
-        {data.gallery.length > 0 && (
+        {sv("gallery") && data.gallery.length > 0 && (
           <section className="au-sec"><h2 className="au-h2">Gallery</h2>
             <div className="au-gallery">{data.gallery.map((g) => (
               <figure key={g.id} className="au-gal"><ZoomImage src={g.image_url} alt={g.caption || ""} />{g.caption && <figcaption>{g.caption}</figcaption>}</figure>
@@ -125,7 +129,7 @@ export function AuroraTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.videos.length > 0 && (
+        {sv("videos") && data.videos.length > 0 && (
           <section className="au-sec"><h2 className="au-h2">Videos</h2>
             <div className="au-videos">{data.videos.map((v) => { const embed = videoEmbed(v.url); return (
               <div key={v.id}>{embed ? <div className="au-video"><iframe src={embed} title={v.title || "Video"} allowFullScreen /></div> : <a className="au-link" href={ext(v.url)} target="_blank" rel="noreferrer">{v.title || v.url}</a>}</div>

@@ -1,14 +1,18 @@
 import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
+import { fontStack } from "@/lib/fonts";
 import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 import { ContactForm } from "@/components/ContactForm";
 
 export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
+  const hidden = new Set(data.settings?.hidden ?? []);
+  const sv = (k: string) => !hidden.has(k);
+  const fontFam = fontStack(data.settings?.font);
   const name = p?.display_name || data.username || "Untitled";
   return (
-    <div className="tpl-min" style={{ ["--tpl-accent" as string]: data.accent || "#7c6cff" } as React.CSSProperties}>
+    <div className="tpl-min" style={{ ["--tpl-accent" as string]: data.accent || "#7c6cff", ...(fontFam ? { fontFamily: fontFam } : {}) } as React.CSSProperties}>
       <div className="tm-wrap">
         <header className="tm-head">
           {p?.avatar_url && <ZoomImage className="tm-avatar" src={p.avatar_url} alt={name} />}
@@ -29,14 +33,14 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           )}
         </header>
 
-        {p?.about && (
+        {sv("about") && p?.about && (
           <section className="tm-sec">
             <h2>About</h2>
             <p className="tm-about">{p.about}</p>
           </section>
         )}
 
-        {data.projects.length > 0 && (
+        {sv("projects") && data.projects.length > 0 && (
           <section className="tm-sec">
             <h2>Projects</h2>
             <div className="tm-projects">
@@ -60,7 +64,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.experience.length > 0 && (
+        {sv("experience") && data.experience.length > 0 && (
           <section className="tm-sec">
             <h2>Experience</h2>
             {data.experience.map((x) => (
@@ -76,7 +80,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.education.length > 0 && (
+        {sv("education") && data.education.length > 0 && (
           <section className="tm-sec">
             <h2>Education</h2>
             {data.education.map((ed) => (
@@ -92,7 +96,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.skills.length > 0 && (
+        {sv("skills") && data.skills.length > 0 && (
           <section className="tm-sec">
             <h2>Skills</h2>
             <div className="tm-skills">
@@ -101,7 +105,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.services.length > 0 && (
+        {sv("services") && data.services.length > 0 && (
           <section className="tm-sec">
             <h2>Services</h2>
             {data.services.map((s) => (
@@ -116,7 +120,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.certifications.length > 0 && (
+        {sv("certifications") && data.certifications.length > 0 && (
           <section className="tm-sec">
             <h2>Certifications</h2>
             {data.certifications.map((c) => (
@@ -131,7 +135,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.achievements.length > 0 && (
+        {sv("achievements") && data.achievements.length > 0 && (
           <section className="tm-sec">
             <h2>Achievements</h2>
             {data.achievements.map((a) => (
@@ -146,7 +150,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.publications.length > 0 && (
+        {sv("publications") && data.publications.length > 0 && (
           <section className="tm-sec">
             <h2>Publications</h2>
             {data.publications.map((pub) => (
@@ -162,7 +166,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.gallery.length > 0 && (
+        {sv("gallery") && data.gallery.length > 0 && (
           <section className="tm-sec">
             <h2>Gallery</h2>
             <div className="tm-gallery">
@@ -176,7 +180,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.videos.length > 0 && (
+        {sv("videos") && data.videos.length > 0 && (
           <section className="tm-sec">
             <h2>Videos</h2>
             <div className="tm-videos">
@@ -197,7 +201,7 @@ export function MinimalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {data.testimonials.length > 0 && (
+        {sv("testimonials") && data.testimonials.length > 0 && (
           <section className="tm-sec">
             <h2>Testimonials</h2>
             {data.testimonials.map((t) => (
