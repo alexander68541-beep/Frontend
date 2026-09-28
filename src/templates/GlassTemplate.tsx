@@ -8,7 +8,10 @@ import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 import { ContactForm } from "@/components/ContactForm";
 
-/** Animated count-up, triggers once the number scrolls into view. */
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
+
 function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
   const [n, setN] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
@@ -44,7 +47,6 @@ function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
   );
 }
 
-/** Years between the earliest experience start_date and now (derived from real data, not invented). */
 function yearsOfExperience(experience: PublicPortfolio["experience"]): number {
   if (!experience?.length) return 0;
   const starts = experience
@@ -52,9 +54,59 @@ function yearsOfExperience(experience: PublicPortfolio["experience"]): number {
     .filter((t): t is number => !!t);
   if (!starts.length) return 0;
   const earliest = Math.min(...starts);
-  const diff = Date.now() - earliest;
-  return Math.max(1, Math.round(diff / (365.25 * 24 * 3600 * 1000)));
+  return Math.max(1, Math.round((Date.now() - earliest) / (365.25 * 24 * 3600 * 1000)));
 }
+
+/** Where the "Let's talk" buttons should point — real contact info first, then in-page contact section. */
+function talkHref(p: PublicPortfolio["profile"]): string {
+  if (p?.email) return `mailto:${p.email}`;
+  return "#tb-contact";
+}
+
+type TimelineItem = {
+  id: string;
+  kind: "experience" | "education";
+  when: string;
+  title: string;
+  sub: string;
+  desc?: string | null;
+  sortKey: number;
+};
+
+function buildTimeline(data: PublicPortfolio, showExp: boolean, showEdu: boolean): TimelineItem[] {
+  const items: TimelineItem[] = [];
+  if (showExp) {
+    for (const x of data.experience) {
+      items.push({
+        id: `exp-${x.id}`,
+        kind: "experience",
+        when: dateRange(x.start_date, x.end_date, x.is_current),
+        title: x.title || x.company || "",
+        sub: [x.company, x.location].filter(Boolean).join(" · "),
+        desc: x.description,
+        sortKey: x.start_date ? new Date(x.start_date).getTime() : 0,
+      });
+    }
+  }
+  if (showEdu) {
+    for (const ed of data.education) {
+      items.push({
+        id: `edu-${ed.id}`,
+        kind: "education",
+        when: dateRange(ed.start_date, ed.end_date),
+        title: ed.school || "",
+        sub: [ed.degree, ed.field].filter(Boolean).join(", "),
+        desc: ed.description,
+        sortKey: ed.start_date ? new Date(ed.start_date).getTime() : 0,
+      });
+    }
+  }
+  return items.sort((a, b) => b.sortKey - a.sortKey);
+}
+
+/* ------------------------------------------------------------------ */
+/* Template                                                            */
+/* ------------------------------------------------------------------ */
 
 export function GlassTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
@@ -64,8 +116,16 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
   const name = p?.display_name || data.username || "Untitled";
 
   const years = yearsOfExperience(data.experience);
+  const awardsCount = data.certifications.length + data.achievements.length;
   const projectCount = data.projects.length;
   const testimonialCount = data.testimonials.length;
+  const talk = talkHref(p);
+
+  const timeline = buildTimeline(data, sv("experience"), sv("education"));
+  const awardsList = [
+    ...data.certifications.map((c) => ({ id: `cert-${c.id}`, title: c.name, org: c.issuer, when: c.issue_date })),
+    ...data.achievements.map((a) => ({ id: `ach-${a.id}`, title: a.title, org: undefined, when: a.date })),
+  ];
 
   return (
     <div
@@ -81,35 +141,59 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
         <span />
         <span />
       </div>
+
       <div className="tb-wrap">
-        <header className="tb-hero">
+        {/* ---------- Intro card ---------- */}
+        <header className="tb-intro">
           {p?.availability && <span className="tb-badge">{p.availability}</span>}
-          {p?.avatar_url && <ZoomImage className="tb-avatar" src={p.avatar_url} alt={name} />}
-          {p?.title && (
-            <p className="tb-eyebrow">
-              {p.title}
-              {p?.pronouns ? ` \u00b7 ${p.pronouns}` : ""}
-            </p>
-          )}
-          <h1 className="tb-name">{name}</h1>
-          {p?.tagline && <p className="tb-tagline">{p.tagline}</p>}
-          {p?.location && <p className="tb-loc">{p.location}</p>}
-          {p?.bio && <p className="tb-bio">{p.bio}</p>}
+          <div className="tb-intro-row">
+            {p?.avatar_url && <ZoomImage className="tb-avatar" src={p.avatar_url} alt={name} />}
+            <div>
+              <p className="tb-hey">
+                Hey, I&apos;m {name}
+                {p?.title ? ` ${p.title}` : ""}
+              </p>
+              {p?.tagline && <p className="tb-intro-sub">{p.tagline}</p>}
+            </div>
+          </div>
+          <div className="tb-cta-row">
+            <a className="tb-btn tb-btn-primary" href={talk}>
+              Let&apos;s talk
+            </a>
+            {p?.resume_url && (
+              <a className="tb-btn tb-btn-ghost" href={ext(p.resume_url)} target="_blank" rel="noreferrer">
+                Download CV
+              </a>
+            )}
+          </div>
+        </header>
+
+        {/* ---------- Big hero ---------- */}
+        <section className="tb-hero-main">
+          <p className="tb-hero-name">{name}</p>
+          {p?.title && <p className="tb-hero-title">{p.title}</p>}
+          {(p?.bio || p?.tagline) && <h1 className="tb-headline">{p?.bio || p?.tagline}</h1>}
 
           {data.links.length > 0 && (
-            <div className="tb-links tb-links-cta">
+            <div className="tb-links">
               {data.links.map((l) => (
                 <LinkChip key={l.id} className="tb-link" platform={l.platform} url={l.url} label={l.label} />
               ))}
             </div>
           )}
 
-          {(years > 0 || projectCount > 0 || testimonialCount > 0) && (
+          {(years > 0 || awardsCount > 0 || projectCount > 0) && (
             <div className="tb-stats">
               {years > 0 && (
                 <div className="tb-stat">
                   <CountUp value={years} suffix="+" />
                   <p>Years of experience</p>
+                </div>
+              )}
+              {awardsCount > 0 && (
+                <div className="tb-stat">
+                  <CountUp value={awardsCount} suffix="x" />
+                  <p>Awards &amp; certifications</p>
                 </div>
               )}
               {projectCount > 0 && (
@@ -118,114 +202,98 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
                   <p>Projects delivered</p>
                 </div>
               )}
-              {testimonialCount > 0 && (
-                <div className="tb-stat">
-                  <CountUp value={testimonialCount} suffix="" />
-                  <p>Client testimonials</p>
-                </div>
-              )}
             </div>
           )}
-        </header>
+        </section>
 
-        {sv("about") && p?.about && (
+        {/* ---------- About ---------- */}
+        {sv("about") && (p?.about || awardsList.length > 0) && (
           <section className="tb-sec" data-sec="about">
             <p className="tb-kicker">About</p>
-            <h2 className="tb-h2">About</h2>
-            <p className="tb-about">{p.about}</p>
+            {p?.about && <p className="tb-about">{p.about}</p>}
+            {awardsList.length > 0 && (
+              <ul className="tb-awards">
+                {awardsList.map((a) => (
+                  <li key={a.id}>
+                    <span className="tb-award-title">{a.title}</span>
+                    {a.org && <span className="tb-award-org">{a.org}</span>}
+                    {a.when && <span className="tb-award-year">{a.when}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         )}
 
+        {/* ---------- Education & Experience ---------- */}
+        {timeline.length > 0 && (
+          <section className="tb-sec" data-sec="experience">
+            <p className="tb-kicker">Education &amp; Experience</p>
+            <div className="tb-timeline">
+              {timeline.map((t) => (
+                <div key={t.id} className="tb-timeline-row">
+                  <span className="tb-when-lead">{t.when}</span>
+                  <div>
+                    <h3>{t.title}</h3>
+                    {t.sub && <p className="tb-row-sub">{t.sub}</p>}
+                    {t.desc && <p className="tb-row-desc">{t.desc}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ---------- Work Highlights ---------- */}
         {sv("projects") && data.projects.length > 0 && (
           <section className="tb-sec">
             <p className="tb-kicker">Work Highlights</p>
-            <h2 className="tb-h2">Selected Work</h2>
             <div className="tb-projects">
               {data.projects.map((pr, i) => (
-                <a
-                  key={pr.id}
-                  className="tb-project"
-                  href={pr.url ? ext(pr.url) : undefined}
-                  target={pr.url ? "_blank" : undefined}
-                  rel="noreferrer"
-                >
+                <article key={pr.id} className="tb-project">
                   {pr.image_url && <img src={pr.image_url} alt={pr.title} className="tb-proj-img" />}
                   <div className="tb-proj-body">
-                    <span className="tb-proj-index">
-                      {String(i + 1).padStart(2, "0")} / {String(data.projects.length).padStart(2, "0")}
-                    </span>
                     <h3>{pr.title}</h3>
-                    {pr.role && <p className="tb-proj-role">{pr.role}</p>}
                     {pr.description && <p className="tb-proj-desc">{pr.description}</p>}
-                    {pr.tags.length > 0 && (
-                      <div className="tb-tags">
-                        {pr.tags.map((t) => (
-                          <span key={t}>{t}</span>
-                        ))}
-                      </div>
-                    )}
+                    <div className="tb-proj-meta">
+                      {pr.role && (
+                        <div>
+                          <span className="tb-meta-label">Role</span>
+                          <span>{pr.role}</span>
+                        </div>
+                      )}
+                      {pr.tags.length > 0 && (
+                        <div>
+                          <span className="tb-meta-label">Tags</span>
+                          <span>{pr.tags.join(", ")}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="tb-proj-foot">
+                      {pr.url ? (
+                        <a className="tb-btn tb-btn-primary tb-btn-sm" href={ext(pr.url)} target="_blank" rel="noreferrer">
+                          Let&apos;s talk
+                        </a>
+                      ) : (
+                        <a className="tb-btn tb-btn-primary tb-btn-sm" href={talk}>
+                          Let&apos;s talk
+                        </a>
+                      )}
+                      <span className="tb-proj-index">
+                        {String(i + 1).padStart(2, "0")} / {String(data.projects.length).padStart(2, "0")}
+                      </span>
+                    </div>
                   </div>
-                </a>
+                </article>
               ))}
             </div>
           </section>
         )}
 
-        {sv("experience") && data.experience.length > 0 && (
-          <section className="tb-sec" data-sec="experience">
-            <p className="tb-kicker">Education & Experience</p>
-            <h2 className="tb-h2">Experience</h2>
-            <div className="tb-timeline">
-              {data.experience.map((x) => (
-                <div key={x.id} className="tb-row tb-timeline-row">
-                  <span className="tb-when tb-when-lead">{dateRange(x.start_date, x.end_date, x.is_current)}</span>
-                  <div>
-                    <h3>{x.title || x.company}</h3>
-                    <p className="tb-row-sub">{[x.company, x.location].filter(Boolean).join(" · ")}</p>
-                    {x.description && <p className="tb-row-desc">{x.description}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {sv("education") && data.education.length > 0 && (
-          <section className="tb-sec" data-sec="education">
-            <h2 className="tb-h2">Education</h2>
-            <div className="tb-timeline">
-              {data.education.map((ed) => (
-                <div key={ed.id} className="tb-row tb-timeline-row">
-                  <span className="tb-when tb-when-lead">{dateRange(ed.start_date, ed.end_date)}</span>
-                  <div>
-                    <h3>{ed.school}</h3>
-                    <p className="tb-row-sub">{[ed.degree, ed.field].filter(Boolean).join(", ")}</p>
-                    {ed.description && <p className="tb-row-desc">{ed.description}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {sv("skills") && data.skills.length > 0 && (
-          <section className="tb-sec" data-sec="skills">
-            <p className="tb-kicker">Tech Stack</p>
-            <h2 className="tb-h2">Skills</h2>
-            <div className="tb-skills">
-              {data.skills.map((s) => (
-                <span key={s.id} className="tb-skill">
-                  {s.name}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-
+        {/* ---------- Services ---------- */}
         {sv("services") && data.services.length > 0 && (
           <section className="tb-sec" data-sec="services">
             <p className="tb-kicker">Services</p>
-            <h2 className="tb-h2">Services</h2>
             <div className="tb-cards">
               {data.services.map((s) => (
                 <div key={s.id} className="tb-card">
@@ -238,47 +306,40 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {sv("certifications") && data.certifications.length > 0 && (
-          <section className="tb-sec" data-sec="certifications">
-            <h2 className="tb-h2">Certifications</h2>
-            <div className="tb-timeline">
-              {data.certifications.map((c) => (
-                <div key={c.id} className="tb-row tb-timeline-row">
-                  <span className="tb-when tb-when-lead">{c.issue_date}</span>
-                  <div>
-                    <h3>{c.url ? <a href={ext(c.url)} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</h3>
-                    <p className="tb-row-sub">{c.issuer}</p>
+        {/* ---------- Tech Stack ---------- */}
+        {sv("skills") && data.skills.length > 0 && (
+          <section className="tb-sec" data-sec="skills">
+            <p className="tb-kicker">Tech Stack</p>
+            <h2 className="tb-h2">See how my expertise with these tools drives better results</h2>
+            <div className="tb-skillbars">
+              {data.skills.map((s) => {
+                const level = (s as { level?: number }).level;
+                return (
+                  <div key={s.id} className="tb-skillbar">
+                    <div className="tb-skillbar-top">
+                      <span>{s.name}</span>
+                      {typeof level === "number" && <span>{level}%</span>}
+                    </div>
+                    {typeof level === "number" && (
+                      <div className="tb-skillbar-track">
+                        <div className="tb-skillbar-fill" style={{ width: `${Math.min(100, Math.max(0, level))}%` }} />
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
 
-        {sv("achievements") && data.achievements.length > 0 && (
-          <section className="tb-sec" data-sec="achievements">
-            <h2 className="tb-h2">Achievements</h2>
-            <div className="tb-timeline">
-              {data.achievements.map((a) => (
-                <div key={a.id} className="tb-row tb-timeline-row">
-                  <span className="tb-when tb-when-lead">{a.date}</span>
-                  <div>
-                    <h3>{a.title}</h3>
-                    {a.description && <p className="tb-row-desc">{a.description}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
+        {/* ---------- Certifications / Achievements / Publications (kept, shown outside About too if not already covered) ---------- */}
         {sv("publications") && data.publications.length > 0 && (
           <section className="tb-sec" data-sec="publications">
-            <h2 className="tb-h2">Publications</h2>
+            <p className="tb-kicker">Publications</p>
             <div className="tb-timeline">
               {data.publications.map((pub) => (
-                <div key={pub.id} className="tb-row tb-timeline-row">
-                  <span className="tb-when tb-when-lead">{pub.date}</span>
+                <div key={pub.id} className="tb-timeline-row">
+                  <span className="tb-when-lead">{pub.date}</span>
                   <div>
                     <h3>{pub.url ? <a href={ext(pub.url)} target="_blank" rel="noreferrer">{pub.title}</a> : pub.title}</h3>
                     <p className="tb-row-sub">{pub.publisher}</p>
@@ -290,9 +351,10 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
+        {/* ---------- Gallery ---------- */}
         {sv("gallery") && data.gallery.length > 0 && (
           <section className="tb-sec" data-sec="gallery">
-            <h2 className="tb-h2">Gallery</h2>
+            <p className="tb-kicker">Gallery</p>
             <div className="tb-gallery">
               {data.gallery.map((g) => (
                 <figure key={g.id} className="tb-gal">
@@ -304,9 +366,10 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
+        {/* ---------- Videos ---------- */}
         {sv("videos") && data.videos.length > 0 && (
           <section className="tb-sec" data-sec="videos">
-            <h2 className="tb-h2">Videos</h2>
+            <p className="tb-kicker">Videos</p>
             <div className="tb-videos">
               {data.videos.map((v) => {
                 const embed = videoEmbed(v.url);
@@ -328,10 +391,27 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
+        {/* ---------- Testimonials ---------- */}
         {sv("testimonials") && data.testimonials.length > 0 && (
           <section className="tb-sec" data-sec="testimonials">
             <p className="tb-kicker">Testimonials</p>
             <h2 className="tb-h2">Here&apos;s what people are saying</h2>
+            {(projectCount > 0 || testimonialCount > 0) && (
+              <div className="tb-stats tb-stats-left">
+                {projectCount > 0 && (
+                  <div className="tb-stat">
+                    <CountUp value={projectCount} suffix="+" />
+                    <p>Finalized projects</p>
+                  </div>
+                )}
+                {testimonialCount > 0 && (
+                  <div className="tb-stat">
+                    <CountUp value={testimonialCount} suffix="" />
+                    <p>Client testimonials</p>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="tb-cards">
               {data.testimonials.map((t) => (
                 <div key={t.id} className="tb-card tb-testi-card">
@@ -349,37 +429,35 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {(p?.email || p?.phone || p?.website || p?.availability) && (
-          <section className="tb-sec">
-            <h2 className="tb-h2">Contact</h2>
-            {p?.availability && <p className="tb-bio">{p.availability}</p>}
-            <div className="tb-links">
-              {p?.email && (
-                <a className="tb-link" href={`mailto:${p.email}`}>
-                  {p.email}
-                </a>
-              )}
-              {p?.phone && <span className="tb-link">{p.phone}</span>}
-              {p?.website && (
-                <a className="tb-link" href={ext(p.website)} target="_blank" rel="noreferrer">
-                  Website
-                </a>
-              )}
-              {p?.resume_url && (
-                <a className="tb-link" href={ext(p.resume_url)} target="_blank" rel="noreferrer">
-                  Résumé ↗
-                </a>
-              )}
+        {/* ---------- Contact ---------- */}
+        <section className="tb-sec" id="tb-contact">
+          <p className="tb-kicker">Contact</p>
+          <h2 className="tb-h2">Let&apos;s build something together</h2>
+          {p?.availability && <p className="tb-bio">{p.availability}</p>}
+          <div className="tb-links">
+            {p?.email && (
+              <a className="tb-link" href={`mailto:${p.email}`}>
+                {p.email}
+              </a>
+            )}
+            {p?.phone && <span className="tb-link">{p.phone}</span>}
+            {p?.website && (
+              <a className="tb-link" href={ext(p.website)} target="_blank" rel="noreferrer">
+                Website
+              </a>
+            )}
+            {p?.resume_url && (
+              <a className="tb-link" href={ext(p.resume_url)} target="_blank" rel="noreferrer">
+                Résumé ↗
+              </a>
+            )}
+          </div>
+          {data.username && (
+            <div className="tb-contact-form">
+              <ContactForm username={data.username} />
             </div>
-          </section>
-        )}
-
-        {data.username && (
-          <section className="tb-sec">
-            <h2 className="tb-h2">Get in touch</h2>
-            <ContactForm username={data.username} />
-          </section>
-        )}
+          )}
+        </section>
 
         {!data.hide_branding && <footer className="tb-foot">Made with Folio</footer>}
       </div>
@@ -429,29 +507,29 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
         .tb-wrap {
           position: relative;
           z-index: 1;
-          max-width: 960px;
+          max-width: 980px;
           margin: 0 auto;
-          padding: 96px 24px 64px;
+          padding: 64px 24px 64px;
         }
 
-        .tb-hero {
-          text-align: center;
+        /* Intro card */
+        .tb-intro {
+          border: 1px solid var(--tb-border);
+          background: var(--tb-surface);
+          border-radius: 24px;
+          padding: 28px;
           display: flex;
           flex-direction: column;
-          align-items: center;
-          gap: 14px;
-          padding-bottom: 56px;
-          border-bottom: 1px solid var(--tb-border);
+          gap: 18px;
         }
-
         .tb-badge {
+          align-self: flex-start;
           display: inline-flex;
           align-items: center;
           gap: 8px;
           padding: 6px 16px;
           border-radius: 999px;
           border: 1px solid var(--tb-border);
-          background: var(--tb-surface);
           font-size: 13px;
           color: var(--tb-muted);
         }
@@ -463,67 +541,99 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           background: #4ade80;
           box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
         }
-
+        .tb-intro-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
         .tb-avatar {
-          width: 84px;
-          height: 84px;
+          width: 64px;
+          height: 64px;
           border-radius: 50%;
           object-fit: cover;
           border: 2px solid var(--tb-border);
-          margin-top: 8px;
+          flex-shrink: 0;
+        }
+        .tb-hey {
+          margin: 0;
+          font-size: 1.2rem;
+          font-weight: 600;
+        }
+        .tb-intro-sub {
+          margin: 4px 0 0;
+          color: var(--tb-muted);
+          font-size: 14px;
+        }
+        .tb-cta-row {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+        .tb-btn {
+          padding: 10px 22px;
+          border-radius: 999px;
+          font-size: 14px;
+          font-weight: 600;
+          text-decoration: none;
+          transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .tb-btn:hover {
+          transform: translateY(-2px);
+        }
+        .tb-btn-primary {
+          background: var(--tpl-accent, #7c6cff);
+          color: #0a0a0d;
+        }
+        .tb-btn-ghost {
+          border: 1px solid var(--tb-border);
+          color: var(--tb-text);
+        }
+        .tb-btn-sm {
+          padding: 7px 16px;
+          font-size: 13px;
         }
 
-        .tb-eyebrow {
+        /* Big hero */
+        .tb-hero-main {
+          text-align: center;
+          padding: 72px 0 56px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+        }
+        .tb-hero-name {
           text-transform: uppercase;
           letter-spacing: 0.14em;
-          font-size: 12px;
+          font-size: 13px;
           color: var(--tpl-accent, #7c6cff);
-          font-weight: 600;
+          font-weight: 700;
           margin: 0;
         }
-
-        .tb-name {
-          font-size: clamp(2.4rem, 6vw, 4.2rem);
-          line-height: 1.05;
+        .tb-hero-title {
+          margin: 0;
+          color: var(--tb-muted);
+          font-size: 14px;
+        }
+        .tb-headline {
+          font-size: clamp(2.2rem, 6vw, 4rem);
+          line-height: 1.08;
           font-weight: 700;
           letter-spacing: -0.02em;
-          margin: 4px 0;
+          max-width: 760px;
+          margin: 10px 0;
           background: linear-gradient(180deg, #fff 0%, #b9b9c6 100%);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
         }
-
-        .tb-tagline {
-          font-size: clamp(1.05rem, 2.2vw, 1.4rem);
-          color: var(--tb-muted);
-          max-width: 620px;
-          margin: 0;
-        }
-
-        .tb-loc {
-          font-size: 13px;
-          color: var(--tb-muted);
-          margin: 0;
-        }
-
-        .tb-bio {
-          color: var(--tb-muted);
-          max-width: 560px;
-          margin: 8px 0 0;
-        }
-
         .tb-links {
           display: flex;
           flex-wrap: wrap;
           gap: 10px;
           justify-content: center;
         }
-
-        .tb-links-cta {
-          margin-top: 12px;
-        }
-
         .tb-link {
           padding: 10px 20px;
           border-radius: 999px;
@@ -543,9 +653,13 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
         .tb-stats {
           display: flex;
           gap: 48px;
-          margin-top: 32px;
+          margin-top: 24px;
           flex-wrap: wrap;
           justify-content: center;
+        }
+        .tb-stats-left {
+          justify-content: flex-start;
+          margin-bottom: 24px;
         }
         .tb-stat {
           text-align: center;
@@ -562,124 +676,79 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           color: var(--tb-muted);
         }
 
+        /* Sections */
         .tb-sec {
-          padding: 64px 0;
-          border-bottom: 1px solid var(--tb-border);
+          padding: 56px 0;
+          border-top: 1px solid var(--tb-border);
         }
-        .tb-sec:last-of-type {
-          border-bottom: none;
-        }
-
         .tb-kicker {
           text-transform: uppercase;
           letter-spacing: 0.14em;
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 700;
           color: var(--tpl-accent, #7c6cff);
-          margin: 0 0 8px;
+          margin: 0 0 16px;
         }
-
         .tb-h2 {
-          font-size: clamp(1.6rem, 3vw, 2.2rem);
+          font-size: clamp(1.5rem, 3vw, 2rem);
           font-weight: 700;
           letter-spacing: -0.01em;
           margin: 0 0 24px;
+          max-width: 640px;
         }
-
         .tb-about {
           color: var(--tb-muted);
           font-size: 1.05rem;
           max-width: 640px;
+          margin: 0 0 28px;
         }
 
-        .tb-projects {
+        /* Awards list */
+        .tb-awards {
+          list-style: none;
+          margin: 0;
+          padding: 0;
           display: flex;
           flex-direction: column;
-          gap: 20px;
         }
-        .tb-project {
-          display: grid;
-          grid-template-columns: 220px 1fr;
-          gap: 24px;
-          padding: 20px;
-          border-radius: 20px;
-          border: 1px solid var(--tb-border);
-          background: var(--tb-surface);
-          text-decoration: none;
-          color: var(--tb-text);
-          transition: border-color 0.2s ease, transform 0.2s ease;
-        }
-        .tb-project:hover {
-          border-color: var(--tpl-accent, #7c6cff);
-          transform: translateY(-3px);
-        }
-        .tb-proj-img {
-          width: 100%;
-          height: 150px;
-          object-fit: cover;
-          border-radius: 12px;
-        }
-        .tb-proj-body {
+        .tb-awards li {
           display: flex;
-          flex-direction: column;
-          gap: 6px;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 0;
+          border-top: 1px solid var(--tb-border);
+          font-size: 14px;
+          flex-wrap: wrap;
         }
-        .tb-proj-index {
-          font-size: 12px;
-          color: var(--tb-muted);
-          letter-spacing: 0.05em;
-        }
-        .tb-proj-body h3 {
-          margin: 0;
-          font-size: 1.25rem;
-        }
-        .tb-proj-role {
-          margin: 0;
-          color: var(--tpl-accent, #7c6cff);
-          font-size: 13px;
+        .tb-award-title {
           font-weight: 600;
         }
-        .tb-proj-desc {
-          margin: 0;
-          color: var(--tb-muted);
-          font-size: 14px;
-        }
-        .tb-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin-top: 6px;
-        }
-        .tb-tags span {
-          font-size: 12px;
-          padding: 4px 10px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.06);
+        .tb-award-org,
+        .tb-award-year {
           color: var(--tb-muted);
         }
 
-        @media (max-width: 640px) {
-          .tb-project {
-            grid-template-columns: 1fr;
-          }
-        }
-
+        /* Timeline */
         .tb-timeline {
           display: flex;
           flex-direction: column;
-          gap: 28px;
         }
         .tb-timeline-row {
           display: grid;
           grid-template-columns: 140px 1fr;
           gap: 20px;
+          padding: 20px 0;
+          border-top: 1px solid var(--tb-border);
+        }
+        .tb-timeline-row:first-child {
+          border-top: none;
         }
         .tb-when-lead {
           color: var(--tb-muted);
           font-size: 13px;
           font-weight: 600;
         }
-        .tb-row h3 {
+        .tb-timeline-row h3 {
           margin: 0 0 4px;
           font-size: 1.1rem;
         }
@@ -693,10 +762,6 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           color: var(--tb-muted);
           font-size: 14px;
         }
-        .tb-when {
-          margin-left: 8px;
-          color: var(--tb-muted);
-        }
 
         @media (max-width: 560px) {
           .tb-timeline-row {
@@ -705,24 +770,80 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           }
         }
 
-        .tb-skills {
+        /* Projects */
+        .tb-projects {
           display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
+          flex-direction: column;
+          gap: 20px;
         }
-        .tb-skill {
-          padding: 10px 18px;
-          border-radius: 999px;
+        .tb-project {
+          display: grid;
+          grid-template-columns: 260px 1fr;
+          gap: 24px;
+          padding: 24px;
+          border-radius: 20px;
           border: 1px solid var(--tb-border);
           background: var(--tb-surface);
-          font-size: 14px;
           transition: border-color 0.2s ease, transform 0.2s ease;
         }
-        .tb-skill:hover {
+        .tb-project:hover {
           border-color: var(--tpl-accent, #7c6cff);
-          transform: translateY(-2px);
+          transform: translateY(-3px);
+        }
+        .tb-proj-img {
+          width: 100%;
+          height: 170px;
+          object-fit: cover;
+          border-radius: 14px;
+        }
+        .tb-proj-body h3 {
+          margin: 0 0 8px;
+          font-size: 1.4rem;
+        }
+        .tb-proj-desc {
+          margin: 0 0 16px;
+          color: var(--tb-muted);
+          font-size: 14px;
+        }
+        .tb-proj-role {
+          margin: 0;
+          color: var(--tpl-accent, #7c6cff);
+          font-size: 13px;
+          font-weight: 600;
+        }
+        .tb-proj-meta {
+          display: flex;
+          gap: 32px;
+          flex-wrap: wrap;
+          margin-bottom: 20px;
+        }
+        .tb-meta-label {
+          display: block;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          font-size: 11px;
+          color: var(--tb-muted);
+          margin-bottom: 4px;
+        }
+        .tb-proj-foot {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+        .tb-proj-index {
+          font-size: 12px;
+          color: var(--tb-muted);
+          letter-spacing: 0.05em;
         }
 
+        @media (max-width: 640px) {
+          .tb-project {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        /* Cards */
         .tb-cards {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -743,7 +864,6 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           margin: 0 0 6px;
           font-size: 1.15rem;
         }
-
         .tb-testi-card {
           display: flex;
           flex-direction: column;
@@ -751,7 +871,6 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
         }
         .tb-quote {
           font-size: 15px;
-          color: var(--tb-text);
           margin: 0 0 16px;
         }
         .tb-cite {
@@ -766,6 +885,31 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           object-fit: cover;
         }
 
+        /* Skill bars */
+        .tb-skillbars {
+          display: flex;
+          flex-direction: column;
+          gap: 22px;
+        }
+        .tb-skillbar-top {
+          display: flex;
+          justify-content: space-between;
+          font-size: 14px;
+          margin-bottom: 8px;
+        }
+        .tb-skillbar-track {
+          height: 6px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.06);
+          overflow: hidden;
+        }
+        .tb-skillbar-fill {
+          height: 100%;
+          border-radius: 999px;
+          background: var(--tpl-accent, #7c6cff);
+        }
+
+        /* Gallery / Videos */
         .tb-gallery {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -780,7 +924,6 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           font-size: 13px;
           color: var(--tb-muted);
         }
-
         .tb-videos {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -799,6 +942,15 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           width: 100%;
           height: 100%;
           border: 0;
+        }
+
+        .tb-bio {
+          color: var(--tb-muted);
+          font-size: 14px;
+          margin: 0 0 16px;
+        }
+        .tb-contact-form {
+          margin-top: 24px;
         }
 
         .tb-foot {
