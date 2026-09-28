@@ -3,6 +3,7 @@ import { MinimalTemplate } from "./MinimalTemplate";
 import { BoldTemplate } from "./BoldTemplate";
 import { EditorialTemplate } from "./EditorialTemplate";
 import { AuroraTemplate } from "./AuroraTemplate";
+import { GlassTemplate } from "./GlassTemplate";
 
 // ============================================================================
 // TEMPLATE REGISTRY — the ONE place to register a coded template.
@@ -24,6 +25,7 @@ export const TEMPLATE_COMPONENTS: Record<string, TemplateComponent> = {
   editorial: ({ data }) => <EditorialTemplate data={data} variant="editorial" />,
   studio: ({ data }) => <EditorialTemplate data={data} variant="studio" />,
   aurora: ({ data }) => <AuroraTemplate data={data} />,
+  glass: ({ data }) => <GlassTemplate data={data} />,
 };
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATE_COMPONENTS);
