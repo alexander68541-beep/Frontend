@@ -151,6 +151,7 @@ const NAV: { section: string; items: NavItem[] }[] = [
     { href: "/dashboard/contact", label: "Contact", icon: I.contact },
     { href: "/dashboard/resume", label: "Resume / CV", icon: I.resume },
     { href: "/dashboard/inbox", label: "Contact inbox", icon: I.contact },
+    { href: "/dashboard/domains", label: "Custom domain", icon: I.appearance },
   ]},
   { section: "Optional", items: [
     { href: "/dashboard/templates", label: "Templates", icon: I.appearance },

@@ -28,6 +28,28 @@ function portfolioSubdomain(host: string): string | null {
   return sub;
 }
 
+function isCustomDomain(host: string): boolean {
+  const hostname = host.split(":")[0].toLowerCase();
+  if (hostname === "localhost" || hostname.startsWith("127.") || hostname.endsWith(".vercel.app")) return false;
+  const root = appRootHost();
+  if (root && (hostname === root || hostname === `www.${root}` || hostname.endsWith(`.${root}`))) return false;
+  return hostname.includes(".");
+}
+
+async function resolveCustomDomain(host: string): Promise<string | null> {
+  const api = process.env.NEXT_PUBLIC_API_URL;
+  if (!api) return null;
+  const hostname = host.split(":")[0].toLowerCase();
+  try {
+    const r = await fetch(`${api}/api/v1/public/resolve-domain?host=${encodeURIComponent(hostname)}`, { next: { revalidate: 300 } });
+    if (!r.ok) return null;
+    const d = (await r.json()) as { username?: string | null };
+    return d?.username || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
   const sub = portfolioSubdomain(host);
@@ -36,6 +58,15 @@ export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname;
     url.pathname = `/p/${sub}${path === "/" ? "" : path}`;
     return NextResponse.rewrite(url);
+  }
+  if (isCustomDomain(host)) {
+    const username = await resolveCustomDomain(host);
+    if (username) {
+      const url = request.nextUrl.clone();
+      const path = request.nextUrl.pathname;
+      url.pathname = `/p/${username}${path === "/" ? "" : path}`;
+      return NextResponse.rewrite(url);
+    }
   }
   return updateSession(request);
 }

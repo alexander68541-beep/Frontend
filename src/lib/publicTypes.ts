@@ -40,6 +40,8 @@ export interface PortfolioSettings {
   font?: string;
   hidden?: string[];
   section_order?: string[];
+  ga_id?: string;
+  pixel_id?: string;
 }
 
 export interface PublicPortfolio {
