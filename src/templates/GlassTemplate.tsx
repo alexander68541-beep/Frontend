@@ -46,7 +46,7 @@ function resolveOrder(settings: PublicPortfolio["settings"]): string[] {
   return order;
 }
 
-function initials(name: string | null, fallback: string | null): string {
+function initials(name: string | null | undefined, fallback: string | null | undefined): string {
   const src = (name || fallback || "").trim();
   if (!src) return "◆";
   const parts = src.split(/\s+/).filter(Boolean);
