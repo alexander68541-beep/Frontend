@@ -71,7 +71,7 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
   const sv = (k: string) => !hidden.has(k);
 
   const name = p?.display_name || data.username || "Your Name";
-  const mono = initials(p?.display_name, data.username);
+  const mono = initials(p?.display_name ?? null, data.username);
 
   // What actually renders — drives the nav so it never links to an empty spot.
   const has = {
