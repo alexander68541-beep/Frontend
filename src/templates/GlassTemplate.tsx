@@ -6,7 +6,7 @@ import { ZoomImage } from "@/components/ZoomImage";
 import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
-   GlassTemplate — "GlassTemplate"
+   GlassTemplate — "Aurora Pro" glass look
    Premium minimal + soft glassmorphism portfolio template for Folio.
    PURE PRESENTATION. Everything comes from `data`. No fetch / DB / auth.
    All styles are self-contained in the <style> block below and prefixed
@@ -70,8 +70,12 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
   const hidden = new Set(data.settings?.hidden ?? []);
   const sv = (k: string) => !hidden.has(k);
 
-  const name = p?.display_name || data.username || "Your Name";
-  const mono = initials(p?.display_name ?? null, data.username);
+  // Narrow to a local so TS keeps `string` inside the JSX below
+  // (a boolean like `has.contact` does NOT narrow `data.username`).
+  const username = data.username;
+
+  const name = p?.display_name || username || "Your Name";
+  const mono = initials(p?.display_name, username);
 
   // What actually renders — drives the nav so it never links to an empty spot.
   const has = {
@@ -81,10 +85,10 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
     projects: sv("projects") && data.projects.length > 0,
     process: sv("process"),
     testimonials: sv("testimonials") && data.testimonials.length > 0,
-    contact: !!data.username,
+    contact: !!username,
   };
 
-  const contactHref = has.contact ? "#contact" : p?.email ? `mailto:${p.email}` : undefined;
+  const contactHref = username ? "#contact" : p?.email ? `mailto:${p.email}` : undefined;
 
   const navItems: { href: string; label: string }[] = [
     { href: "#top", label: "Home" },
@@ -115,6 +119,7 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
   const sections: Record<string, () => ReactNode> = {
     about: () => {
       if (!has.about) return null;
+      const aboutText = p?.about ?? null;
       const stats = [
         { n: data.projects.length, label: "Projects" },
         { n: data.experience.length, label: "Roles" },
@@ -140,11 +145,9 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
               )}
             </div>
             <div className="aup-about-right aup-glass">
-              {p?.about ? (
-                p.about.split(/\n{2,}/).map((para, i) => <p key={i}>{para}</p>)
-              ) : (
-                <p>{p?.bio}</p>
-              )}
+              {aboutText
+                ? aboutText.split(/\n{2,}/).map((para, i) => <p key={i}>{para}</p>)
+                : <p>{p?.bio}</p>}
               {p?.resume_url && (
                 <a className="aup-btn aup-btn-ghost aup-mt" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">
                   View résumé <span aria-hidden>↗</span>
@@ -675,7 +678,7 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
         ))}
 
         {/* ---------------- CONTACT ---------------- */}
-        {has.contact && (
+        {username && (
           <section id="contact" className="aup-section">
             <div className="aup-contact">
               <div className="aup-contact-left">
@@ -715,7 +718,7 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
 
               <div className="aup-formcard aup-glass">
                 <span className="aup-orb aup-orb-contact" aria-hidden />
-                <ContactForm username={data.username} />
+                <ContactForm username={username} />
               </div>
             </div>
           </section>
