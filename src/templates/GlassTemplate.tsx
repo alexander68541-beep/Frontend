@@ -63,7 +63,7 @@ function oneDate(s: string | null): string | null {
 
 /* ------------------------------- component ------------------------------- */
 
-export function AuroraProTemplate({ data }: { data: PublicPortfolio }) {
+export function GlassTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const accent = data.accent || "#7c6cff";
 
