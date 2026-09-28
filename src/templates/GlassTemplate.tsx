@@ -1,320 +1,416 @@
 "use client";
+
 import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { fontStack } from "@/lib/fonts";
-import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 import { ContactForm } from "@/components/ContactForm";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-// --- Tree Node Component (The core of OSINT style) ---
-function Node({
-  title,
-  subtitle,
-  defaultOpen = false,
-  content,
-  children,
-  isRoot = false,
-}: {
-  title: React.ReactNode;
-  subtitle?: React.ReactNode;
-  defaultOpen?: boolean;
-  content?: React.ReactNode;
-  children?: React.ReactNode;
-  isRoot?: boolean;
-}) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  const hasChildren = Boolean(content || React.Children.count(children) > 0);
-
+// Helper components for the "Curtis" style
+const Crosshair = ({ position }: { position: "tl" | "tr" | "bl" | "br" }) => {
+  const posClasses = {
+    tl: "-top-2 -left-2",
+    tr: "-top-2 -right-2",
+    bl: "-bottom-2 -left-2",
+    br: "-bottom-2 -right-2",
+  };
   return (
-    <div className="flex flex-col relative w-full">
-      <div
-        className={`flex items-start gap-3 py-1.5 group transition-all duration-300 ${
-          hasChildren ? "cursor-pointer" : "cursor-default"
-        }`}
-        onClick={() => hasChildren && setIsOpen(!isOpen)}
-      >
-        {/* Connection Line to Left (Only if not root) */}
-        {!isRoot && (
-          <div className="absolute left-[-16px] top-[14px] w-[14px] h-[1px] bg-white/20 group-hover:bg-[var(--tpl-accent)] transition-colors" />
-        )}
-
-        {/* Node Icon (+ / - / •) */}
-        <div
-          className={`relative z-10 flex-shrink-0 mt-[4px] flex items-center justify-center w-[18px] h-[18px] rounded-sm border ${
-            isRoot
-              ? "border-[var(--tpl-accent)] bg-[var(--tpl-accent)] text-black"
-              : "border-white/30 bg-[#0a0a0f] text-gray-400 group-hover:border-[var(--tpl-accent)] group-hover:text-[var(--tpl-accent)] group-hover:shadow-[0_0_10px_var(--tpl-accent)]"
-          } text-[10px] font-mono transition-all duration-300`}
-        >
-          {hasChildren ? (isOpen ? "−" : "+") : "•"}
-        </div>
-
-        {/* Title & Subtitle */}
-        <div className="flex flex-col pt-[2px]">
-          <span
-            className={`font-mono text-sm md:text-base leading-tight font-semibold tracking-tight ${
-              isRoot ? "text-[var(--tpl-accent)] text-lg md:text-xl" : "text-gray-200 group-hover:text-white"
-            } transition-colors`}
-          >
-            {title}
-          </span>
-          {subtitle && <span className="text-xs text-gray-500 font-sans mt-1">{subtitle}</span>}
-        </div>
-      </div>
-
-      {/* Children Container */}
-      {isOpen && hasChildren && (
-        <div className="flex w-full animate-[fadeInDown_0.3s_ease-out]">
-          {/* Vertical indent line */}
-          <div className="w-[1px] bg-white/10 ml-[8px] my-1 group-hover:bg-[var(--tpl-accent)]/30 transition-colors" />
-          <div className="flex-1 pl-6 py-2 flex flex-col gap-1 w-full max-w-[100%] overflow-hidden">
-            {content && <div className="mb-3">{content}</div>}
-            {children}
-          </div>
-        </div>
-      )}
-    </div>
+    <svg
+      className={`absolute w-4 h-4 text-white/30 group-hover:text-[#b0ff4d] transition-colors duration-300 z-10 ${posClasses[position]}`}
+      viewBox="0 0 8 8"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path d="M4.5 3.5H7V4.5H4.5V7H3.5V4.5H1V3.5H3.5V1H4.5V3.5Z" fill="currentColor"></path>
+    </svg>
   );
-}
+};
 
-// --- Main Template ---
 export function GlassTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const hidden = new Set(data.settings?.hidden ?? []);
   const sv = (k: string) => !hidden.has(k);
   const fontFam = fontStack(data.settings?.font);
   const name = p?.display_name || data.username || "sys.admin";
-  const accentColor = data.accent || "#00ffcc"; // Default to hacker cyan/green
+  
+  // Interactive state for "Worked At" section
+  const [activeExp, setActiveExp] = useState(0);
 
   return (
     <div
-      className="min-h-screen bg-[#050508] text-gray-300 overflow-x-hidden font-sans pb-20 selection:bg-[var(--tpl-accent)] selection:text-black"
+      className="min-h-screen bg-[#0A0A0A] text-[#F5F0EB] selection:bg-[#b0ff4d] selection:text-black uppercase overflow-x-hidden font-sans"
       style={{
-        ["--tpl-accent" as string]: accentColor,
         ...(fontFam ? { fontFamily: fontFam } : {}),
       } as React.CSSProperties}
     >
-      {/* Grid Background overlay for cyber vibe */}
-      <div className="fixed inset-0 pointer-events-none bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20" />
+      <style dangerouslySetInnerHTML={{__html: `
+        .clip-notch {
+          clip-path: polygon(0% 4px, 4px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%);
+        }
+        .bg-grid {
+          background-size: 100px 100px;
+          background-image: 
+            linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        }
+        .marquee-container {
+          overflow: hidden;
+          white-space: nowrap;
+          width: 100vw;
+        }
+        .marquee-content {
+          display: inline-block;
+          animation: marquee 20s linear infinite;
+        }
+        @keyframes marquee {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+        /* Custom Scrollbar for horizontal areas */
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}} />
 
-      {/* Main Tree Container */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-12 pt-16 overflow-x-auto">
+      {/* Global Grid Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-0 bg-grid opacity-50" />
+      <div className="fixed left-4 md:left-12 lg:left-24 top-0 bottom-0 w-[1px] bg-white/10 z-0 pointer-events-none" />
+      <div className="fixed right-4 md:right-12 lg:right-24 top-0 bottom-0 w-[1px] bg-white/10 z-0 pointer-events-none" />
+
+      {/* Navigation (Sticky) */}
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-6 md:px-12 backdrop-blur-md border-b border-white/10 bg-[#0A0A0A]/80">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-3 bg-[#b0ff4d] clip-notch animate-pulse" />
+          <span className="font-mono text-xs tracking-widest text-white/50 hidden md:block">SYS.ACTIVE</span>
+        </div>
+        <div className="hidden md:flex gap-12 font-mono text-xs tracking-widest text-white/50">
+          <p>SOUND - <span className="text-white">ON</span></p>
+          {p?.location && <p>{p.location}</p>}
+        </div>
+        <button className="relative px-6 py-2 bg-[#1a1a1a] border border-[#333] text-sm font-bold tracking-widest text-[#b0ff4d] hover:bg-[#b0ff4d] hover:text-black transition-colors clip-notch">
+          MENU
+        </button>
+      </nav>
+
+      {/* Page Content Container */}
+      <main className="relative z-10 pt-40 md:pt-48 pb-20 px-4 md:px-12 lg:px-24">
         
-        {/* Terminal Header */}
-        <div className="mb-10 font-mono text-xs md:text-sm text-gray-500 border-b border-white/10 pb-4">
-          <p>{`> Initializing portfolio tree for user: ${data.username}`}</p>
-          <p>{`> Status: Online`}</p>
-          <p className="text-[var(--tpl-accent)] animate-pulse">{`> Awaiting input...`}</p>
+        {/* HERO SECTION */}
+        <section className="relative mb-40 border-l border-r border-white/10 px-4 md:px-8 py-10">
+          <div className="flex flex-col lg:flex-row gap-12 items-start lg:items-end">
+            
+            <div className="flex-1">
+              <p className="font-mono text-[#b0ff4d] text-sm md:text-base tracking-[0.2em] mb-6">
+                FROM <span className="text-white">{p?.location || "UNKNOWN SECTOR"}</span>
+              </p>
+              
+              <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-bold leading-[0.85] tracking-tighter mix-blend-difference mb-8 text-white break-words">
+                {name.split(' ').map((word, i) => (
+                  <span key={i} className="block">{word}</span>
+                ))}
+              </h1>
+
+              <div className="font-mono text-sm md:text-base lg:text-lg text-white/60 tracking-widest max-w-2xl leading-relaxed border-l-2 border-[#b0ff4d] pl-6 mt-10 normal-case">
+                {p?.tagline && <span className="text-[#b0ff4d] font-bold block mb-4 uppercase">{p.tagline}</span>}
+                {p?.bio && <span>{p.bio}</span>}
+              </div>
+            </div>
+
+            {p?.avatar_url && (
+              <div className="relative shrink-0 group">
+                <div className="absolute inset-0 bg-[#b0ff4d] translate-x-3 translate-y-3 clip-notch opacity-50 transition-transform group-hover:translate-x-4 group-hover:translate-y-4" />
+                <ZoomImage 
+                  src={p.avatar_url} 
+                  alt={name} 
+                  className="w-48 h-64 md:w-64 md:h-80 object-cover grayscale group-hover:grayscale-0 transition-all duration-500 relative z-10 clip-notch border border-white/20"
+                />
+                <Crosshair position="tl" /><Crosshair position="tr" />
+                <Crosshair position="bl" /><Crosshair position="br" />
+              </div>
+            )}
+          </div>
+
+          {/* Scroll Cue */}
+          <div className="absolute -bottom-20 left-8 flex flex-col items-center gap-2 animate-bounce">
+            <span className="font-mono text-xs tracking-widest text-white/40">SCROLL</span>
+            <div className="w-[1px] h-12 bg-gradient-to-b from-[#b0ff4d] to-transparent" />
+          </div>
+        </section>
+
+        {/* ABOUT SECTION */}
+        {sv("about") && p?.about && (
+          <section className="mb-40 border-t border-b border-white/10 py-20 relative">
+            <h2 className="absolute top-0 -translate-y-1/2 left-8 bg-[#0A0A0A] px-4 font-mono text-xs tracking-[0.3em] text-[#b0ff4d]">/ ABOUT_ME.TXT</h2>
+            <div className="text-xl md:text-3xl lg:text-4xl font-semibold leading-snug tracking-tight max-w-5xl normal-case">
+              {p.about}
+            </div>
+          </section>
+        )}
+
+        {/* SELECTED WORK (Horizontal Scroll like Curtis) */}
+        {sv("projects") && data.projects.length > 0 && (
+          <section className="mb-40 relative">
+             <div className="flex items-center gap-4 mb-12">
+               <span className="px-3 py-1 bg-[#b0ff4d] text-black font-bold tracking-widest text-xs clip-notch">FEATURED</span>
+               <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">Selected Work</h2>
+             </div>
+
+             <div className="flex overflow-x-auto gap-8 pb-12 pt-4 hide-scrollbar snap-x snap-mandatory">
+                {data.projects.map((pr, i) => (
+                  <article key={pr.id} className="relative group shrink-0 w-[85vw] md:w-[600px] snap-center">
+                    <Crosshair position="tl" /><Crosshair position="tr" />
+                    <Crosshair position="bl" /><Crosshair position="br" />
+                    
+                    <a href={pr.url ? ext(pr.url) : undefined} target="_blank" rel="noreferrer" className="block relative border border-white/10 bg-[#111] p-4 transition-colors hover:border-[#b0ff4d]">
+                       {pr.image_url && (
+                         <div className="relative w-full aspect-[4/3] overflow-hidden mb-6 bg-black clip-notch">
+                           <div className="absolute inset-0 bg-[#b0ff4d]/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"/>
+                           <img src={pr.image_url} alt={pr.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" />
+                         </div>
+                       )}
+                       
+                       <div className="flex justify-between items-end border-t border-white/10 pt-4">
+                         <div>
+                           <h3 className="text-2xl md:text-3xl font-bold mb-2">{pr.title}</h3>
+                           {pr.role && <p className="font-mono text-[#b0ff4d] text-xs tracking-widest">{pr.role}</p>}
+                           {pr.description && <p className="text-white/60 text-sm mt-3 normal-case line-clamp-2 max-w-[80%]">{pr.description}</p>}
+                         </div>
+                         <div className="shrink-0 w-12 h-12 bg-white/5 border border-white/10 group-hover:bg-[#b0ff4d] group-hover:border-[#b0ff4d] group-hover:text-black text-white flex items-center justify-center transition-colors clip-notch">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                         </div>
+                       </div>
+                       
+                       {pr.tags.length > 0 && (
+                         <div className="flex flex-wrap gap-2 mt-4">
+                           {pr.tags.map(t => <span key={t} className="text-[10px] font-mono border border-white/20 px-2 py-1 text-white/50">{t}</span>)}
+                         </div>
+                       )}
+                    </a>
+                  </article>
+                ))}
+             </div>
+          </section>
+        )}
+
+        {/* WORKED AT (Interactive CRT List) */}
+        {sv("experience") && data.experience.length > 0 && (
+          <section className="mb-40 border-t border-b border-white/10 relative">
+             <h2 className="absolute top-0 -translate-y-1/2 left-8 bg-[#0A0A0A] px-4 font-mono text-xs tracking-[0.3em] text-[#b0ff4d]">/ CAREER_TIMELINE</h2>
+             
+             <div className="flex flex-col lg:flex-row w-full divide-y lg:divide-y-0 lg:divide-x divide-white/10">
+                {/* Left: List */}
+                <div className="w-full lg:w-1/2 flex flex-col">
+                  {data.experience.map((x, i) => (
+                    <button 
+                      key={x.id} 
+                      onClick={() => setActiveExp(i)}
+                      className={`group flex items-center justify-between p-6 md:p-8 text-left transition-colors border-b border-white/10 last:border-0 ${activeExp === i ? 'bg-white/5' : 'hover:bg-white/5'}`}
+                    >
+                      <div className="flex items-center gap-6">
+                        <span className={`font-mono text-xs ${activeExp === i ? 'text-[#b0ff4d]' : 'text-white/30'}`}>
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <div>
+                          <h3 className={`text-xl md:text-3xl font-bold mb-1 ${activeExp === i ? 'text-white' : 'text-white/60 group-hover:text-white'}`}>
+                            {x.title || x.company}
+                          </h3>
+                          <span className="font-mono text-[#b0ff4d] tracking-widest text-xs">
+                            {[x.company, x.location].filter(Boolean).join(" // ")}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={`font-mono text-2xl ${activeExp === i ? 'text-[#b0ff4d]' : 'text-white/30'}`}>
+                        {activeExp === i ? '−' : '+'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Right: Details Panel (CRT effect) */}
+                <div className="w-full lg:w-1/2 p-8 md:p-16 flex flex-col justify-center relative bg-[#050505] overflow-hidden">
+                  <div className="absolute inset-0 bg-grid opacity-20 pointer-events-none" />
+                  <Crosshair position="tl" /><Crosshair position="tr" />
+                  <Crosshair position="bl" /><Crosshair position="br" />
+                  
+                  {data.experience[activeExp] && (
+                    <div className="relative z-10 animate-[fadeIn_0.3s_ease-out]">
+                      <div className="inline-block px-3 py-1 border border-[#b0ff4d] text-[#b0ff4d] font-mono text-xs mb-6">
+                        {dateRange(data.experience[activeExp].start_date, data.experience[activeExp].end_date, data.experience[activeExp].is_current)}
+                      </div>
+                      <p className="text-xl md:text-2xl leading-relaxed text-white/80 normal-case font-medium">
+                        {data.experience[activeExp].description || "No description provided."}
+                      </p>
+                    </div>
+                  )}
+                </div>
+             </div>
+          </section>
+        )}
+
+        {/* SKILLS / TECH STACK (Brutalist badges) */}
+        {sv("skills") && data.skills.length > 0 && (
+          <section className="mb-40">
+            <h2 className="text-sm font-mono tracking-[0.3em] text-[#b0ff4d] mb-8">/ TECH_STACK</h2>
+            <div className="flex flex-wrap gap-4">
+              {data.skills.map(s => (
+                <span key={s.id} className="px-6 py-4 border border-white/20 text-white/80 text-lg md:text-2xl font-bold uppercase tracking-tight hover:border-[#b0ff4d] hover:text-[#b0ff4d] hover:-translate-y-1 transition-all bg-[#111]">
+                  {s.name}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* EDUCATION & OTHERS (Grid System) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/10 mb-40 border border-white/10">
+          
+          {sv("education") && data.education.length > 0 && (
+            <section className="bg-[#0A0A0A] p-8 md:p-12 relative group">
+              <Crosshair position="tl" /><Crosshair position="tr" /><Crosshair position="bl" /><Crosshair position="br" />
+              <h2 className="text-sm font-mono tracking-[0.3em] text-[#b0ff4d] mb-8">/ EDUCATION</h2>
+              <div className="space-y-10">
+                {data.education.map(ed => (
+                  <div key={ed.id}>
+                    <h3 className="text-2xl font-bold mb-2">{ed.school}</h3>
+                    <p className="font-mono text-white/60 mb-2">{[ed.degree, ed.field].filter(Boolean).join(" // ")}</p>
+                    <p className="text-xs text-[#b0ff4d] border border-[#b0ff4d]/30 inline-block px-2 py-1 mb-4">{dateRange(ed.start_date, ed.end_date)}</p>
+                    {ed.description && <p className="text-white/50 text-sm normal-case">{ed.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {sv("services") && data.services.length > 0 && (
+            <section className="bg-[#0A0A0A] p-8 md:p-12 relative group">
+              <Crosshair position="tl" /><Crosshair position="tr" /><Crosshair position="bl" /><Crosshair position="br" />
+              <h2 className="text-sm font-mono tracking-[0.3em] text-[#b0ff4d] mb-8">/ SERVICES</h2>
+              <div className="space-y-8">
+                {data.services.map((s, i) => (
+                  <div key={s.id} className="border-b border-white/10 pb-6 last:border-0 last:pb-0">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-xl font-bold flex gap-4">
+                        <span className="text-white/30 font-mono text-sm mt-1">0{i+1}</span>
+                        {s.title}
+                      </h3>
+                      {s.price && <span className="text-[#b0ff4d] font-mono text-sm">{s.price}</span>}
+                    </div>
+                    {s.description && <p className="text-white/50 text-sm normal-case ml-8">{s.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Certifications & Achievements mapping inside grid if needed */}
+          {sv("certifications") && data.certifications.length > 0 && (
+             <section className="bg-[#0A0A0A] p-8 md:p-12 relative group">
+               <Crosshair position="tl" /><Crosshair position="tr" /><Crosshair position="bl" /><Crosshair position="br" />
+               <h2 className="text-sm font-mono tracking-[0.3em] text-[#b0ff4d] mb-8">/ CERTS</h2>
+               <ul className="space-y-6">
+                 {data.certifications.map(c => (
+                   <li key={c.id} className="flex justify-between border-b border-white/5 pb-4">
+                     <div>
+                       <h3 className="font-bold">{c.url ? <a href={ext(c.url)} target="_blank" rel="noreferrer" className="hover:text-[#b0ff4d]">{c.name} ↗</a> : c.name}</h3>
+                       <p className="text-white/40 text-sm">{c.issuer}</p>
+                     </div>
+                     <span className="font-mono text-xs text-[#b0ff4d]">{c.issue_date}</span>
+                   </li>
+                 ))}
+               </ul>
+             </section>
+          )}
         </div>
 
-        {/* ROOT NODE */}
-        <Node title={`[ ${name} ]`} isRoot defaultOpen>
+        {/* MEDIA GALLERY */}
+        {sv("gallery") && data.gallery.length > 0 && (
+          <section className="mb-40">
+            <h2 className="text-sm font-mono tracking-[0.3em] text-[#b0ff4d] mb-8">/ MEDIA_ARCHIVE</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-1 bg-white/10 border border-white/10 p-1">
+              {data.gallery.map(g => (
+                <figure key={g.id} className="relative group bg-[#0A0A0A] overflow-hidden aspect-square">
+                  <div className="absolute inset-0 bg-[#b0ff4d]/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"/>
+                  <ZoomImage src={g.image_url} alt={g.caption || ""} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105" />
+                  {g.caption && <figcaption className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur text-xs font-mono p-2 border-l-2 border-[#b0ff4d] opacity-0 group-hover:opacity-100 transition-opacity">{g.caption}</figcaption>}
+                </figure>
+              ))}
+            </div>
+          </section>
+        )}
+
+      </main>
+
+      {/* FOOTER */}
+      <footer className="relative bg-[#b0ff4d] text-black overflow-hidden pt-24 pb-12 mt-40">
+        <div className="absolute inset-0 bg-grid opacity-10 pointer-events-none mix-blend-multiply" />
+        
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
           
-          {/* PROFILE BRANCH */}
-          <Node title="Profile" defaultOpen>
-            <div className="p-4 md:p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm max-w-3xl flex flex-col md:flex-row gap-6 items-start">
-              {p?.avatar_url && (
-                <div className="flex-shrink-0 relative">
-                  <div className="absolute inset-0 bg-[var(--tpl-accent)] blur-md opacity-20" />
-                  <ZoomImage
-                    src={p.avatar_url}
-                    alt={name}
-                    className="w-24 h-24 rounded-lg object-cover border border-white/20 relative z-10"
-                  />
-                </div>
-              )}
-              <div className="flex flex-col gap-2">
-                {p?.title && <p className="text-[var(--tpl-accent)] font-mono text-sm">{"< " + p.title + " >"}</p>}
-                {p?.tagline && <p className="text-gray-200 text-lg">{p.tagline}</p>}
-                {p?.location && <p className="text-xs text-gray-500 font-mono flex items-center gap-2">📍 {p.location}</p>}
-                {p?.bio && <p className="text-sm text-gray-400 mt-2 leading-relaxed whitespace-pre-wrap">{p.bio}</p>}
-                
-                {data.links.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    {data.links.map((l) => (
-                      <LinkChip key={l.id} platform={l.platform} url={l.url} label={l.label} className="text-xs" />
-                    ))}
-                  </div>
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12 mb-24">
+            <div>
+              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-8 max-w-2xl leading-none">
+                Let's build<br/>something<br/>insane.
+              </h2>
+              <div className="flex flex-wrap gap-4">
+                {p?.email && (
+                  <a href={`mailto:${p.email}`} className="px-6 py-4 bg-black text-white font-bold uppercase tracking-widest text-sm hover:bg-white hover:text-black border-2 border-transparent hover:border-black transition-all clip-notch">
+                    Shoot a message
+                  </a>
+                )}
+                {p?.resume_url && (
+                  <a href={ext(p.resume_url)} target="_blank" rel="noreferrer" className="px-6 py-4 bg-transparent border-2 border-black text-black font-bold uppercase tracking-widest text-sm hover:bg-black hover:text-[#b0ff4d] transition-all clip-notch">
+                    Download CV
+                  </a>
                 )}
               </div>
             </div>
-          </Node>
 
-          {/* ABOUT BRANCH */}
-          {sv("about") && p?.about && (
-            <Node title="About_Me.txt">
-              <div className="p-4 rounded-lg bg-black/40 border border-white/5 font-mono text-sm text-gray-400 max-w-3xl leading-relaxed whitespace-pre-wrap">
-                {p.about}
-              </div>
-            </Node>
-          )}
-
-          {/* PROJECTS BRANCH */}
-          {sv("projects") && data.projects.length > 0 && (
-            <Node title="Projects" defaultOpen>
-              {data.projects.map((pr) => (
-                <Node key={pr.id} title={pr.title} subtitle={pr.role}>
-                  <div className="max-w-2xl bg-white/5 border border-white/10 rounded-xl p-4 my-2">
-                    {pr.image_url && (
-                      <a href={pr.url ? ext(pr.url) : undefined} target="_blank" rel="noreferrer">
-                        <img src={pr.image_url} alt={pr.title} className="w-full h-48 object-cover rounded-md mb-4 hover:opacity-80 transition-opacity" />
-                      </a>
-                    )}
-                    {pr.description && <p className="text-sm text-gray-300 mb-4">{pr.description}</p>}
-                    <div className="flex flex-wrap gap-2">
-                      {pr.tags.map(t => (
-                        <span key={t} className="text-[10px] uppercase font-mono px-2 py-1 bg-[var(--tpl-accent)]/10 text-[var(--tpl-accent)] border border-[var(--tpl-accent)]/20 rounded-sm">
-                          {t}
-                        </span>
-                      ))}
-                      {pr.url && (
-                         <a href={ext(pr.url)} target="_blank" rel="noreferrer" className="text-[10px] uppercase font-mono px-2 py-1 bg-white/10 hover:bg-white/20 rounded-sm transition-colors">
-                           Visit Link ↗
-                         </a>
-                      )}
+            {/* Social Links Matrix */}
+            <div className="w-full lg:w-auto">
+              <p className="font-mono text-xs font-bold tracking-widest mb-6 opacity-60">/ CONNECT_DIRECTORY</p>
+              <div className="flex flex-col gap-2 w-full lg:min-w-[300px]">
+                {data.links.map((l, i) => (
+                  <a key={l.id} href={ext(l.url)} target="_blank" rel="noreferrer" className="group flex justify-between items-center py-4 border-b border-black/20 hover:border-black transition-colors">
+                    <div className="flex items-center gap-6">
+                      <span className="font-mono text-xs font-bold opacity-30 group-hover:opacity-100">0{i+1}</span>
+                      <span className="font-bold uppercase tracking-widest text-lg group-hover:translate-x-2 transition-transform">{l.platform}</span>
                     </div>
-                  </div>
-                </Node>
-              ))}
-            </Node>
-          )}
-
-          {/* EXPERIENCE BRANCH */}
-          {sv("experience") && data.experience.length > 0 && (
-            <Node title="Experience">
-              {data.experience.map((x) => (
-                <Node key={x.id} title={x.title || x.company} subtitle={dateRange(x.start_date, x.end_date, x.is_current)}>
-                  <div className="max-w-2xl text-sm font-sans mb-4">
-                    <p className="text-[var(--tpl-accent)] font-medium mb-2">{[x.company, x.location].filter(Boolean).join(" · ")}</p>
-                    {x.description && <p className="text-gray-400 whitespace-pre-wrap leading-relaxed">{x.description}</p>}
-                  </div>
-                </Node>
-              ))}
-            </Node>
-          )}
-
-          {/* EDUCATION BRANCH */}
-          {sv("education") && data.education.length > 0 && (
-            <Node title="Education">
-              {data.education.map((ed) => (
-                <Node key={ed.id} title={ed.school} subtitle={dateRange(ed.start_date, ed.end_date)}>
-                  <div className="max-w-2xl text-sm font-sans mb-4">
-                    <p className="text-white font-medium mb-1">{[ed.degree, ed.field].filter(Boolean).join(", ")}</p>
-                    {ed.description && <p className="text-gray-400">{ed.description}</p>}
-                  </div>
-                </Node>
-              ))}
-            </Node>
-          )}
-
-          {/* SKILLS BRANCH */}
-          {sv("skills") && data.skills.length > 0 && (
-            <Node title="Skills_&_Tech">
-              <div className="flex flex-wrap gap-2 max-w-2xl py-2">
-                {data.skills.map((s) => (
-                  <span key={s.id} className="font-mono text-xs px-3 py-1.5 bg-[#0a0a0f] border border-white/20 text-gray-300 rounded-sm hover:border-[var(--tpl-accent)] hover:text-[var(--tpl-accent)] transition-colors cursor-default">
-                    {s.name}
-                  </span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                  </a>
                 ))}
               </div>
-            </Node>
-          )}
-
-          {/* SERVICES BRANCH */}
-          {sv("services") && data.services.length > 0 && (
-            <Node title="Services">
-              {data.services.map((s) => (
-                <Node key={s.id} title={s.title} subtitle={s.price}>
-                  {s.description && (
-                    <div className="max-w-2xl text-sm text-gray-400 mb-4 whitespace-pre-wrap p-3 bg-white/5 border-l-2 border-[var(--tpl-accent)]">
-                      {s.description}
-                    </div>
-                  )}
-                </Node>
-              ))}
-            </Node>
-          )}
-
-          {/* GALLERY BRANCH */}
-          {sv("gallery") && data.gallery.length > 0 && (
-            <Node title="Media_Gallery">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl my-2">
-                {data.gallery.map((g) => (
-                  <figure key={g.id} className="relative group">
-                    <div className="overflow-hidden rounded-md border border-white/10">
-                      <ZoomImage src={g.image_url} alt={g.caption || ""} className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-500 opacity-70 group-hover:opacity-100" />
-                    </div>
-                    {g.caption && <figcaption className="text-[10px] font-mono mt-1 text-gray-500 truncate">{g.caption}</figcaption>}
-                  </figure>
-                ))}
-              </div>
-            </Node>
-          )}
-
-          {/* VIDEOS BRANCH */}
-          {sv("videos") && data.videos.length > 0 && (
-            <Node title="Videos">
-              <div className="flex flex-col gap-4 max-w-2xl my-2">
-                {data.videos.map((v) => {
-                  const embed = videoEmbed(v.url);
-                  return (
-                    <div key={v.id} className="rounded-lg overflow-hidden border border-white/10 bg-black">
-                      {embed ? (
-                        <div className="aspect-video"><iframe src={embed} title={v.title || "Video"} allowFullScreen className="w-full h-full" /></div>
-                      ) : (
-                        <div className="p-4"><a className="text-[var(--tpl-accent)] font-mono text-sm hover:underline" href={ext(v.url)} target="_blank" rel="noreferrer">► Play {v.title || v.url}</a></div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </Node>
-          )}
-
-          {/* TESTIMONIALS BRANCH */}
-          {sv("testimonials") && data.testimonials.length > 0 && (
-            <Node title="Testimonials">
-              {data.testimonials.map((t) => (
-                <Node key={t.id} title={t.author} subtitle={t.role}>
-                  <div className="max-w-2xl p-4 bg-white/5 border border-white/10 rounded-r-xl rounded-bl-xl mb-4 relative">
-                    <p className="text-sm text-gray-300 italic mb-3">"{t.quote}"</p>
-                    {t.avatar_url && <img className="w-8 h-8 rounded-full border border-gray-600" src={t.avatar_url} alt={t.author} />}
-                  </div>
-                </Node>
-              ))}
-            </Node>
-          )}
-
-          {/* CONTACT & DIRECTORY BRANCH */}
-          <Node title="Contact_Directory">
-            <div className="flex flex-col gap-4 max-w-xl my-2">
-              {p?.availability && <p className="text-[var(--tpl-accent)] font-mono text-xs border border-[var(--tpl-accent)]/30 bg-[var(--tpl-accent)]/10 px-3 py-1 inline-block w-fit mb-2">STATUS: {p.availability}</p>}
-              
-              <div className="space-y-3 font-mono text-sm">
-                {p?.email && <p className="flex items-center gap-3 text-gray-400"><span>[MAIL]</span> <a href={`mailto:${p.email}`} className="text-gray-200 hover:text-[var(--tpl-accent)]">{p.email}</a></p>}
-                {p?.phone && <p className="flex items-center gap-3 text-gray-400"><span>[TEL ]</span> <span className="text-gray-200">{p.phone}</span></p>}
-                {p?.website && <p className="flex items-center gap-3 text-gray-400"><span>[WEB ]</span> <a href={ext(p.website)} target="_blank" rel="noreferrer" className="text-[var(--tpl-accent)] hover:underline">Link ↗</a></p>}
-                {p?.resume_url && <p className="flex items-center gap-3 text-gray-400 pt-2"><span>[FILE]</span> <a href={ext(p.resume_url)} target="_blank" rel="noreferrer" className="bg-white/10 text-white px-3 py-1 rounded-sm hover:bg-[var(--tpl-accent)] hover:text-black transition-colors">Download_Resume.pdf</a></p>}
-              </div>
-
-              {data.username && (
-                <div className="mt-8 p-6 bg-black/50 border border-white/10 rounded-xl">
-                  <p className="font-mono text-xs text-gray-500 mb-4">{`// SEND DIRECT MESSAGE TO ${data.username}`}</p>
-                  <ContactForm username={data.username} />
-                </div>
-              )}
             </div>
-          </Node>
-        </Node>
+          </div>
 
-        {/* Footer */}
-        {!data.hide_branding && (
-          <footer className="mt-20 font-mono text-xs text-gray-600 pl-4 border-l-2 border-[var(--tpl-accent)]/50">
-            System generated by Folio
-          </footer>
-        )}
-      </div>
+          {/* Contact Form embedded in Footer if username exists */}
+          {data.username && (
+            <div className="w-full max-w-2xl bg-black p-8 text-[#F5F0EB] clip-notch mb-24 relative group">
+              <Crosshair position="tl" /><Crosshair position="tr" /><Crosshair position="bl" /><Crosshair position="br" />
+              <h3 className="font-bold text-2xl uppercase mb-6 tracking-tighter text-[#b0ff4d]">Direct Terminal</h3>
+              <ContactForm username={data.username} />
+            </div>
+          )}
+
+          {/* Giant Marquee Text */}
+          <div className="marquee-container -ml-6 md:-ml-12 mb-12 mix-blend-multiply opacity-20 pointer-events-none">
+            <div className="marquee-content text-[15vw] font-black uppercase tracking-tighter leading-none">
+               PORTFOLIO/{name.replace(" ", "")} PORTFOLIO/{name.replace(" ", "")} PORTFOLIO/{name.replace(" ", "")} 
+            </div>
+          </div>
+
+          {!data.hide_branding && (
+            <div className="flex justify-between items-center font-mono text-xs font-bold tracking-widest pt-6 border-t border-black/20">
+              <p>@2026 BY {name}</p>
+              <p>SYSTEM GENERATED BY FOLIO</p>
+            </div>
+          )}
+        </div>
+      </footer>
     </div>
   );
 }
