@@ -1,11 +1,60 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { fontStack } from "@/lib/fonts";
+import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 import { ContactForm } from "@/components/ContactForm";
-import React, { useMemo } from "react";
+
+/** Animated count-up, triggers once the number scrolls into view. */
+function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
+  const [n, setN] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const done = useRef(false);
+
+  useEffect(() => {
+    if (!ref.current || value <= 0) return;
+    const el = ref.current;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting || done.current) return;
+        done.current = true;
+        const start = performance.now();
+        const dur = 900;
+        const step = (t: number) => {
+          const p = Math.min(1, (t - start) / dur);
+          setN(Math.round(value * (1 - Math.pow(1 - p, 3))));
+          if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      },
+      { threshold: 0.4 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [value]);
+
+  return (
+    <span ref={ref} className="tb-stat-num">
+      {n}
+      {suffix}
+    </span>
+  );
+}
+
+/** Years between the earliest experience start_date and now (derived from real data, not invented). */
+function yearsOfExperience(experience: PublicPortfolio["experience"]): number {
+  if (!experience?.length) return 0;
+  const starts = experience
+    .map((x) => (x.start_date ? new Date(x.start_date).getTime() : null))
+    .filter((t): t is number => !!t);
+  if (!starts.length) return 0;
+  const earliest = Math.min(...starts);
+  const diff = Date.now() - earliest;
+  return Math.max(1, Math.round(diff / (365.25 * 24 * 3600 * 1000)));
+}
 
 export function GlassTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
@@ -13,233 +62,108 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
   const sv = (k: string) => !hidden.has(k);
   const fontFam = fontStack(data.settings?.font);
   const name = p?.display_name || data.username || "Untitled";
-  const firstName = name.split(" ")[0];
-  const accentColor = data.accent || "#00D05E"; // Default neon green from image
 
-  // Calculate Years of Experience dynamically
-  const expYears = useMemo(() => {
-    if (!data.experience || data.experience.length === 0) return "5+";
-    const startYears = data.experience.map((x) => {
-      const match = x.start_date?.match(/\d{4}/);
-      return match ? parseInt(match[0]) : new Date().getFullYear();
-    });
-    const minYear = Math.min(...startYears);
-    const years = new Date().getFullYear() - minYear;
-    return years > 0 ? `${years}+` : "1+";
-  }, [data.experience]);
-
-  // Make the hero text stand out by wrapping middle words in pills
-  const renderHeroText = () => {
-    const text = p?.tagline || p?.about || "Crafting digital experiences and brands that people remember";
-    const words = text.split(" ");
-    if (words.length < 4) return <span className="text-white">{text}</span>;
-    
-    const midStart = Math.floor(words.length / 3);
-    const midEnd = Math.floor((words.length / 3) * 2);
-
-    return (
-      <>
-        <span className="text-white">{words.slice(0, midStart).join(" ")} </span>
-        <span 
-          className="inline-block px-4 py-1 mx-1 text-black rounded-full font-bold transform -rotate-1 shadow-lg"
-          style={{ backgroundColor: accentColor }}
-        >
-          {words.slice(midStart, midEnd).join(" ")}
-        </span>
-        <span className="text-white"> {words.slice(midEnd).join(" ")}</span>
-      </>
-    );
-  };
+  const years = yearsOfExperience(data.experience);
+  const projectCount = data.projects.length;
+  const testimonialCount = data.testimonials.length;
 
   return (
     <div
-      className="min-h-screen bg-[#0A0A0A] text-gray-300 selection:text-black font-sans flex flex-col lg:flex-row p-4 md:p-6 gap-6"
-      style={{
-        ["--tpl-accent" as string]: accentColor,
-        ...(fontFam ? { fontFamily: fontFam } : {}),
-      } as React.CSSProperties}
+      className="tpl-bold"
+      style={
+        {
+          ["--tpl-accent" as string]: data.accent || "#7c6cff",
+          ...(fontFam ? { fontFamily: fontFam } : {}),
+        } as React.CSSProperties
+      }
     >
-      <style dangerouslySetInnerHTML={{ __html: `
-        ::selection { background: var(--tpl-accent); }
-        .spin-slow { animation: spin 12s linear infinite; }
-        .hide-scroll::-webkit-scrollbar { display: none; }
-        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-      `}} />
+      <div className="tb-aurora" aria-hidden>
+        <span />
+        <span />
+      </div>
+      <div className="tb-wrap">
+        <header className="tb-hero">
+          {p?.availability && <span className="tb-badge">{p.availability}</span>}
+          {p?.avatar_url && <ZoomImage className="tb-avatar" src={p.avatar_url} alt={name} />}
+          {p?.title && (
+            <p className="tb-eyebrow">
+              {p.title}
+              {p?.pronouns ? ` \u00b7 ${p.pronouns}` : ""}
+            </p>
+          )}
+          <h1 className="tb-name">{name}</h1>
+          {p?.tagline && <p className="tb-tagline">{p.tagline}</p>}
+          {p?.location && <p className="tb-loc">{p.location}</p>}
+          {p?.bio && <p className="tb-bio">{p.bio}</p>}
 
-      {/* LEFT PANEL - STICKY SIDEBAR */}
-      <aside className="w-full lg:w-[420px] xl:w-[460px] h-[85vh] lg:h-[calc(100vh-48px)] lg:sticky top-6 rounded-[32px] bg-[#141414] overflow-hidden flex flex-col relative shrink-0 shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-white/5">
-        
-        {/* Avatar Background */}
-        {p?.avatar_url && (
-          <div className="absolute inset-0 z-0">
-            <img 
-              src={p.avatar_url} 
-              alt={name} 
-              className="w-full h-full object-cover opacity-50 grayscale mix-blend-luminosity hover:grayscale-0 hover:opacity-80 transition-all duration-700"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#141414]/10 via-[#141414]/40 to-[#141414] pointer-events-none" />
-          </div>
-        )}
-
-        {/* Top Left Logo / Icon */}
-        <div className="absolute top-8 left-8 z-10 w-8 h-8 rounded-full bg-white flex items-center justify-center text-black font-bold text-lg">
-          {firstName.charAt(0)}
-        </div>
-
-        {/* Social Links (Right Edge) */}
-        {data.links.length > 0 && (
-          <div className="absolute top-8 right-6 z-10 flex flex-col gap-3">
-            {data.links.slice(0, 4).map((l) => (
-              <a 
-                key={l.id} 
-                href={ext(l.url)} 
-                target="_blank" 
-                rel="noreferrer"
-                className="w-10 h-10 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-[var(--tpl-accent)] hover:text-black hover:border-transparent transition-all shadow-lg font-medium text-xs uppercase"
-                title={l.label || l.platform}
-              >
-                {l.platform.substring(0, 2)}
-              </a>
-            ))}
-          </div>
-        )}
-
-        {/* Available for Work Badge (Left Edge) */}
-        {p?.availability && (
-          <div className="absolute top-1/2 -left-[4.5rem] -translate-y-1/2 -rotate-90 origin-center z-10 flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-full shadow-lg">
-            <span className="w-2 h-2 rounded-full bg-[var(--tpl-accent)] animate-pulse" />
-            <span className="text-xs tracking-widest uppercase font-medium text-white/90">{p.availability}</span>
-          </div>
-        )}
-
-        {/* Bottom Content Area */}
-        <div className="relative z-10 mt-auto p-8 pt-32 bg-gradient-to-t from-[#0A0A0A] to-transparent">
-          <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">Hey, I'm {firstName}</h2>
-          <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-[90%]">
-            {p?.bio || `I help brands grow with smart design and development based in ${p?.location || 'the digital world'}.`}
-          </p>
-          
-          <div className="flex flex-wrap gap-4 items-center">
-            <a 
-              href="#contact" 
-              className="flex items-center gap-2 px-6 py-3 rounded-full text-black font-semibold text-sm transition-transform hover:scale-105"
-              style={{ backgroundColor: accentColor }}
-            >
-              <span className="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center">↗</span>
-              Let's talk
-            </a>
-            {p?.resume_url && (
-              <a 
-                href={ext(p.resume_url)} 
-                target="_blank" 
-                rel="noreferrer"
-                className="flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 text-white font-semibold text-sm hover:bg-white hover:text-black transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                Download CV
-              </a>
-            )}
-          </div>
-        </div>
-      </aside>
-
-      {/* RIGHT PANEL - MAIN CONTENT */}
-      <main className="flex-1 relative lg:pl-10 lg:pr-8 xl:pr-16 py-8 h-auto lg:h-[calc(100vh-48px)] lg:overflow-y-auto hide-scroll rounded-[32px]">
-        
-        {/* Background Ambient Glow */}
-        <div 
-          className="absolute top-40 right-20 w-[400px] h-[400px] rounded-full blur-[150px] opacity-20 pointer-events-none"
-          style={{ backgroundColor: accentColor }}
-        />
-
-        {/* Top Header */}
-        <header className="flex justify-between items-center mb-20 relative z-10">
-          <div className="flex items-center gap-4">
-            {p?.avatar_url && <img src={p.avatar_url} alt={name} className="w-12 h-12 rounded-full object-cover border border-white/10" />}
-            <div>
-              <h1 className="text-white font-semibold text-lg leading-tight">{name}</h1>
-              {p?.title && <p className="text-gray-500 text-xs">{p.title}</p>}
+          {data.links.length > 0 && (
+            <div className="tb-links tb-links-cta">
+              {data.links.map((l) => (
+                <LinkChip key={l.id} className="tb-link" platform={l.platform} url={l.url} label={l.label} />
+              ))}
             </div>
-          </div>
-          <div className="text-right hidden md:block text-gray-500 text-xs font-mono">
-            <p>Based in</p>
-            <p className="text-gray-300">{p?.location || 'Worldwide'}</p>
-          </div>
+          )}
+
+          {(years > 0 || projectCount > 0 || testimonialCount > 0) && (
+            <div className="tb-stats">
+              {years > 0 && (
+                <div className="tb-stat">
+                  <CountUp value={years} suffix="+" />
+                  <p>Years of experience</p>
+                </div>
+              )}
+              {projectCount > 0 && (
+                <div className="tb-stat">
+                  <CountUp value={projectCount} suffix="+" />
+                  <p>Projects delivered</p>
+                </div>
+              )}
+              {testimonialCount > 0 && (
+                <div className="tb-stat">
+                  <CountUp value={testimonialCount} suffix="" />
+                  <p>Client testimonials</p>
+                </div>
+              )}
+            </div>
+          )}
         </header>
 
-        {/* Hero Section */}
-        <section className="mb-24 relative z-10">
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-tighter leading-[1.1] max-w-4xl">
-            {renderHeroText()}
-          </h2>
+        {sv("about") && p?.about && (
+          <section className="tb-sec" data-sec="about">
+            <p className="tb-kicker">About</p>
+            <h2 className="tb-h2">About</h2>
+            <p className="tb-about">{p.about}</p>
+          </section>
+        )}
 
-          {/* Spinning Badge Graphic (Simulation) */}
-          <div className="absolute right-0 md:right-12 top-full -translate-y-1/2 w-32 h-32 md:w-40 md:h-40 pointer-events-none hidden sm:flex items-center justify-center">
-            <div className="absolute inset-0 border border-white/10 rounded-full spin-slow border-dashed" />
-            <div 
-              className="w-24 h-24 rounded-full flex items-center justify-center text-center text-[10px] font-bold tracking-widest uppercase text-black"
-              style={{ backgroundColor: accentColor }}
-            >
-              Excellence<br/>Since<br/>2024
-            </div>
-          </div>
-        </section>
-
-        {/* Stats Section */}
-        <section className="flex flex-wrap gap-12 md:gap-24 mb-32 relative z-10">
-          <div>
-            <h3 className="text-5xl md:text-7xl font-medium text-white mb-2">{expYears}</h3>
-            <p className="text-gray-500 text-sm uppercase tracking-wider">Years of experience</p>
-          </div>
-          {data.projects.length > 0 && (
-            <div>
-              <h3 className="text-5xl md:text-7xl font-medium text-white mb-2">{data.projects.length}x</h3>
-              <p className="text-gray-500 text-sm uppercase tracking-wider">Completed Projects</p>
-            </div>
-          )}
-          {data.certifications.length > 0 && (
-            <div>
-              <h3 className="text-5xl md:text-7xl font-medium text-white mb-2">{data.certifications.length}</h3>
-              <p className="text-gray-500 text-sm uppercase tracking-wider">Certifications</p>
-            </div>
-          )}
-        </section>
-
-        <div className="w-full h-px bg-gradient-to-r from-white/10 to-transparent mb-20" />
-
-        {/* Selected Work */}
         {sv("projects") && data.projects.length > 0 && (
-          <section className="mb-32 relative z-10">
-            <div className="flex items-center gap-3 mb-10">
-              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: accentColor }} />
-              <h3 className="text-2xl text-white font-medium">Selected Works</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {data.projects.map((pr) => (
-                <a 
-                  key={pr.id} 
-                  href={pr.url ? ext(pr.url) : undefined} 
-                  target={pr.url ? "_blank" : undefined} 
+          <section className="tb-sec">
+            <p className="tb-kicker">Work Highlights</p>
+            <h2 className="tb-h2">Selected Work</h2>
+            <div className="tb-projects">
+              {data.projects.map((pr, i) => (
+                <a
+                  key={pr.id}
+                  className="tb-project"
+                  href={pr.url ? ext(pr.url) : undefined}
+                  target={pr.url ? "_blank" : undefined}
                   rel="noreferrer"
-                  className="group block"
                 >
-                  <div className="w-full aspect-[4/3] rounded-3xl overflow-hidden bg-[#1A1A1A] border border-white/5 mb-6 relative">
-                    {pr.image_url ? (
-                      <img src={pr.image_url} alt={pr.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-700">No Image</div>
+                  {pr.image_url && <img src={pr.image_url} alt={pr.title} className="tb-proj-img" />}
+                  <div className="tb-proj-body">
+                    <span className="tb-proj-index">
+                      {String(i + 1).padStart(2, "0")} / {String(data.projects.length).padStart(2, "0")}
+                    </span>
+                    <h3>{pr.title}</h3>
+                    {pr.role && <p className="tb-proj-role">{pr.role}</p>}
+                    {pr.description && <p className="tb-proj-desc">{pr.description}</p>}
+                    {pr.tags.length > 0 && (
+                      <div className="tb-tags">
+                        {pr.tags.map((t) => (
+                          <span key={t}>{t}</span>
+                        ))}
+                      </div>
                     )}
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <span className="bg-white text-black px-6 py-3 rounded-full font-semibold text-sm transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">View Project</span>
-                    </div>
-                  </div>
-                  <h4 className="text-xl text-white font-medium mb-2">{pr.title}</h4>
-                  <p className="text-gray-500 text-sm mb-4">{pr.role || pr.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {pr.tags.map(t => (
-                      <span key={t} className="text-xs px-3 py-1 rounded-full bg-white/5 text-gray-400 border border-white/5">{t}</span>
-                    ))}
                   </div>
                 </a>
               ))}
@@ -247,59 +171,50 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {/* Experience & Education */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-32 relative z-10">
-          {sv("experience") && data.experience.length > 0 && (
-            <section>
-              <h3 className="text-2xl text-white font-medium mb-10 flex items-center gap-3">
-                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: accentColor }} />
-                Experience
-              </h3>
-              <div className="space-y-8">
-                {data.experience.map((x) => (
-                  <div key={x.id} className="relative pl-6 border-l border-white/10 group hover:border-[var(--tpl-accent)] transition-colors">
-                    <span className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#1A1A1A] border border-white/30 group-hover:border-[var(--tpl-accent)] group-hover:bg-[var(--tpl-accent)] transition-all" />
-                    <span className="text-xs font-mono text-[var(--tpl-accent)] mb-2 block">{dateRange(x.start_date, x.end_date, x.is_current)}</span>
-                    <h4 className="text-lg text-white font-medium mb-1">{x.title || x.company}</h4>
-                    <p className="text-gray-400 text-sm mb-3">{[x.company, x.location].filter(Boolean).join(" · ")}</p>
-                    {x.description && <p className="text-sm text-gray-500 leading-relaxed">{x.description}</p>}
+        {sv("experience") && data.experience.length > 0 && (
+          <section className="tb-sec" data-sec="experience">
+            <p className="tb-kicker">Education & Experience</p>
+            <h2 className="tb-h2">Experience</h2>
+            <div className="tb-timeline">
+              {data.experience.map((x) => (
+                <div key={x.id} className="tb-row tb-timeline-row">
+                  <span className="tb-when tb-when-lead">{dateRange(x.start_date, x.end_date, x.is_current)}</span>
+                  <div>
+                    <h3>{x.title || x.company}</h3>
+                    <p className="tb-row-sub">{[x.company, x.location].filter(Boolean).join(" · ")}</p>
+                    {x.description && <p className="tb-row-desc">{x.description}</p>}
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-          {sv("education") && data.education.length > 0 && (
-            <section>
-              <h3 className="text-2xl text-white font-medium mb-10 flex items-center gap-3">
-                <span className="w-3 h-3 rounded-full bg-white" />
-                Education
-              </h3>
-              <div className="space-y-8">
-                {data.education.map((ed) => (
-                  <div key={ed.id} className="relative pl-6 border-l border-white/10 group hover:border-white transition-colors">
-                    <span className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#1A1A1A] border border-white/30 group-hover:bg-white transition-all" />
-                    <span className="text-xs font-mono text-gray-500 mb-2 block">{dateRange(ed.start_date, ed.end_date)}</span>
-                    <h4 className="text-lg text-white font-medium mb-1">{ed.school}</h4>
-                    <p className="text-gray-400 text-sm mb-3">{[ed.degree, ed.field].filter(Boolean).join(", ")}</p>
-                    {ed.description && <p className="text-sm text-gray-500 leading-relaxed">{ed.description}</p>}
+        {sv("education") && data.education.length > 0 && (
+          <section className="tb-sec" data-sec="education">
+            <h2 className="tb-h2">Education</h2>
+            <div className="tb-timeline">
+              {data.education.map((ed) => (
+                <div key={ed.id} className="tb-row tb-timeline-row">
+                  <span className="tb-when tb-when-lead">{dateRange(ed.start_date, ed.end_date)}</span>
+                  <div>
+                    <h3>{ed.school}</h3>
+                    <p className="tb-row-sub">{[ed.degree, ed.field].filter(Boolean).join(", ")}</p>
+                    {ed.description && <p className="tb-row-desc">{ed.description}</p>}
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* Skills */}
         {sv("skills") && data.skills.length > 0 && (
-          <section className="mb-32 relative z-10">
-            <h3 className="text-2xl text-white font-medium mb-10 flex items-center gap-3">
-              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: accentColor }} />
-              Skills & Expertise
-            </h3>
-            <div className="flex flex-wrap gap-3">
+          <section className="tb-sec" data-sec="skills">
+            <p className="tb-kicker">Tech Stack</p>
+            <h2 className="tb-h2">Skills</h2>
+            <div className="tb-skills">
               {data.skills.map((s) => (
-                <span key={s.id} className="px-5 py-3 rounded-2xl bg-[#1A1A1A] border border-white/5 text-gray-300 font-medium hover:text-white hover:border-white/20 transition-colors">
+                <span key={s.id} className="tb-skill">
                   {s.name}
                 </span>
               ))}
@@ -307,55 +222,592 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {/* Services */}
         {sv("services") && data.services.length > 0 && (
-          <section className="mb-32 relative z-10">
-            <h3 className="text-2xl text-white font-medium mb-10">Services</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <section className="tb-sec" data-sec="services">
+            <p className="tb-kicker">Services</p>
+            <h2 className="tb-h2">Services</h2>
+            <div className="tb-cards">
               {data.services.map((s) => (
-                <div key={s.id} className="p-8 rounded-3xl bg-[#1A1A1A] border border-white/5 hover:border-[var(--tpl-accent)] transition-colors group">
-                  <h4 className="text-xl text-white font-medium mb-3 group-hover:text-[var(--tpl-accent)] transition-colors">{s.title}</h4>
-                  {s.price && <span className="inline-block px-3 py-1 bg-white/5 text-gray-300 text-xs rounded-full mb-4">{s.price}</span>}
-                  {s.description && <p className="text-gray-500 text-sm leading-relaxed">{s.description}</p>}
+                <div key={s.id} className="tb-card">
+                  <h3>{s.title}</h3>
+                  {s.price && <p className="tb-proj-role">{s.price}</p>}
+                  {s.description && <p className="tb-proj-desc">{s.description}</p>}
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* Gallery */}
-        {sv("gallery") && data.gallery.length > 0 && (
-          <section className="mb-32 relative z-10">
-             <h3 className="text-2xl text-white font-medium mb-10">Gallery</h3>
-             <div className="columns-1 sm:columns-2 gap-6 space-y-6">
-               {data.gallery.map(g => (
-                 <figure key={g.id} className="break-inside-avoid rounded-3xl overflow-hidden relative group">
-                   <ZoomImage src={g.image_url} alt={g.caption || ""} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500" />
-                   {g.caption && <figcaption className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black to-transparent text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity">{g.caption}</figcaption>}
-                 </figure>
-               ))}
-             </div>
+        {sv("certifications") && data.certifications.length > 0 && (
+          <section className="tb-sec" data-sec="certifications">
+            <h2 className="tb-h2">Certifications</h2>
+            <div className="tb-timeline">
+              {data.certifications.map((c) => (
+                <div key={c.id} className="tb-row tb-timeline-row">
+                  <span className="tb-when tb-when-lead">{c.issue_date}</span>
+                  <div>
+                    <h3>{c.url ? <a href={ext(c.url)} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</h3>
+                    <p className="tb-row-sub">{c.issuer}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 
-        {/* Contact Form */}
-        <section id="contact" className="relative z-10 bg-[#141414] p-8 md:p-12 rounded-[32px] border border-white/5">
-           <div className="max-w-2xl mx-auto">
-             <h3 className="text-3xl text-white font-medium mb-4 text-center">Let's work together</h3>
-             <p className="text-gray-500 text-center mb-10">Have a project in mind? Drop a message and I'll get back to you shortly.</p>
-             {data.username && <ContactForm username={data.username} />}
-           </div>
-        </section>
-
-        {/* Minimal Footer inside Main */}
-        {!data.hide_branding && (
-          <footer className="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-600 relative z-10">
-            <p>&copy; {new Date().getFullYear()} {name}. All rights reserved.</p>
-            <p>Made with Folio</p>
-          </footer>
+        {sv("achievements") && data.achievements.length > 0 && (
+          <section className="tb-sec" data-sec="achievements">
+            <h2 className="tb-h2">Achievements</h2>
+            <div className="tb-timeline">
+              {data.achievements.map((a) => (
+                <div key={a.id} className="tb-row tb-timeline-row">
+                  <span className="tb-when tb-when-lead">{a.date}</span>
+                  <div>
+                    <h3>{a.title}</h3>
+                    {a.description && <p className="tb-row-desc">{a.description}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
-      </main>
+        {sv("publications") && data.publications.length > 0 && (
+          <section className="tb-sec" data-sec="publications">
+            <h2 className="tb-h2">Publications</h2>
+            <div className="tb-timeline">
+              {data.publications.map((pub) => (
+                <div key={pub.id} className="tb-row tb-timeline-row">
+                  <span className="tb-when tb-when-lead">{pub.date}</span>
+                  <div>
+                    <h3>{pub.url ? <a href={ext(pub.url)} target="_blank" rel="noreferrer">{pub.title}</a> : pub.title}</h3>
+                    <p className="tb-row-sub">{pub.publisher}</p>
+                    {pub.description && <p className="tb-row-desc">{pub.description}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {sv("gallery") && data.gallery.length > 0 && (
+          <section className="tb-sec" data-sec="gallery">
+            <h2 className="tb-h2">Gallery</h2>
+            <div className="tb-gallery">
+              {data.gallery.map((g) => (
+                <figure key={g.id} className="tb-gal">
+                  <ZoomImage src={g.image_url} alt={g.caption || ""} />
+                  {g.caption && <figcaption>{g.caption}</figcaption>}
+                </figure>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {sv("videos") && data.videos.length > 0 && (
+          <section className="tb-sec" data-sec="videos">
+            <h2 className="tb-h2">Videos</h2>
+            <div className="tb-videos">
+              {data.videos.map((v) => {
+                const embed = videoEmbed(v.url);
+                return (
+                  <div key={v.id}>
+                    {embed ? (
+                      <div className="tb-video">
+                        <iframe src={embed} title={v.title || "Video"} allowFullScreen />
+                      </div>
+                    ) : (
+                      <a className="tb-link" href={ext(v.url)} target="_blank" rel="noreferrer">
+                        {v.title || v.url}
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {sv("testimonials") && data.testimonials.length > 0 && (
+          <section className="tb-sec" data-sec="testimonials">
+            <p className="tb-kicker">Testimonials</p>
+            <h2 className="tb-h2">Here&apos;s what people are saying</h2>
+            <div className="tb-cards">
+              {data.testimonials.map((t) => (
+                <div key={t.id} className="tb-card tb-testi-card">
+                  <p className="tb-quote">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="tb-cite">
+                    {t.avatar_url && <img className="tb-cite-av" src={t.avatar_url} alt={t.author} />}
+                    <p className="tb-proj-role">
+                      {t.author}
+                      {t.role ? `, ${t.role}` : ""}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {(p?.email || p?.phone || p?.website || p?.availability) && (
+          <section className="tb-sec">
+            <h2 className="tb-h2">Contact</h2>
+            {p?.availability && <p className="tb-bio">{p.availability}</p>}
+            <div className="tb-links">
+              {p?.email && (
+                <a className="tb-link" href={`mailto:${p.email}`}>
+                  {p.email}
+                </a>
+              )}
+              {p?.phone && <span className="tb-link">{p.phone}</span>}
+              {p?.website && (
+                <a className="tb-link" href={ext(p.website)} target="_blank" rel="noreferrer">
+                  Website
+                </a>
+              )}
+              {p?.resume_url && (
+                <a className="tb-link" href={ext(p.resume_url)} target="_blank" rel="noreferrer">
+                  Résumé ↗
+                </a>
+              )}
+            </div>
+          </section>
+        )}
+
+        {data.username && (
+          <section className="tb-sec">
+            <h2 className="tb-h2">Get in touch</h2>
+            <ContactForm username={data.username} />
+          </section>
+        )}
+
+        {!data.hide_branding && <footer className="tb-foot">Made with Folio</footer>}
+      </div>
+
+      <style jsx global>{`
+        .tpl-bold {
+          --tb-bg: #0a0a0d;
+          --tb-surface: #131318;
+          --tb-border: rgba(255, 255, 255, 0.08);
+          --tb-text: #f3f3f6;
+          --tb-muted: #9a9aa5;
+          position: relative;
+          background: var(--tb-bg);
+          color: var(--tb-text);
+          min-height: 100vh;
+          overflow-x: hidden;
+          line-height: 1.5;
+        }
+
+        .tb-aurora {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          pointer-events: none;
+          overflow: hidden;
+        }
+        .tb-aurora span {
+          position: absolute;
+          width: 46vw;
+          height: 46vw;
+          border-radius: 50%;
+          filter: blur(120px);
+          opacity: 0.35;
+        }
+        .tb-aurora span:first-child {
+          top: -10%;
+          left: -10%;
+          background: var(--tpl-accent, #7c6cff);
+        }
+        .tb-aurora span:last-child {
+          bottom: -15%;
+          right: -10%;
+          background: #ff6c9c;
+          opacity: 0.22;
+        }
+
+        .tb-wrap {
+          position: relative;
+          z-index: 1;
+          max-width: 960px;
+          margin: 0 auto;
+          padding: 96px 24px 64px;
+        }
+
+        .tb-hero {
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 14px;
+          padding-bottom: 56px;
+          border-bottom: 1px solid var(--tb-border);
+        }
+
+        .tb-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 16px;
+          border-radius: 999px;
+          border: 1px solid var(--tb-border);
+          background: var(--tb-surface);
+          font-size: 13px;
+          color: var(--tb-muted);
+        }
+        .tb-badge::before {
+          content: "";
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #4ade80;
+          box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
+        }
+
+        .tb-avatar {
+          width: 84px;
+          height: 84px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid var(--tb-border);
+          margin-top: 8px;
+        }
+
+        .tb-eyebrow {
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          font-size: 12px;
+          color: var(--tpl-accent, #7c6cff);
+          font-weight: 600;
+          margin: 0;
+        }
+
+        .tb-name {
+          font-size: clamp(2.4rem, 6vw, 4.2rem);
+          line-height: 1.05;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          margin: 4px 0;
+          background: linear-gradient(180deg, #fff 0%, #b9b9c6 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+
+        .tb-tagline {
+          font-size: clamp(1.05rem, 2.2vw, 1.4rem);
+          color: var(--tb-muted);
+          max-width: 620px;
+          margin: 0;
+        }
+
+        .tb-loc {
+          font-size: 13px;
+          color: var(--tb-muted);
+          margin: 0;
+        }
+
+        .tb-bio {
+          color: var(--tb-muted);
+          max-width: 560px;
+          margin: 8px 0 0;
+        }
+
+        .tb-links {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          justify-content: center;
+        }
+
+        .tb-links-cta {
+          margin-top: 12px;
+        }
+
+        .tb-link {
+          padding: 10px 20px;
+          border-radius: 999px;
+          border: 1px solid var(--tb-border);
+          background: var(--tb-surface);
+          color: var(--tb-text);
+          font-size: 14px;
+          font-weight: 500;
+          text-decoration: none;
+          transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .tb-link:hover {
+          transform: translateY(-2px);
+          border-color: var(--tpl-accent, #7c6cff);
+        }
+
+        .tb-stats {
+          display: flex;
+          gap: 48px;
+          margin-top: 32px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .tb-stat {
+          text-align: center;
+        }
+        .tb-stat-num {
+          display: block;
+          font-size: clamp(2rem, 4vw, 2.8rem);
+          font-weight: 700;
+          color: var(--tpl-accent, #7c6cff);
+        }
+        .tb-stat p {
+          margin: 4px 0 0;
+          font-size: 13px;
+          color: var(--tb-muted);
+        }
+
+        .tb-sec {
+          padding: 64px 0;
+          border-bottom: 1px solid var(--tb-border);
+        }
+        .tb-sec:last-of-type {
+          border-bottom: none;
+        }
+
+        .tb-kicker {
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--tpl-accent, #7c6cff);
+          margin: 0 0 8px;
+        }
+
+        .tb-h2 {
+          font-size: clamp(1.6rem, 3vw, 2.2rem);
+          font-weight: 700;
+          letter-spacing: -0.01em;
+          margin: 0 0 24px;
+        }
+
+        .tb-about {
+          color: var(--tb-muted);
+          font-size: 1.05rem;
+          max-width: 640px;
+        }
+
+        .tb-projects {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        .tb-project {
+          display: grid;
+          grid-template-columns: 220px 1fr;
+          gap: 24px;
+          padding: 20px;
+          border-radius: 20px;
+          border: 1px solid var(--tb-border);
+          background: var(--tb-surface);
+          text-decoration: none;
+          color: var(--tb-text);
+          transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+        .tb-project:hover {
+          border-color: var(--tpl-accent, #7c6cff);
+          transform: translateY(-3px);
+        }
+        .tb-proj-img {
+          width: 100%;
+          height: 150px;
+          object-fit: cover;
+          border-radius: 12px;
+        }
+        .tb-proj-body {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .tb-proj-index {
+          font-size: 12px;
+          color: var(--tb-muted);
+          letter-spacing: 0.05em;
+        }
+        .tb-proj-body h3 {
+          margin: 0;
+          font-size: 1.25rem;
+        }
+        .tb-proj-role {
+          margin: 0;
+          color: var(--tpl-accent, #7c6cff);
+          font-size: 13px;
+          font-weight: 600;
+        }
+        .tb-proj-desc {
+          margin: 0;
+          color: var(--tb-muted);
+          font-size: 14px;
+        }
+        .tb-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-top: 6px;
+        }
+        .tb-tags span {
+          font-size: 12px;
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.06);
+          color: var(--tb-muted);
+        }
+
+        @media (max-width: 640px) {
+          .tb-project {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .tb-timeline {
+          display: flex;
+          flex-direction: column;
+          gap: 28px;
+        }
+        .tb-timeline-row {
+          display: grid;
+          grid-template-columns: 140px 1fr;
+          gap: 20px;
+        }
+        .tb-when-lead {
+          color: var(--tb-muted);
+          font-size: 13px;
+          font-weight: 600;
+        }
+        .tb-row h3 {
+          margin: 0 0 4px;
+          font-size: 1.1rem;
+        }
+        .tb-row-sub {
+          margin: 0;
+          color: var(--tb-muted);
+          font-size: 14px;
+        }
+        .tb-row-desc {
+          margin: 8px 0 0;
+          color: var(--tb-muted);
+          font-size: 14px;
+        }
+        .tb-when {
+          margin-left: 8px;
+          color: var(--tb-muted);
+        }
+
+        @media (max-width: 560px) {
+          .tb-timeline-row {
+            grid-template-columns: 1fr;
+            gap: 6px;
+          }
+        }
+
+        .tb-skills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        .tb-skill {
+          padding: 10px 18px;
+          border-radius: 999px;
+          border: 1px solid var(--tb-border);
+          background: var(--tb-surface);
+          font-size: 14px;
+          transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+        .tb-skill:hover {
+          border-color: var(--tpl-accent, #7c6cff);
+          transform: translateY(-2px);
+        }
+
+        .tb-cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 18px;
+        }
+        .tb-card {
+          padding: 24px;
+          border-radius: 20px;
+          border: 1px solid var(--tb-border);
+          background: var(--tb-surface);
+          transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+        .tb-card:hover {
+          border-color: var(--tpl-accent, #7c6cff);
+          transform: translateY(-3px);
+        }
+        .tb-card h3 {
+          margin: 0 0 6px;
+          font-size: 1.15rem;
+        }
+
+        .tb-testi-card {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+        .tb-quote {
+          font-size: 15px;
+          color: var(--tb-text);
+          margin: 0 0 16px;
+        }
+        .tb-cite {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .tb-cite-av {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        .tb-gallery {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+          gap: 16px;
+        }
+        .tb-gal img {
+          width: 100%;
+          border-radius: 16px;
+        }
+        .tb-gal figcaption {
+          margin-top: 6px;
+          font-size: 13px;
+          color: var(--tb-muted);
+        }
+
+        .tb-videos {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 16px;
+        }
+        .tb-video {
+          position: relative;
+          padding-top: 56.25%;
+          border-radius: 16px;
+          overflow: hidden;
+          border: 1px solid var(--tb-border);
+        }
+        .tb-video iframe {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          border: 0;
+        }
+
+        .tb-foot {
+          text-align: center;
+          padding-top: 40px;
+          font-size: 12px;
+          color: var(--tb-muted);
+        }
+      `}</style>
     </div>
   );
 }
