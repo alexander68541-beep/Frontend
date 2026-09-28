@@ -53,10 +53,10 @@ export default function SettingsPage() {
     mutationFn: (v: string) => apiFetch<Portfolio>("/portfolio/visibility", { method: "PATCH", body: JSON.stringify({ visibility: v }) }),
     onSuccess: (d) => qc.setQueryData(["portfolio"], d),
   });
-  const [pw, setPw] = useState("");
+  const [linkPw, setLinkPw] = useState("");
   const setAccess = useMutation({
     mutationFn: (password: string | null) => apiFetch<Portfolio>("/portfolio/access", { method: "PATCH", body: JSON.stringify({ password }) }),
-    onSuccess: (d) => { qc.setQueryData(["portfolio"], d); setPw(""); },
+    onSuccess: (d) => { qc.setQueryData(["portfolio"], d); setLinkPw(""); },
   });
 
   const [exporting, setExporting] = useState(false);
@@ -122,8 +122,8 @@ export default function SettingsPage() {
           <p className="muted small">Visitors must enter this password to view your portfolio. Leave empty and click Remove to turn off.</p>
           {setAccess.isSuccess && <div className="alert alert-ok mt-2">Updated.</div>}
           <div className="row gap-2 wrap mt-3">
-            <input className="input" style={{ maxWidth: 240 }} type="text" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Set a password" />
-            <Button variant="accent" loading={setAccess.isPending} disabled={!pw.trim()} onClick={() => setAccess.mutate(pw)}>Set password</Button>
+            <input className="input" style={{ maxWidth: 240 }} type="text" value={linkPw} onChange={(e) => setLinkPw(e.target.value)} placeholder="Set a password" />
+            <Button variant="accent" loading={setAccess.isPending} disabled={!linkPw.trim()} onClick={() => setAccess.mutate(linkPw)}>Set password</Button>
             <Button loading={setAccess.isPending} onClick={() => setAccess.mutate(null)}>Remove</Button>
           </div>
         </div>
