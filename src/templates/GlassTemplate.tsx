@@ -5,260 +5,301 @@ import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { fontStack } from "@/lib/fonts";
 import { ZoomImage } from "@/components/ZoomImage";
 import { ContactForm } from "@/components/ContactForm";
-import React, { useState, useEffect } from "react";
-
-// Helper components for the "Curtis" style
-const Crosshair = ({ position }: { position: "tl" | "tr" | "bl" | "br" }) => {
-  const posClasses = {
-    tl: "-top-2 -left-2",
-    tr: "-top-2 -right-2",
-    bl: "-bottom-2 -left-2",
-    br: "-bottom-2 -right-2",
-  };
-  return (
-    <svg
-      className={`absolute w-4 h-4 text-white/30 group-hover:text-[#b0ff4d] transition-colors duration-300 z-10 ${posClasses[position]}`}
-      viewBox="0 0 8 8"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path d="M4.5 3.5H7V4.5H4.5V7H3.5V4.5H1V3.5H3.5V1H4.5V3.5Z" fill="currentColor"></path>
-    </svg>
-  );
-};
+import React, { useMemo } from "react";
 
 export function GlassTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const hidden = new Set(data.settings?.hidden ?? []);
   const sv = (k: string) => !hidden.has(k);
   const fontFam = fontStack(data.settings?.font);
-  const name = p?.display_name || data.username || "sys.admin";
-  
-  // Interactive state for "Worked At" section
-  const [activeExp, setActiveExp] = useState(0);
+  const name = p?.display_name || data.username || "Untitled";
+  const firstName = name.split(" ")[0];
+  const accentColor = data.accent || "#00D05E"; // Default neon green from image
+
+  // Calculate Years of Experience dynamically
+  const expYears = useMemo(() => {
+    if (!data.experience || data.experience.length === 0) return "5+";
+    const startYears = data.experience.map((x) => {
+      const match = x.start_date?.match(/\d{4}/);
+      return match ? parseInt(match[0]) : new Date().getFullYear();
+    });
+    const minYear = Math.min(...startYears);
+    const years = new Date().getFullYear() - minYear;
+    return years > 0 ? `${years}+` : "1+";
+  }, [data.experience]);
+
+  // Make the hero text stand out by wrapping middle words in pills
+  const renderHeroText = () => {
+    const text = p?.tagline || p?.about || "Crafting digital experiences and brands that people remember";
+    const words = text.split(" ");
+    if (words.length < 4) return <span className="text-white">{text}</span>;
+    
+    const midStart = Math.floor(words.length / 3);
+    const midEnd = Math.floor((words.length / 3) * 2);
+
+    return (
+      <>
+        <span className="text-white">{words.slice(0, midStart).join(" ")} </span>
+        <span 
+          className="inline-block px-4 py-1 mx-1 text-black rounded-full font-bold transform -rotate-1 shadow-lg"
+          style={{ backgroundColor: accentColor }}
+        >
+          {words.slice(midStart, midEnd).join(" ")}
+        </span>
+        <span className="text-white"> {words.slice(midEnd).join(" ")}</span>
+      </>
+    );
+  };
 
   return (
     <div
-      className="min-h-screen bg-[#0A0A0A] text-[#F5F0EB] selection:bg-[#b0ff4d] selection:text-black uppercase overflow-x-hidden font-sans"
+      className="min-h-screen bg-[#0A0A0A] text-gray-300 selection:text-black font-sans flex flex-col lg:flex-row p-4 md:p-6 gap-6"
       style={{
+        ["--tpl-accent" as string]: accentColor,
         ...(fontFam ? { fontFamily: fontFam } : {}),
       } as React.CSSProperties}
     >
-      <style dangerouslySetInnerHTML={{__html: `
-        .clip-notch {
-          clip-path: polygon(0% 4px, 4px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%);
-        }
-        .bg-grid {
-          background-size: 100px 100px;
-          background-image: 
-            linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-        }
-        .marquee-container {
-          overflow: hidden;
-          white-space: nowrap;
-          width: 100vw;
-        }
-        .marquee-content {
-          display: inline-block;
-          animation: marquee 20s linear infinite;
-        }
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
-        }
-        /* Custom Scrollbar for horizontal areas */
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+      <style dangerouslySetInnerHTML={{ __html: `
+        ::selection { background: var(--tpl-accent); }
+        .spin-slow { animation: spin 12s linear infinite; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
 
-      {/* Global Grid Overlay */}
-      <div className="fixed inset-0 pointer-events-none z-0 bg-grid opacity-50" />
-      <div className="fixed left-4 md:left-12 lg:left-24 top-0 bottom-0 w-[1px] bg-white/10 z-0 pointer-events-none" />
-      <div className="fixed right-4 md:right-12 lg:right-24 top-0 bottom-0 w-[1px] bg-white/10 z-0 pointer-events-none" />
-
-      {/* Navigation (Sticky) */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-6 md:px-12 backdrop-blur-md border-b border-white/10 bg-[#0A0A0A]/80">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-3 bg-[#b0ff4d] clip-notch animate-pulse" />
-          <span className="font-mono text-xs tracking-widest text-white/50 hidden md:block">SYS.ACTIVE</span>
-        </div>
-        <div className="hidden md:flex gap-12 font-mono text-xs tracking-widest text-white/50">
-          <p>SOUND - <span className="text-white">ON</span></p>
-          {p?.location && <p>{p.location}</p>}
-        </div>
-        <button className="relative px-6 py-2 bg-[#1a1a1a] border border-[#333] text-sm font-bold tracking-widest text-[#b0ff4d] hover:bg-[#b0ff4d] hover:text-black transition-colors clip-notch">
-          MENU
-        </button>
-      </nav>
-
-      {/* Page Content Container */}
-      <main className="relative z-10 pt-40 md:pt-48 pb-20 px-4 md:px-12 lg:px-24">
+      {/* LEFT PANEL - STICKY SIDEBAR */}
+      <aside className="w-full lg:w-[420px] xl:w-[460px] h-[85vh] lg:h-[calc(100vh-48px)] lg:sticky top-6 rounded-[32px] bg-[#141414] overflow-hidden flex flex-col relative shrink-0 shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-white/5">
         
-        {/* HERO SECTION */}
-        <section className="relative mb-40 border-l border-r border-white/10 px-4 md:px-8 py-10">
-          <div className="flex flex-col lg:flex-row gap-12 items-start lg:items-end">
-            
-            <div className="flex-1">
-              <p className="font-mono text-[#b0ff4d] text-sm md:text-base tracking-[0.2em] mb-6">
-                FROM <span className="text-white">{p?.location || "UNKNOWN SECTOR"}</span>
-              </p>
-              
-              <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-bold leading-[0.85] tracking-tighter mix-blend-difference mb-8 text-white break-words">
-                {name.split(' ').map((word, i) => (
-                  <span key={i} className="block">{word}</span>
-                ))}
-              </h1>
+        {/* Avatar Background */}
+        {p?.avatar_url && (
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={p.avatar_url} 
+              alt={name} 
+              className="w-full h-full object-cover opacity-50 grayscale mix-blend-luminosity hover:grayscale-0 hover:opacity-80 transition-all duration-700"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#141414]/10 via-[#141414]/40 to-[#141414] pointer-events-none" />
+          </div>
+        )}
 
-              <div className="font-mono text-sm md:text-base lg:text-lg text-white/60 tracking-widest max-w-2xl leading-relaxed border-l-2 border-[#b0ff4d] pl-6 mt-10 normal-case">
-                {p?.tagline && <span className="text-[#b0ff4d] font-bold block mb-4 uppercase">{p.tagline}</span>}
-                {p?.bio && <span>{p.bio}</span>}
-              </div>
-            </div>
+        {/* Top Left Logo / Icon */}
+        <div className="absolute top-8 left-8 z-10 w-8 h-8 rounded-full bg-white flex items-center justify-center text-black font-bold text-lg">
+          {firstName.charAt(0)}
+        </div>
 
-            {p?.avatar_url && (
-              <div className="relative shrink-0 group">
-                <div className="absolute inset-0 bg-[#b0ff4d] translate-x-3 translate-y-3 clip-notch opacity-50 transition-transform group-hover:translate-x-4 group-hover:translate-y-4" />
-                <ZoomImage 
-                  src={p.avatar_url} 
-                  alt={name} 
-                  className="w-48 h-64 md:w-64 md:h-80 object-cover grayscale group-hover:grayscale-0 transition-all duration-500 relative z-10 clip-notch border border-white/20"
-                />
-                <Crosshair position="tl" /><Crosshair position="tr" />
-                <Crosshair position="bl" /><Crosshair position="br" />
-              </div>
+        {/* Social Links (Right Edge) */}
+        {data.links.length > 0 && (
+          <div className="absolute top-8 right-6 z-10 flex flex-col gap-3">
+            {data.links.slice(0, 4).map((l) => (
+              <a 
+                key={l.id} 
+                href={ext(l.url)} 
+                target="_blank" 
+                rel="noreferrer"
+                className="w-10 h-10 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-[var(--tpl-accent)] hover:text-black hover:border-transparent transition-all shadow-lg font-medium text-xs uppercase"
+                title={l.label || l.platform}
+              >
+                {l.platform.substring(0, 2)}
+              </a>
+            ))}
+          </div>
+        )}
+
+        {/* Available for Work Badge (Left Edge) */}
+        {p?.availability && (
+          <div className="absolute top-1/2 -left-[4.5rem] -translate-y-1/2 -rotate-90 origin-center z-10 flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-full shadow-lg">
+            <span className="w-2 h-2 rounded-full bg-[var(--tpl-accent)] animate-pulse" />
+            <span className="text-xs tracking-widest uppercase font-medium text-white/90">{p.availability}</span>
+          </div>
+        )}
+
+        {/* Bottom Content Area */}
+        <div className="relative z-10 mt-auto p-8 pt-32 bg-gradient-to-t from-[#0A0A0A] to-transparent">
+          <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">Hey, I'm {firstName}</h2>
+          <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-[90%]">
+            {p?.bio || `I help brands grow with smart design and development based in ${p?.location || 'the digital world'}.`}
+          </p>
+          
+          <div className="flex flex-wrap gap-4 items-center">
+            <a 
+              href="#contact" 
+              className="flex items-center gap-2 px-6 py-3 rounded-full text-black font-semibold text-sm transition-transform hover:scale-105"
+              style={{ backgroundColor: accentColor }}
+            >
+              <span className="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center">↗</span>
+              Let's talk
+            </a>
+            {p?.resume_url && (
+              <a 
+                href={ext(p.resume_url)} 
+                target="_blank" 
+                rel="noreferrer"
+                className="flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 text-white font-semibold text-sm hover:bg-white hover:text-black transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Download CV
+              </a>
             )}
           </div>
+        </div>
+      </aside>
 
-          {/* Scroll Cue */}
-          <div className="absolute -bottom-20 left-8 flex flex-col items-center gap-2 animate-bounce">
-            <span className="font-mono text-xs tracking-widest text-white/40">SCROLL</span>
-            <div className="w-[1px] h-12 bg-gradient-to-b from-[#b0ff4d] to-transparent" />
+      {/* RIGHT PANEL - MAIN CONTENT */}
+      <main className="flex-1 relative lg:pl-10 lg:pr-8 xl:pr-16 py-8 h-auto lg:h-[calc(100vh-48px)] lg:overflow-y-auto hide-scroll rounded-[32px]">
+        
+        {/* Background Ambient Glow */}
+        <div 
+          className="absolute top-40 right-20 w-[400px] h-[400px] rounded-full blur-[150px] opacity-20 pointer-events-none"
+          style={{ backgroundColor: accentColor }}
+        />
+
+        {/* Top Header */}
+        <header className="flex justify-between items-center mb-20 relative z-10">
+          <div className="flex items-center gap-4">
+            {p?.avatar_url && <img src={p.avatar_url} alt={name} className="w-12 h-12 rounded-full object-cover border border-white/10" />}
+            <div>
+              <h1 className="text-white font-semibold text-lg leading-tight">{name}</h1>
+              {p?.title && <p className="text-gray-500 text-xs">{p.title}</p>}
+            </div>
+          </div>
+          <div className="text-right hidden md:block text-gray-500 text-xs font-mono">
+            <p>Based in</p>
+            <p className="text-gray-300">{p?.location || 'Worldwide'}</p>
+          </div>
+        </header>
+
+        {/* Hero Section */}
+        <section className="mb-24 relative z-10">
+          <h2 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-tighter leading-[1.1] max-w-4xl">
+            {renderHeroText()}
+          </h2>
+
+          {/* Spinning Badge Graphic (Simulation) */}
+          <div className="absolute right-0 md:right-12 top-full -translate-y-1/2 w-32 h-32 md:w-40 md:h-40 pointer-events-none hidden sm:flex items-center justify-center">
+            <div className="absolute inset-0 border border-white/10 rounded-full spin-slow border-dashed" />
+            <div 
+              className="w-24 h-24 rounded-full flex items-center justify-center text-center text-[10px] font-bold tracking-widest uppercase text-black"
+              style={{ backgroundColor: accentColor }}
+            >
+              Excellence<br/>Since<br/>2024
+            </div>
           </div>
         </section>
 
-        {/* ABOUT SECTION */}
-        {sv("about") && p?.about && (
-          <section className="mb-40 border-t border-b border-white/10 py-20 relative">
-            <h2 className="absolute top-0 -translate-y-1/2 left-8 bg-[#0A0A0A] px-4 font-mono text-xs tracking-[0.3em] text-[#b0ff4d]">/ ABOUT_ME.TXT</h2>
-            <div className="text-xl md:text-3xl lg:text-4xl font-semibold leading-snug tracking-tight max-w-5xl normal-case">
-              {p.about}
+        {/* Stats Section */}
+        <section className="flex flex-wrap gap-12 md:gap-24 mb-32 relative z-10">
+          <div>
+            <h3 className="text-5xl md:text-7xl font-medium text-white mb-2">{expYears}</h3>
+            <p className="text-gray-500 text-sm uppercase tracking-wider">Years of experience</p>
+          </div>
+          {data.projects.length > 0 && (
+            <div>
+              <h3 className="text-5xl md:text-7xl font-medium text-white mb-2">{data.projects.length}x</h3>
+              <p className="text-gray-500 text-sm uppercase tracking-wider">Completed Projects</p>
+            </div>
+          )}
+          {data.certifications.length > 0 && (
+            <div>
+              <h3 className="text-5xl md:text-7xl font-medium text-white mb-2">{data.certifications.length}</h3>
+              <p className="text-gray-500 text-sm uppercase tracking-wider">Certifications</p>
+            </div>
+          )}
+        </section>
+
+        <div className="w-full h-px bg-gradient-to-r from-white/10 to-transparent mb-20" />
+
+        {/* Selected Work */}
+        {sv("projects") && data.projects.length > 0 && (
+          <section className="mb-32 relative z-10">
+            <div className="flex items-center gap-3 mb-10">
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: accentColor }} />
+              <h3 className="text-2xl text-white font-medium">Selected Works</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {data.projects.map((pr) => (
+                <a 
+                  key={pr.id} 
+                  href={pr.url ? ext(pr.url) : undefined} 
+                  target={pr.url ? "_blank" : undefined} 
+                  rel="noreferrer"
+                  className="group block"
+                >
+                  <div className="w-full aspect-[4/3] rounded-3xl overflow-hidden bg-[#1A1A1A] border border-white/5 mb-6 relative">
+                    {pr.image_url ? (
+                      <img src={pr.image_url} alt={pr.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-700">No Image</div>
+                    )}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <span className="bg-white text-black px-6 py-3 rounded-full font-semibold text-sm transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">View Project</span>
+                    </div>
+                  </div>
+                  <h4 className="text-xl text-white font-medium mb-2">{pr.title}</h4>
+                  <p className="text-gray-500 text-sm mb-4">{pr.role || pr.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {pr.tags.map(t => (
+                      <span key={t} className="text-xs px-3 py-1 rounded-full bg-white/5 text-gray-400 border border-white/5">{t}</span>
+                    ))}
+                  </div>
+                </a>
+              ))}
             </div>
           </section>
         )}
 
-        {/* SELECTED WORK (Horizontal Scroll like Curtis) */}
-        {sv("projects") && data.projects.length > 0 && (
-          <section className="mb-40 relative">
-             <div className="flex items-center gap-4 mb-12">
-               <span className="px-3 py-1 bg-[#b0ff4d] text-black font-bold tracking-widest text-xs clip-notch">FEATURED</span>
-               <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">Selected Work</h2>
-             </div>
-
-             <div className="flex overflow-x-auto gap-8 pb-12 pt-4 hide-scrollbar snap-x snap-mandatory">
-                {data.projects.map((pr, i) => (
-                  <article key={pr.id} className="relative group shrink-0 w-[85vw] md:w-[600px] snap-center">
-                    <Crosshair position="tl" /><Crosshair position="tr" />
-                    <Crosshair position="bl" /><Crosshair position="br" />
-                    
-                    <a href={pr.url ? ext(pr.url) : undefined} target="_blank" rel="noreferrer" className="block relative border border-white/10 bg-[#111] p-4 transition-colors hover:border-[#b0ff4d]">
-                       {pr.image_url && (
-                         <div className="relative w-full aspect-[4/3] overflow-hidden mb-6 bg-black clip-notch">
-                           <div className="absolute inset-0 bg-[#b0ff4d]/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"/>
-                           <img src={pr.image_url} alt={pr.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" />
-                         </div>
-                       )}
-                       
-                       <div className="flex justify-between items-end border-t border-white/10 pt-4">
-                         <div>
-                           <h3 className="text-2xl md:text-3xl font-bold mb-2">{pr.title}</h3>
-                           {pr.role && <p className="font-mono text-[#b0ff4d] text-xs tracking-widest">{pr.role}</p>}
-                           {pr.description && <p className="text-white/60 text-sm mt-3 normal-case line-clamp-2 max-w-[80%]">{pr.description}</p>}
-                         </div>
-                         <div className="shrink-0 w-12 h-12 bg-white/5 border border-white/10 group-hover:bg-[#b0ff4d] group-hover:border-[#b0ff4d] group-hover:text-black text-white flex items-center justify-center transition-colors clip-notch">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
-                         </div>
-                       </div>
-                       
-                       {pr.tags.length > 0 && (
-                         <div className="flex flex-wrap gap-2 mt-4">
-                           {pr.tags.map(t => <span key={t} className="text-[10px] font-mono border border-white/20 px-2 py-1 text-white/50">{t}</span>)}
-                         </div>
-                       )}
-                    </a>
-                  </article>
+        {/* Experience & Education */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-32 relative z-10">
+          {sv("experience") && data.experience.length > 0 && (
+            <section>
+              <h3 className="text-2xl text-white font-medium mb-10 flex items-center gap-3">
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: accentColor }} />
+                Experience
+              </h3>
+              <div className="space-y-8">
+                {data.experience.map((x) => (
+                  <div key={x.id} className="relative pl-6 border-l border-white/10 group hover:border-[var(--tpl-accent)] transition-colors">
+                    <span className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#1A1A1A] border border-white/30 group-hover:border-[var(--tpl-accent)] group-hover:bg-[var(--tpl-accent)] transition-all" />
+                    <span className="text-xs font-mono text-[var(--tpl-accent)] mb-2 block">{dateRange(x.start_date, x.end_date, x.is_current)}</span>
+                    <h4 className="text-lg text-white font-medium mb-1">{x.title || x.company}</h4>
+                    <p className="text-gray-400 text-sm mb-3">{[x.company, x.location].filter(Boolean).join(" · ")}</p>
+                    {x.description && <p className="text-sm text-gray-500 leading-relaxed">{x.description}</p>}
+                  </div>
                 ))}
-             </div>
-          </section>
-        )}
+              </div>
+            </section>
+          )}
 
-        {/* WORKED AT (Interactive CRT List) */}
-        {sv("experience") && data.experience.length > 0 && (
-          <section className="mb-40 border-t border-b border-white/10 relative">
-             <h2 className="absolute top-0 -translate-y-1/2 left-8 bg-[#0A0A0A] px-4 font-mono text-xs tracking-[0.3em] text-[#b0ff4d]">/ CAREER_TIMELINE</h2>
-             
-             <div className="flex flex-col lg:flex-row w-full divide-y lg:divide-y-0 lg:divide-x divide-white/10">
-                {/* Left: List */}
-                <div className="w-full lg:w-1/2 flex flex-col">
-                  {data.experience.map((x, i) => (
-                    <button 
-                      key={x.id} 
-                      onClick={() => setActiveExp(i)}
-                      className={`group flex items-center justify-between p-6 md:p-8 text-left transition-colors border-b border-white/10 last:border-0 ${activeExp === i ? 'bg-white/5' : 'hover:bg-white/5'}`}
-                    >
-                      <div className="flex items-center gap-6">
-                        <span className={`font-mono text-xs ${activeExp === i ? 'text-[#b0ff4d]' : 'text-white/30'}`}>
-                          {String(i + 1).padStart(2, '0')}
-                        </span>
-                        <div>
-                          <h3 className={`text-xl md:text-3xl font-bold mb-1 ${activeExp === i ? 'text-white' : 'text-white/60 group-hover:text-white'}`}>
-                            {x.title || x.company}
-                          </h3>
-                          <span className="font-mono text-[#b0ff4d] tracking-widest text-xs">
-                            {[x.company, x.location].filter(Boolean).join(" // ")}
-                          </span>
-                        </div>
-                      </div>
-                      <span className={`font-mono text-2xl ${activeExp === i ? 'text-[#b0ff4d]' : 'text-white/30'}`}>
-                        {activeExp === i ? '−' : '+'}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                
-                {/* Right: Details Panel (CRT effect) */}
-                <div className="w-full lg:w-1/2 p-8 md:p-16 flex flex-col justify-center relative bg-[#050505] overflow-hidden">
-                  <div className="absolute inset-0 bg-grid opacity-20 pointer-events-none" />
-                  <Crosshair position="tl" /><Crosshair position="tr" />
-                  <Crosshair position="bl" /><Crosshair position="br" />
-                  
-                  {data.experience[activeExp] && (
-                    <div className="relative z-10 animate-[fadeIn_0.3s_ease-out]">
-                      <div className="inline-block px-3 py-1 border border-[#b0ff4d] text-[#b0ff4d] font-mono text-xs mb-6">
-                        {dateRange(data.experience[activeExp].start_date, data.experience[activeExp].end_date, data.experience[activeExp].is_current)}
-                      </div>
-                      <p className="text-xl md:text-2xl leading-relaxed text-white/80 normal-case font-medium">
-                        {data.experience[activeExp].description || "No description provided."}
-                      </p>
-                    </div>
-                  )}
-                </div>
-             </div>
-          </section>
-        )}
+          {sv("education") && data.education.length > 0 && (
+            <section>
+              <h3 className="text-2xl text-white font-medium mb-10 flex items-center gap-3">
+                <span className="w-3 h-3 rounded-full bg-white" />
+                Education
+              </h3>
+              <div className="space-y-8">
+                {data.education.map((ed) => (
+                  <div key={ed.id} className="relative pl-6 border-l border-white/10 group hover:border-white transition-colors">
+                    <span className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#1A1A1A] border border-white/30 group-hover:bg-white transition-all" />
+                    <span className="text-xs font-mono text-gray-500 mb-2 block">{dateRange(ed.start_date, ed.end_date)}</span>
+                    <h4 className="text-lg text-white font-medium mb-1">{ed.school}</h4>
+                    <p className="text-gray-400 text-sm mb-3">{[ed.degree, ed.field].filter(Boolean).join(", ")}</p>
+                    {ed.description && <p className="text-sm text-gray-500 leading-relaxed">{ed.description}</p>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
 
-        {/* SKILLS / TECH STACK (Brutalist badges) */}
+        {/* Skills */}
         {sv("skills") && data.skills.length > 0 && (
-          <section className="mb-40">
-            <h2 className="text-sm font-mono tracking-[0.3em] text-[#b0ff4d] mb-8">/ TECH_STACK</h2>
-            <div className="flex flex-wrap gap-4">
-              {data.skills.map(s => (
-                <span key={s.id} className="px-6 py-4 border border-white/20 text-white/80 text-lg md:text-2xl font-bold uppercase tracking-tight hover:border-[#b0ff4d] hover:text-[#b0ff4d] hover:-translate-y-1 transition-all bg-[#111]">
+          <section className="mb-32 relative z-10">
+            <h3 className="text-2xl text-white font-medium mb-10 flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: accentColor }} />
+              Skills & Expertise
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              {data.skills.map((s) => (
+                <span key={s.id} className="px-5 py-3 rounded-2xl bg-[#1A1A1A] border border-white/5 text-gray-300 font-medium hover:text-white hover:border-white/20 transition-colors">
                   {s.name}
                 </span>
               ))}
@@ -266,151 +307,55 @@ export function GlassTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         )}
 
-        {/* EDUCATION & OTHERS (Grid System) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/10 mb-40 border border-white/10">
-          
-          {sv("education") && data.education.length > 0 && (
-            <section className="bg-[#0A0A0A] p-8 md:p-12 relative group">
-              <Crosshair position="tl" /><Crosshair position="tr" /><Crosshair position="bl" /><Crosshair position="br" />
-              <h2 className="text-sm font-mono tracking-[0.3em] text-[#b0ff4d] mb-8">/ EDUCATION</h2>
-              <div className="space-y-10">
-                {data.education.map(ed => (
-                  <div key={ed.id}>
-                    <h3 className="text-2xl font-bold mb-2">{ed.school}</h3>
-                    <p className="font-mono text-white/60 mb-2">{[ed.degree, ed.field].filter(Boolean).join(" // ")}</p>
-                    <p className="text-xs text-[#b0ff4d] border border-[#b0ff4d]/30 inline-block px-2 py-1 mb-4">{dateRange(ed.start_date, ed.end_date)}</p>
-                    {ed.description && <p className="text-white/50 text-sm normal-case">{ed.description}</p>}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {sv("services") && data.services.length > 0 && (
-            <section className="bg-[#0A0A0A] p-8 md:p-12 relative group">
-              <Crosshair position="tl" /><Crosshair position="tr" /><Crosshair position="bl" /><Crosshair position="br" />
-              <h2 className="text-sm font-mono tracking-[0.3em] text-[#b0ff4d] mb-8">/ SERVICES</h2>
-              <div className="space-y-8">
-                {data.services.map((s, i) => (
-                  <div key={s.id} className="border-b border-white/10 pb-6 last:border-0 last:pb-0">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-xl font-bold flex gap-4">
-                        <span className="text-white/30 font-mono text-sm mt-1">0{i+1}</span>
-                        {s.title}
-                      </h3>
-                      {s.price && <span className="text-[#b0ff4d] font-mono text-sm">{s.price}</span>}
-                    </div>
-                    {s.description && <p className="text-white/50 text-sm normal-case ml-8">{s.description}</p>}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Certifications & Achievements mapping inside grid if needed */}
-          {sv("certifications") && data.certifications.length > 0 && (
-             <section className="bg-[#0A0A0A] p-8 md:p-12 relative group">
-               <Crosshair position="tl" /><Crosshair position="tr" /><Crosshair position="bl" /><Crosshair position="br" />
-               <h2 className="text-sm font-mono tracking-[0.3em] text-[#b0ff4d] mb-8">/ CERTS</h2>
-               <ul className="space-y-6">
-                 {data.certifications.map(c => (
-                   <li key={c.id} className="flex justify-between border-b border-white/5 pb-4">
-                     <div>
-                       <h3 className="font-bold">{c.url ? <a href={ext(c.url)} target="_blank" rel="noreferrer" className="hover:text-[#b0ff4d]">{c.name} ↗</a> : c.name}</h3>
-                       <p className="text-white/40 text-sm">{c.issuer}</p>
-                     </div>
-                     <span className="font-mono text-xs text-[#b0ff4d]">{c.issue_date}</span>
-                   </li>
-                 ))}
-               </ul>
-             </section>
-          )}
-        </div>
-
-        {/* MEDIA GALLERY */}
-        {sv("gallery") && data.gallery.length > 0 && (
-          <section className="mb-40">
-            <h2 className="text-sm font-mono tracking-[0.3em] text-[#b0ff4d] mb-8">/ MEDIA_ARCHIVE</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-1 bg-white/10 border border-white/10 p-1">
-              {data.gallery.map(g => (
-                <figure key={g.id} className="relative group bg-[#0A0A0A] overflow-hidden aspect-square">
-                  <div className="absolute inset-0 bg-[#b0ff4d]/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none"/>
-                  <ZoomImage src={g.image_url} alt={g.caption || ""} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105" />
-                  {g.caption && <figcaption className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur text-xs font-mono p-2 border-l-2 border-[#b0ff4d] opacity-0 group-hover:opacity-100 transition-opacity">{g.caption}</figcaption>}
-                </figure>
+        {/* Services */}
+        {sv("services") && data.services.length > 0 && (
+          <section className="mb-32 relative z-10">
+            <h3 className="text-2xl text-white font-medium mb-10">Services</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {data.services.map((s) => (
+                <div key={s.id} className="p-8 rounded-3xl bg-[#1A1A1A] border border-white/5 hover:border-[var(--tpl-accent)] transition-colors group">
+                  <h4 className="text-xl text-white font-medium mb-3 group-hover:text-[var(--tpl-accent)] transition-colors">{s.title}</h4>
+                  {s.price && <span className="inline-block px-3 py-1 bg-white/5 text-gray-300 text-xs rounded-full mb-4">{s.price}</span>}
+                  {s.description && <p className="text-gray-500 text-sm leading-relaxed">{s.description}</p>}
+                </div>
               ))}
             </div>
           </section>
         )}
 
+        {/* Gallery */}
+        {sv("gallery") && data.gallery.length > 0 && (
+          <section className="mb-32 relative z-10">
+             <h3 className="text-2xl text-white font-medium mb-10">Gallery</h3>
+             <div className="columns-1 sm:columns-2 gap-6 space-y-6">
+               {data.gallery.map(g => (
+                 <figure key={g.id} className="break-inside-avoid rounded-3xl overflow-hidden relative group">
+                   <ZoomImage src={g.image_url} alt={g.caption || ""} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500" />
+                   {g.caption && <figcaption className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black to-transparent text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity">{g.caption}</figcaption>}
+                 </figure>
+               ))}
+             </div>
+          </section>
+        )}
+
+        {/* Contact Form */}
+        <section id="contact" className="relative z-10 bg-[#141414] p-8 md:p-12 rounded-[32px] border border-white/5">
+           <div className="max-w-2xl mx-auto">
+             <h3 className="text-3xl text-white font-medium mb-4 text-center">Let's work together</h3>
+             <p className="text-gray-500 text-center mb-10">Have a project in mind? Drop a message and I'll get back to you shortly.</p>
+             {data.username && <ContactForm username={data.username} />}
+           </div>
+        </section>
+
+        {/* Minimal Footer inside Main */}
+        {!data.hide_branding && (
+          <footer className="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-600 relative z-10">
+            <p>&copy; {new Date().getFullYear()} {name}. All rights reserved.</p>
+            <p>Made with Folio</p>
+          </footer>
+        )}
+
       </main>
-
-      {/* FOOTER */}
-      <footer className="relative bg-[#b0ff4d] text-black overflow-hidden pt-24 pb-12 mt-40">
-        <div className="absolute inset-0 bg-grid opacity-10 pointer-events-none mix-blend-multiply" />
-        
-        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
-          
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12 mb-24">
-            <div>
-              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-8 max-w-2xl leading-none">
-                Let's build<br/>something<br/>insane.
-              </h2>
-              <div className="flex flex-wrap gap-4">
-                {p?.email && (
-                  <a href={`mailto:${p.email}`} className="px-6 py-4 bg-black text-white font-bold uppercase tracking-widest text-sm hover:bg-white hover:text-black border-2 border-transparent hover:border-black transition-all clip-notch">
-                    Shoot a message
-                  </a>
-                )}
-                {p?.resume_url && (
-                  <a href={ext(p.resume_url)} target="_blank" rel="noreferrer" className="px-6 py-4 bg-transparent border-2 border-black text-black font-bold uppercase tracking-widest text-sm hover:bg-black hover:text-[#b0ff4d] transition-all clip-notch">
-                    Download CV
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* Social Links Matrix */}
-            <div className="w-full lg:w-auto">
-              <p className="font-mono text-xs font-bold tracking-widest mb-6 opacity-60">/ CONNECT_DIRECTORY</p>
-              <div className="flex flex-col gap-2 w-full lg:min-w-[300px]">
-                {data.links.map((l, i) => (
-                  <a key={l.id} href={ext(l.url)} target="_blank" rel="noreferrer" className="group flex justify-between items-center py-4 border-b border-black/20 hover:border-black transition-colors">
-                    <div className="flex items-center gap-6">
-                      <span className="font-mono text-xs font-bold opacity-30 group-hover:opacity-100">0{i+1}</span>
-                      <span className="font-bold uppercase tracking-widest text-lg group-hover:translate-x-2 transition-transform">{l.platform}</span>
-                    </div>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Form embedded in Footer if username exists */}
-          {data.username && (
-            <div className="w-full max-w-2xl bg-black p-8 text-[#F5F0EB] clip-notch mb-24 relative group">
-              <Crosshair position="tl" /><Crosshair position="tr" /><Crosshair position="bl" /><Crosshair position="br" />
-              <h3 className="font-bold text-2xl uppercase mb-6 tracking-tighter text-[#b0ff4d]">Direct Terminal</h3>
-              <ContactForm username={data.username} />
-            </div>
-          )}
-
-          {/* Giant Marquee Text */}
-          <div className="marquee-container -ml-6 md:-ml-12 mb-12 mix-blend-multiply opacity-20 pointer-events-none">
-            <div className="marquee-content text-[15vw] font-black uppercase tracking-tighter leading-none">
-               PORTFOLIO/{name.replace(" ", "")} PORTFOLIO/{name.replace(" ", "")} PORTFOLIO/{name.replace(" ", "")} 
-            </div>
-          </div>
-
-          {!data.hide_branding && (
-            <div className="flex justify-between items-center font-mono text-xs font-bold tracking-widest pt-6 border-t border-black/20">
-              <p>@2026 BY {name}</p>
-              <p>SYSTEM GENERATED BY FOLIO</p>
-            </div>
-          )}
-        </div>
-      </footer>
     </div>
   );
 }
