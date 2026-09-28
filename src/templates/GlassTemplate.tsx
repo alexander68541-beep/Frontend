@@ -1,519 +1,1088 @@
-"use client";
-
+import type { CSSProperties, ReactNode } from "react";
+import { Fragment } from "react";
 import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
-import { fontStack } from "@/lib/fonts";
-import { LinkChip } from "@/components/LinkChip";
 import { ZoomImage } from "@/components/ZoomImage";
 import { ContactForm } from "@/components/ContactForm";
-import React, { useState } from "react";
 
-// --- Helper Components for 3D Tree Structure ---
+/* =====================================================================
+   GlassTemplate — "GlassTemplate"
+   Premium minimal + soft glassmorphism portfolio template for Folio.
+   PURE PRESENTATION. Everything comes from `data`. No fetch / DB / auth.
+   All styles are self-contained in the <style> block below and prefixed
+   with `.aup-` so they never clash with other templates.
+   ===================================================================== */
 
-function SectionHeader({ title }: { title: string }) {
-  return (
-    <div className="relative flex items-center justify-start md:justify-center w-full py-16 z-20">
-      <div className="relative flex items-center w-[85%] md:w-auto md:min-w-[300px] md:justify-center px-4 md:px-10 py-3 md:rounded-full rounded-r-full border border-white/10 bg-gradient-to-b from-white/5 to-transparent backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.5)] group overflow-hidden">
-        <div className="absolute inset-0 rounded-full border border-white/5 pointer-events-none" />
-        <div className="absolute left-6 md:left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-7 h-7 md:w-10 md:h-10 rounded-full border-4 border-indigo-500 bg-[#050508]/50 shadow-[0_0_25px_10px_rgba(99,102,241,0.6)] group-hover:border-indigo-400 group-hover:shadow-[0_0_35px_15px_rgba(99,102,241,0.8)] transition-all duration-500 z-0" />
-        <h2 className="relative z-10 text-2xl md:text-3xl font-extrabold tracking-widest text-white pl-12 md:pl-0 drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
-          {title}
-        </h2>
-      </div>
-    </div>
-  );
+/* ---------- small, pure helpers (safe for any/empty data) ---------- */
+
+const DEFAULT_ORDER = [
+  "about",
+  "services",
+  "skills",
+  "projects",
+  "experience",
+  "education",
+  "certifications",
+  "achievements",
+  "publications",
+  "gallery",
+  "videos",
+  "process", // static template chrome (see note at bottom of file)
+  "testimonials",
+];
+
+function resolveOrder(settings: PublicPortfolio["settings"]): string[] {
+  const custom = settings?.section_order;
+  const order = custom && custom.length ? [...custom] : [...DEFAULT_ORDER];
+  // Keep "process" chrome positioned just before testimonials if the app
+  // supplied an order that doesn't know about it.
+  if (!order.includes("process")) {
+    const ti = order.indexOf("testimonials");
+    if (ti >= 0) order.splice(ti, 0, "process");
+    else order.push("process");
+  }
+  // Make sure every known section still gets a chance to render.
+  for (const k of DEFAULT_ORDER) if (!order.includes(k)) order.push(k);
+  return order;
 }
 
-function BranchNode({ idx, children }: { idx: number; children: React.ReactNode }) {
-  const isLeft = idx % 2 === 0;
-  return (
-    <div className="relative w-full mb-16 group z-10">
-      <div className="absolute left-6 md:left-1/2 top-10 w-4 h-4 rounded-full border-2 border-indigo-500 bg-[#0a0a0f] transform -translate-x-1/2 group-hover:bg-indigo-400 group-hover:shadow-[0_0_20px_rgba(99,102,241,1)] transition-all duration-500 z-20" />
-      <div className={`hidden md:block absolute top-[46px] h-[2px] bg-gradient-to-r group-hover:h-[3px] transition-all duration-500 z-10 ${isLeft ? 'right-[50%] w-16 from-transparent to-indigo-500/50 group-hover:to-indigo-400/80 mr-2' : 'left-[50%] w-16 from-indigo-500/50 to-transparent group-hover:from-indigo-400/80 ml-2'}`} />
-      <div className="md:hidden absolute top-[46px] left-8 w-8 h-[2px] bg-gradient-to-r from-indigo-500/50 to-transparent group-hover:from-indigo-400/80 transition-colors duration-500 z-10" />
-
-      <div className={`flex flex-col md:flex-row w-full perspective-1000 ${isLeft ? 'md:flex-row-reverse' : ''}`}>
-        <div className="hidden md:block md:w-1/2" />
-        <div className={`w-full pl-16 pr-4 md:w-1/2 ${isLeft ? 'md:pr-16 md:pl-4 md:text-right' : 'md:pl-16 md:pr-4 md:text-left'}`}>
-          <div className="relative p-[1px] rounded-3xl bg-gradient-to-br from-white/20 via-white/5 to-transparent transform transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.7)] group-hover:shadow-[0_30px_60px_-15px_rgba(99,102,241,0.3)] z-10">
-            <div className="h-full w-full p-6 md:p-8 rounded-[23px] bg-[#0A0A0F]/90 backdrop-blur-xl relative overflow-hidden">
-               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-               <div className="relative z-10">
-                 {children}
-               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+function initials(name: string | null, fallback: string | null): string {
+  const src = (name || fallback || "").trim();
+  if (!src) return "◆";
+  const parts = src.split(/\s+/).filter(Boolean);
+  const letters = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : src.slice(0, 2);
+  return letters.toUpperCase();
 }
 
-function CenterNode({ children, iconColor = "purple" }: { children: React.ReactNode, iconColor?: string }) {
-  const borderColor = iconColor === "purple" ? "border-purple-500" : "border-indigo-500";
-  const shadowColor = iconColor === "purple" ? "shadow-[0_0_20px_rgba(168,85,247,0.7)] group-hover:shadow-[0_0_30px_rgba(168,85,247,1)]" : "shadow-[0_0_20px_rgba(99,102,241,0.7)] group-hover:shadow-[0_0_30px_rgba(99,102,241,1)]";
-
-  return (
-    <div className="relative w-full mb-20 z-10 flex flex-col items-center group">
-       <div className={`absolute left-6 md:left-1/2 top-8 w-5 h-5 bg-[#0a0a0f] border-[3px] ${borderColor} rounded-full transform -translate-x-1/2 z-20 transition-all duration-500 ${shadowColor}`} />
-       <div className="w-full pl-16 pr-4 md:pl-4 md:px-12 max-w-4xl">
-          <div className="relative p-[1px] mt-2 md:mt-16 rounded-3xl bg-gradient-to-b from-white/20 via-white/5 to-transparent transform transition-all duration-500 hover:-translate-y-2 shadow-[0_20px_50px_rgba(0,0,0,0.8)] group-hover:shadow-[0_30px_60px_-15px_rgba(99,102,241,0.25)] z-10">
-            <div className="p-8 md:p-12 rounded-[23px] bg-[#0A0A0F]/80 backdrop-blur-2xl relative overflow-hidden">
-               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent pointer-events-none" />
-               <div className="relative z-10">
-                 {children}
-               </div>
-            </div>
-          </div>
-       </div>
-    </div>
-  )
+function oneDate(s: string | null): string | null {
+  if (!s) return null;
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return s;
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short" });
 }
 
-// --- Main Template Component ---
+/* ------------------------------- component ------------------------------- */
 
-export function GlassTemplate({ data }: { data: PublicPortfolio }) {
+export function AuroraProTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
+  const accent = data.accent || "#7c6cff";
+
   const hidden = new Set(data.settings?.hidden ?? []);
   const sv = (k: string) => !hidden.has(k);
-  const fontFam = fontStack(data.settings?.font);
-  const name = p?.display_name || data.username || "Untitled";
-  const accentColor = data.accent || "#7c6cff";
 
-  // Lightbox State for Gallery
-  const [lightboxImage, setLightboxImage] = useState<{ src: string; caption?: string } | null>(null);
+  const name = p?.display_name || data.username || "Your Name";
+  const mono = initials(p?.display_name, data.username);
+
+  // What actually renders — drives the nav so it never links to an empty spot.
+  const has = {
+    about: sv("about") && !!(p?.about || p?.bio || p?.tagline),
+    services: sv("services") && data.services.length > 0,
+    skills: sv("skills") && data.skills.length > 0,
+    projects: sv("projects") && data.projects.length > 0,
+    process: sv("process"),
+    testimonials: sv("testimonials") && data.testimonials.length > 0,
+    contact: !!data.username,
+  };
+
+  const contactHref = has.contact ? "#contact" : p?.email ? `mailto:${p.email}` : undefined;
+
+  const navItems: { href: string; label: string }[] = [
+    { href: "#top", label: "Home" },
+    has.about && { href: "#about", label: "About" },
+    has.services && { href: "#services", label: "Services" },
+    has.projects && { href: "#work", label: "Work" },
+    has.process && { href: "#process", label: "Process" },
+    has.testimonials && { href: "#testimonials", label: "Reviews" },
+    has.contact && { href: "#contact", label: "Contact" },
+  ].filter(Boolean) as { href: string; label: string }[];
+
+  /* --- reusable bits --- */
+  const eyebrow = (t: string) => <span className="aup-eyebrow">{t}</span>;
+
+  const socialChips = (extra?: string) =>
+    data.links.length > 0 && (
+      <div className={`aup-chips ${extra || ""}`}>
+        {data.links.map((l) => (
+          <a key={l.id} className="aup-chip aup-chip-link" href={ext(l.url)} target="_blank" rel="noopener noreferrer">
+            <span className="aup-chip-mono">{initials(l.label || l.platform, l.platform)}</span>
+            <span>{l.label || l.platform}</span>
+          </a>
+        ))}
+      </div>
+    );
+
+  /* --- section renderers (each returns null when there's nothing to show) --- */
+  const sections: Record<string, () => ReactNode> = {
+    about: () => {
+      if (!has.about) return null;
+      const stats = [
+        { n: data.projects.length, label: "Projects" },
+        { n: data.experience.length, label: "Roles" },
+        { n: data.testimonials.length, label: "Clients" },
+        { n: data.skills.length, label: "Skills" },
+      ].filter((s) => s.n > 0);
+      return (
+        <section id="about" data-sec="about" className="aup-section">
+          <div className="aup-about">
+            <div className="aup-about-left">
+              {eyebrow("About me")}
+              <h2 className="aup-h2">{p?.tagline || "A little about the work"}</h2>
+              {p?.bio && <p className="aup-lead">{p.bio}</p>}
+              {stats.length > 0 && (
+                <div className="aup-stats aup-glass">
+                  {stats.map((s) => (
+                    <div key={s.label} className="aup-stat">
+                      <b>{s.n}</b>
+                      <span>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="aup-about-right aup-glass">
+              {p?.about ? (
+                p.about.split(/\n{2,}/).map((para, i) => <p key={i}>{para}</p>)
+              ) : (
+                <p>{p?.bio}</p>
+              )}
+              {p?.resume_url && (
+                <a className="aup-btn aup-btn-ghost aup-mt" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">
+                  View résumé <span aria-hidden>↗</span>
+                </a>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+    },
+
+    services: () => {
+      if (!has.services) return null;
+      return (
+        <section id="services" data-sec="services" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("What I do")}
+              <h2 className="aup-h2">Services I offer</h2>
+            </div>
+          </div>
+          <div className="aup-grid-4">
+            {data.services.map((s) => (
+              <article key={s.id} className="aup-card">
+                <span className="aup-icon" aria-hidden>{initials(s.title, "S")}</span>
+                <h3 className="aup-card-title">{s.title}</h3>
+                {s.description && <p className="aup-muted aup-clamp-4">{s.description}</p>}
+                <div className="aup-card-foot">
+                  {s.price && <span className="aup-price">{s.price}</span>}
+                  <span className="aup-arrow" aria-hidden>↗</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    },
+
+    skills: () => {
+      if (!has.skills) return null;
+      const sorted = [...data.skills].sort((a, b) => (a.category || "").localeCompare(b.category || ""));
+      return (
+        <section id="skills" data-sec="skills" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("Tools & skills")}
+              <h2 className="aup-h2">Technologies I use</h2>
+            </div>
+          </div>
+          <div className="aup-panel aup-glass">
+            <div className="aup-chips">
+              {sorted.map((s) => (
+                <span key={s.id} className="aup-chip" title={s.category || undefined}>
+                  <span className="aup-chip-mono">{initials(s.name, "•")}</span>
+                  <span>{s.name}</span>
+                  {s.level && <span className="aup-chip-level">{s.level}</span>}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    },
+
+    projects: () => {
+      if (!has.projects) return null;
+      const ordered = [...data.projects].sort((a, b) => Number(!!b.is_featured) - Number(!!a.is_featured));
+      return (
+        <section id="work" data-sec="projects" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("Selected work")}
+              <h2 className="aup-h2">Featured projects</h2>
+            </div>
+            <span className="aup-count-pill">{data.projects.length} total</span>
+          </div>
+          <div className="aup-grid-3">
+            {ordered.map((pr) => {
+              const category = pr.role || (pr.tags && pr.tags[0]) || null;
+              const Card = (
+                <>
+                  <div className="aup-proj-media">
+                    {pr.image_url ? (
+                      <ZoomImage src={pr.image_url} alt={pr.title || "Project image"} />
+                    ) : (
+                      <div className="aup-proj-ph" aria-hidden>{initials(pr.title, "P")}</div>
+                    )}
+                    {pr.is_featured && <span className="aup-badge">Featured</span>}
+                  </div>
+                  <div className="aup-proj-body">
+                    <h3 className="aup-card-title">{pr.title || "Untitled project"}</h3>
+                    {category && <p className="aup-muted aup-proj-cat">{category}</p>}
+                    {pr.description && <p className="aup-muted aup-clamp-3">{pr.description}</p>}
+                    {pr.tags && pr.tags.length > 0 && (
+                      <div className="aup-tags">
+                        {pr.tags.slice(0, 4).map((t) => (
+                          <span key={t} className="aup-tag">{t}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+              return pr.url ? (
+                <a key={pr.id} className="aup-proj aup-glass aup-proj-link" href={ext(pr.url)} target="_blank" rel="noopener noreferrer">
+                  {Card}
+                  <span className="aup-proj-arrow" aria-hidden>↗</span>
+                </a>
+              ) : (
+                <article key={pr.id} className="aup-proj aup-glass">{Card}</article>
+              );
+            })}
+          </div>
+        </section>
+      );
+    },
+
+    experience: () => {
+      if (!(sv("experience") && data.experience.length > 0)) return null;
+      return (
+        <section id="experience" data-sec="experience" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("Career")}
+              <h2 className="aup-h2">Experience</h2>
+            </div>
+          </div>
+          <div className="aup-time">
+            {data.experience.map((e) => (
+              <article key={e.id} className="aup-time-item aup-glass">
+                <div className="aup-time-head">
+                  <h3 className="aup-time-role">{e.title || e.company || "Role"}</h3>
+                  <span className="aup-time-date">{dateRange(e.start_date, e.end_date, e.is_current)}</span>
+                </div>
+                <p className="aup-time-meta">
+                  {[e.company, e.location].filter(Boolean).join(" · ")}
+                </p>
+                {e.description && <p className="aup-muted">{e.description}</p>}
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    },
+
+    education: () => {
+      if (!(sv("education") && data.education.length > 0)) return null;
+      return (
+        <section id="education" data-sec="education" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("Learning")}
+              <h2 className="aup-h2">Education</h2>
+            </div>
+          </div>
+          <div className="aup-grid-2">
+            {data.education.map((ed) => (
+              <article key={ed.id} className="aup-time-item aup-glass">
+                <div className="aup-time-head">
+                  <h3 className="aup-time-role">{ed.school || "School"}</h3>
+                  <span className="aup-time-date">{dateRange(ed.start_date, ed.end_date)}</span>
+                </div>
+                {(ed.degree || ed.field) && (
+                  <p className="aup-time-meta">{[ed.degree, ed.field].filter(Boolean).join(", ")}</p>
+                )}
+                {ed.description && <p className="aup-muted">{ed.description}</p>}
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    },
+
+    certifications: () => {
+      if (!(sv("certifications") && data.certifications.length > 0)) return null;
+      return (
+        <section id="certifications" data-sec="certifications" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("Credentials")}
+              <h2 className="aup-h2">Certifications</h2>
+            </div>
+          </div>
+          <div className="aup-grid-3">
+            {data.certifications.map((c) => {
+              const body = (
+                <>
+                  <span className="aup-icon" aria-hidden>{initials(c.issuer || c.name, "C")}</span>
+                  <h3 className="aup-card-title">{c.name}</h3>
+                  {c.issuer && <p className="aup-muted">{c.issuer}</p>}
+                  <div className="aup-card-foot">
+                    {oneDate(c.issue_date) && <span className="aup-muted aup-small">{oneDate(c.issue_date)}</span>}
+                    {c.credential_id && <span className="aup-muted aup-small">ID: {c.credential_id}</span>}
+                  </div>
+                </>
+              );
+              return c.url ? (
+                <a key={c.id} className="aup-card aup-card-link" href={ext(c.url)} target="_blank" rel="noopener noreferrer">
+                  {body}<span className="aup-arrow" aria-hidden>↗</span>
+                </a>
+              ) : (
+                <article key={c.id} className="aup-card">{body}</article>
+              );
+            })}
+          </div>
+        </section>
+      );
+    },
+
+    achievements: () => {
+      if (!(sv("achievements") && data.achievements.length > 0)) return null;
+      return (
+        <section id="achievements" data-sec="achievements" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("Highlights")}
+              <h2 className="aup-h2">Achievements</h2>
+            </div>
+          </div>
+          <div className="aup-grid-3">
+            {data.achievements.map((a) => (
+              <article key={a.id} className="aup-card">
+                <span className="aup-icon" aria-hidden>★</span>
+                <h3 className="aup-card-title">{a.title}</h3>
+                {oneDate(a.date) && <p className="aup-muted aup-small">{oneDate(a.date)}</p>}
+                {a.description && <p className="aup-muted aup-clamp-4">{a.description}</p>}
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    },
+
+    publications: () => {
+      if (!(sv("publications") && data.publications.length > 0)) return null;
+      return (
+        <section id="publications" data-sec="publications" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("Writing")}
+              <h2 className="aup-h2">Publications</h2>
+            </div>
+          </div>
+          <div className="aup-time">
+            {data.publications.map((pub) => {
+              const meta = [pub.publisher, oneDate(pub.date)].filter(Boolean).join(" · ");
+              const body = (
+                <>
+                  <div className="aup-time-head">
+                    <h3 className="aup-time-role">{pub.title}</h3>
+                    {pub.url && <span className="aup-arrow" aria-hidden>↗</span>}
+                  </div>
+                  {meta && <p className="aup-time-meta">{meta}</p>}
+                  {pub.description && <p className="aup-muted">{pub.description}</p>}
+                </>
+              );
+              return pub.url ? (
+                <a key={pub.id} className="aup-time-item aup-glass aup-time-link" href={ext(pub.url)} target="_blank" rel="noopener noreferrer">
+                  {body}
+                </a>
+              ) : (
+                <article key={pub.id} className="aup-time-item aup-glass">{body}</article>
+              );
+            })}
+          </div>
+        </section>
+      );
+    },
+
+    gallery: () => {
+      if (!(sv("gallery") && data.gallery.length > 0)) return null;
+      return (
+        <section id="gallery" data-sec="gallery" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("Visuals")}
+              <h2 className="aup-h2">Gallery</h2>
+            </div>
+          </div>
+          <div className="aup-gallery">
+            {data.gallery.map((g) =>
+              g.image_url ? (
+                <figure key={g.id} className="aup-gitem aup-glass">
+                  <ZoomImage src={g.image_url} alt={g.caption || "Gallery image"} />
+                  {g.caption && <figcaption className="aup-muted aup-small">{g.caption}</figcaption>}
+                </figure>
+              ) : null
+            )}
+          </div>
+        </section>
+      );
+    },
+
+    videos: () => {
+      if (!(sv("videos") && data.videos.length > 0)) return null;
+      return (
+        <section id="videos" data-sec="videos" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("Watch")}
+              <h2 className="aup-h2">Videos</h2>
+            </div>
+          </div>
+          <div className="aup-grid-2">
+            {data.videos.map((v) => {
+              const src = v.url ? videoEmbed(v.url) : null;
+              if (!src) return null;
+              return (
+                <figure key={v.id} className="aup-video aup-glass">
+                  <div className="aup-video-frame">
+                    <iframe
+                      src={src}
+                      title={v.title || "Video"}
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                  {v.title && <figcaption className="aup-muted aup-small">{v.title}</figcaption>}
+                </figure>
+              );
+            })}
+          </div>
+        </section>
+      );
+    },
+
+    process: () => {
+      if (!has.process) return null;
+      // Static template chrome — profession-neutral, no owner data involved.
+      const steps = [
+        { t: "Discover", d: "Understand the goals, audience and the problem worth solving." },
+        { t: "Define", d: "Shape the scope, constraints and what success looks like." },
+        { t: "Ideate", d: "Explore directions, sketch options and pressure-test ideas." },
+        { t: "Create", d: "Build the real thing with craft, clarity and attention to detail." },
+        { t: "Refine", d: "Test, iterate and polish until it truly lands." },
+      ];
+      return (
+        <section id="process" data-sec="process" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("My process")}
+              <h2 className="aup-h2">How I work</h2>
+            </div>
+          </div>
+          <div className="aup-grid-5">
+            {steps.map((s, i) => (
+              <article key={s.t} className="aup-step aup-glass">
+                <span className="aup-step-n">{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="aup-step-t">{s.t}</h3>
+                <p className="aup-muted aup-small">{s.d}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    },
+
+    testimonials: () => {
+      if (!has.testimonials) return null;
+      return (
+        <section id="testimonials" data-sec="testimonials" className="aup-section">
+          <div className="aup-sechead">
+            <div>
+              {eyebrow("Testimonials")}
+              <h2 className="aup-h2">What clients say</h2>
+            </div>
+          </div>
+          <div className="aup-tgrid">
+            {data.testimonials.map((t) => (
+              <figure key={t.id} className="aup-quote aup-glass">
+                <span className="aup-quote-mark" aria-hidden>”</span>
+                {t.quote && <blockquote>{t.quote}</blockquote>}
+                <figcaption className="aup-quote-by">
+                  <span className="aup-avatar" aria-hidden>
+                    {t.avatar_url ? (
+                      <img src={t.avatar_url} alt="" loading="lazy" />
+                    ) : (
+                      initials(t.author, "•")
+                    )}
+                  </span>
+                  <span>
+                    {t.author && <b>{t.author}</b>}
+                    {t.role && <em className="aup-muted">{t.role}</em>}
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      );
+    },
+  };
+
+  const order = resolveOrder(data.settings);
+
+  /* --- hero floating data (only rendered if the data exists) --- */
+  const floatA = p?.availability;
+  const floatB = data.projects.length > 0 ? data.projects.length : null;
 
   return (
     <div
-      className="relative min-h-screen bg-[#050508] text-gray-200 overflow-hidden selection:bg-indigo-500/30 font-sans pb-20 perspective-1000"
-      style={{
-        ["--tpl-accent" as string]: accentColor,
-        ...(fontFam ? { fontFamily: fontFam } : {}),
-      } as React.CSSProperties}
+      className="aup-root"
+      id="top"
+      style={{ ["--tpl-accent" as string]: accent } as CSSProperties}
     >
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes zoomIn {
-          0% { transform: scale(0.9) translateY(20px); opacity: 0; }
-          100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        .animate-zoom-in {
-          animation: zoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes mobileFloat {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-5px); }
-        }
-        .mobile-3d-float {
-          animation: mobileFloat 5s ease-in-out infinite;
-        }
-      `}} />
+      <style dangerouslySetInnerHTML={{ __html: AUP_CSS }} />
 
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [transform:rotateX(60deg)_translateY(-100px)_scale(2.5)] origin-top opacity-30" />
-        <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-indigo-600/10 blur-[150px] animate-[pulse_10s_ease-in-out_infinite]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-purple-600/10 blur-[150px] animate-[pulse_12s_ease-in-out_infinite_reverse]" />
+      {/* decorative, behind everything */}
+      <div className="aup-bg" aria-hidden>
+        <span className="aup-blob aup-blob-1" />
+        <span className="aup-blob aup-blob-2" />
+        <span className="aup-blob aup-blob-3" />
       </div>
 
-      <header className="relative z-20 max-w-4xl mx-auto px-6 pt-32 pb-20 flex flex-col items-center text-center animate-[fadeIn_1s_ease-out]">
-        {p?.avatar_url && (
-          <div className="relative z-20 p-2 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-[#0a0a0f] shadow-[0_20px_50px_rgba(99,102,241,0.5)] mb-8 transform hover:scale-105 hover:-translate-y-2 transition-all duration-500">
-            <div className="p-1 bg-[#050508] rounded-full">
-              <ZoomImage
-                className="w-36 h-36 md:w-52 md:h-52 rounded-full object-cover"
-                src={p.avatar_url}
-                alt={name}
-              />
+      <div className="aup-shell">
+        {/* ---------------- NAVBAR ---------------- */}
+        <div className="aup-navwrap">
+          <nav className="aup-nav aup-glass" aria-label="Primary">
+            <a className="aup-brand" href="#top">
+              <span className="aup-brand-logo" aria-hidden>{mono}</span>
+              <span className="aup-brand-txt">
+                <b>{name}</b>
+                {p?.title && <em>{p.title}</em>}
+              </span>
+            </a>
+
+            {navItems.length > 1 && (
+              <ul className="aup-navlinks">
+                {navItems.map((it) => (
+                  <li key={it.href}>
+                    <a href={it.href}>{it.label}</a>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="aup-nav-right">
+              {contactHref && (
+                <a className="aup-btn aup-btn-primary aup-nav-cta" href={contactHref}>
+                  Let’s talk <span aria-hidden>↗</span>
+                </a>
+              )}
+              {navItems.length > 1 && (
+                <details className="aup-menu">
+                  <summary aria-label="Menu">
+                    <span /><span /><span />
+                  </summary>
+                  <ul>
+                    {navItems.map((it) => (
+                      <li key={it.href}>
+                        <a href={it.href}>{it.label}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+          </nav>
+        </div>
+
+        {/* ---------------- HERO ---------------- */}
+        <header className="aup-hero">
+          <div className="aup-hero-left">
+            {eyebrow(p?.pronouns ? `Hello — ${p.pronouns}` : "Hello, I’m")}
+            <h1 className="aup-hero-name">{name}</h1>
+            {p?.title && <p className="aup-hero-title">{p.title}</p>}
+            {(p?.tagline || p?.bio) && <p className="aup-hero-intro">{p?.tagline || p?.bio}</p>}
+
+            <div className="aup-hero-cta">
+              {has.projects && (
+                <a className="aup-btn aup-btn-primary" href="#work">
+                  View my work <span aria-hidden>↗</span>
+                </a>
+              )}
+              {p?.resume_url && (
+                <a className="aup-btn aup-btn-ghost" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">
+                  Download CV <span aria-hidden>↓</span>
+                </a>
+              )}
+              {!has.projects && !p?.resume_url && contactHref && (
+                <a className="aup-btn aup-btn-primary" href={contactHref}>
+                  Get in touch <span aria-hidden>↗</span>
+                </a>
+              )}
+            </div>
+
+            {(p?.location || p?.availability) && (
+              <p className="aup-hero-meta">
+                {p?.location && <span>📍 {p.location}</span>}
+                {p?.availability && <span className="aup-dot-avail">● {p.availability}</span>}
+              </p>
+            )}
+
+            {socialChips("aup-hero-socials")}
+          </div>
+
+          <div className="aup-hero-right">
+            <div className="aup-portrait">
+              <div className="aup-portrait-frame aup-glass">
+                {p?.avatar_url ? (
+                  <img src={p.avatar_url} alt={name} loading="eager" />
+                ) : (
+                  <div className="aup-portrait-ph" aria-hidden>{mono}</div>
+                )}
+              </div>
+
+              {floatA && (
+                <div className="aup-float aup-float-a aup-glass">
+                  <b>Available</b>
+                  <span>{floatA}</span>
+                </div>
+              )}
+              {floatB && (
+                <div className="aup-float aup-float-b aup-glass">
+                  <b>{floatB}+</b>
+                  <span>Projects</span>
+                </div>
+              )}
+              <span className="aup-orb" aria-hidden />
             </div>
           </div>
-        )}
-        
-        <div className="space-y-4 z-20 relative">
-          <div className="absolute inset-0 bg-white/5 blur-3xl rounded-full -z-10" />
-          {p?.title && (
-            <p className="inline-block px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 font-bold tracking-widest uppercase text-xs backdrop-blur-md shadow-[0_0_15px_rgba(99,102,241,0.3)] mb-4">
-              {p.title} {p?.pronouns ? ` \u00b7 ${p.pronouns}` : ""}
-            </p>
-          )}
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-gray-200 to-gray-600 drop-shadow-2xl">
-            {name}
-          </h1>
-          {p?.tagline && <p className="text-xl md:text-2xl text-gray-400 font-medium max-w-2xl mx-auto mt-4">{p.tagline}</p>}
-          
-          {(p?.location || p?.bio) && (
-            <div className="max-w-xl mx-auto space-y-4 pt-6">
-              {p?.location && (
-                <p className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 shadow-inner">
-                  <svg className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  {p.location}
-                </p>
-              )}
-              {p?.bio && <p className="text-gray-400 leading-relaxed text-sm md:text-base bg-[#0A0A0F]/60 p-4 rounded-2xl border border-white/5">{p.bio}</p>}
+        </header>
+
+        {/* ---------------- DATA SECTIONS (ordered + hideable) ---------------- */}
+        {order.map((k) => (
+          <Fragment key={k}>{sections[k] ? sections[k]() : null}</Fragment>
+        ))}
+
+        {/* ---------------- CONTACT ---------------- */}
+        {has.contact && (
+          <section id="contact" className="aup-section">
+            <div className="aup-contact">
+              <div className="aup-contact-left">
+                {eyebrow("Let’s connect")}
+                <h2 className="aup-h2">Have a project in mind?</h2>
+                <p className="aup-lead">Tell me a little about what you’re building and I’ll get back to you.</p>
+
+                <div className="aup-contact-rows">
+                  {p?.email && (
+                    <a className="aup-contact-row" href={`mailto:${p.email}`}>
+                      <span className="aup-icon aup-icon-sm" aria-hidden>✉</span>
+                      <span>{p.email}</span>
+                    </a>
+                  )}
+                  {p?.phone && (
+                    <a className="aup-contact-row" href={`tel:${p.phone}`}>
+                      <span className="aup-icon aup-icon-sm" aria-hidden>☎</span>
+                      <span>{p.phone}</span>
+                    </a>
+                  )}
+                  {p?.website && (
+                    <a className="aup-contact-row" href={ext(p.website)} target="_blank" rel="noopener noreferrer">
+                      <span className="aup-icon aup-icon-sm" aria-hidden>🌐</span>
+                      <span>{p.website.replace(/^https?:\/\//, "")}</span>
+                    </a>
+                  )}
+                  {p?.location && (
+                    <div className="aup-contact-row">
+                      <span className="aup-icon aup-icon-sm" aria-hidden>📍</span>
+                      <span>{p.location}</span>
+                    </div>
+                  )}
+                </div>
+
+                {socialChips()}
+              </div>
+
+              <div className="aup-formcard aup-glass">
+                <span className="aup-orb aup-orb-contact" aria-hidden />
+                <ContactForm username={data.username} />
+              </div>
             </div>
-          )}
+          </section>
+        )}
+      </div>
+
+      {/* ---------------- FOOTER ---------------- */}
+      <footer className="aup-footer">
+        <div className="aup-shell aup-footer-inner">
+          <a className="aup-brand aup-brand-foot" href="#top">
+            <span className="aup-brand-logo" aria-hidden>{mono}</span>
+            <b>{name}</b>
+          </a>
 
           {data.links.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-4 pt-8">
+            <nav className="aup-foot-links" aria-label="Social">
               {data.links.map((l) => (
-                <div key={l.id} className="relative group/chip transform hover:-translate-y-1 transition-transform">
-                  <div className="absolute inset-0 bg-indigo-500/50 blur-md opacity-0 group-hover/chip:opacity-100 transition-opacity rounded-full" />
-                  <LinkChip className="relative z-10 bg-white/5 border-white/20" platform={l.platform} url={l.url} label={l.label} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </header>
-
-      <div className="relative max-w-6xl mx-auto w-full z-10 mt-10">
-        <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-indigo-500 via-purple-500 to-transparent transform -translate-x-1/2 z-0 shadow-[0_0_20px_rgba(99,102,241,0.8)]" />
-
-        {/* About */}
-        {sv("about") && p?.about && (
-          <div className="mt-8">
-            <SectionHeader title="About" />
-            <CenterNode iconColor="indigo">
-              <p className="text-lg md:text-xl text-gray-300 leading-relaxed whitespace-pre-wrap md:text-center text-left font-light">{p.about}</p>
-            </CenterNode>
-          </div>
-        )}
-
-        {/* Projects */}
-        {sv("projects") && data.projects.length > 0 && (
-          <div>
-            <SectionHeader title="Selected Work" />
-            {data.projects.map((pr, idx) => (
-              <BranchNode key={pr.id} idx={idx}>
-                <a href={pr.url ? ext(pr.url) : undefined} target={pr.url ? "_blank" : undefined} rel="noreferrer" className="block group/link">
-                  {pr.image_url && (
-                    <div className="w-full h-56 md:h-64 rounded-xl overflow-hidden mb-6 border border-white/10 relative shadow-inner">
-                      <div className="absolute inset-0 bg-indigo-500/20 mix-blend-overlay opacity-0 group-hover/link:opacity-100 transition-opacity z-10" />
-                      <img src={pr.image_url} alt={pr.title} className="w-full h-full object-cover group-hover/link:scale-110 transition-transform duration-700 ease-out" />
-                    </div>
-                  )}
-                  <h3 className="text-3xl font-extrabold mb-2 text-white group-hover/link:text-indigo-400 transition-colors drop-shadow-md">{pr.title}</h3>
-                  {pr.role && <p className="text-sm font-bold tracking-wider uppercase text-purple-400 mb-4">{pr.role}</p>}
-                  {pr.description && <p className="text-gray-400 mb-6 text-sm md:text-base leading-relaxed">{pr.description}</p>}
-                  {pr.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {pr.tags.map((t) => (
-                        <span key={t} className="inline-block text-xs font-semibold px-3 py-1.5 rounded-md bg-white/5 text-gray-300 border border-white/10 shadow-sm">{t}</span>
-                      ))}
-                    </div>
-                  )}
+                <a key={l.id} href={ext(l.url)} target="_blank" rel="noopener noreferrer">
+                  {l.label || l.platform}
                 </a>
-              </BranchNode>
-            ))}
-          </div>
-        )}
+              ))}
+            </nav>
+          )}
 
-        {/* Experience */}
-        {sv("experience") && data.experience.length > 0 && (
-          <div>
-            <SectionHeader title="Experience" />
-            {data.experience.map((x, idx) => (
-              <BranchNode key={x.id} idx={idx}>
-                <h3 className="text-2xl font-bold text-white drop-shadow-sm">{x.title || x.company}</h3>
-                <p className="font-semibold tracking-wide text-indigo-300 my-2 uppercase text-sm">
-                  {[x.company, x.location].filter(Boolean).join(" · ")}
-                </p>
-                <div className="mb-5">
-                  <span className="inline-block bg-indigo-500/10 border border-indigo-500/30 px-4 py-1.5 rounded-full text-xs font-bold text-indigo-200 shadow-inner">
-                    {dateRange(x.start_date, x.end_date, x.is_current)}
-                  </span>
-                </div>
-                {x.description && <p className="text-gray-400 leading-relaxed text-sm">{x.description}</p>}
-              </BranchNode>
-            ))}
-          </div>
-        )}
-
-        {/* Education */}
-        {sv("education") && data.education.length > 0 && (
-          <div>
-            <SectionHeader title="Education" />
-            {data.education.map((ed, idx) => (
-              <BranchNode key={ed.id} idx={idx}>
-                <h3 className="text-2xl font-bold text-white drop-shadow-sm">{ed.school}</h3>
-                <p className="text-purple-400 font-semibold tracking-wide text-sm mt-2 mb-3">
-                  {[ed.degree, ed.field].filter(Boolean).join(", ")}
-                </p>
-                <div className="mb-4">
-                  <span className="inline-block bg-white/5 border border-white/10 px-3 py-1 rounded-md text-xs font-bold text-gray-400">
-                    {dateRange(ed.start_date, ed.end_date)}
-                  </span>
-                </div>
-                {ed.description && <p className="text-sm text-gray-400 leading-relaxed">{ed.description}</p>}
-              </BranchNode>
-            ))}
-          </div>
-        )}
-
-        {/* Certifications */}
-        {sv("certifications") && data.certifications.length > 0 && (
-          <div>
-            <SectionHeader title="Certifications" />
-            {data.certifications.map((c, idx) => (
-              <BranchNode key={c.id} idx={idx}>
-                <h3 className="text-2xl font-bold text-white drop-shadow-sm">
-                  {c.url ? <a href={ext(c.url)} target="_blank" rel="noreferrer" className="hover:text-indigo-400 transition-colors">{c.name} ↗</a> : c.name}
-                </h3>
-                <p className="text-purple-400 font-semibold tracking-wide text-sm mt-2 mb-3">
-                  {c.issuer}
-                </p>
-                <div className="mb-2">
-                  <span className="inline-block bg-white/5 border border-white/10 px-3 py-1 rounded-md text-xs font-bold text-gray-400">
-                    {c.issue_date}
-                  </span>
-                </div>
-              </BranchNode>
-            ))}
-          </div>
-        )}
-
-        {/* Achievements */}
-        {sv("achievements") && data.achievements.length > 0 && (
-          <div>
-            <SectionHeader title="Achievements" />
-            {data.achievements.map((a, idx) => (
-              <BranchNode key={a.id} idx={idx}>
-                <h3 className="text-2xl font-bold text-white drop-shadow-sm">{a.title}</h3>
-                <div className="my-3">
-                  <span className="inline-block bg-indigo-500/10 border border-indigo-500/30 px-4 py-1.5 rounded-full text-xs font-bold text-indigo-200 shadow-inner">
-                    {a.date}
-                  </span>
-                </div>
-                {a.description && <p className="text-sm text-gray-400 leading-relaxed">{a.description}</p>}
-              </BranchNode>
-            ))}
-          </div>
-        )}
-
-        {/* Publications */}
-        {sv("publications") && data.publications.length > 0 && (
-          <div>
-            <SectionHeader title="Publications" />
-            {data.publications.map((pub, idx) => (
-              <BranchNode key={pub.id} idx={idx}>
-                <h3 className="text-2xl font-bold text-white drop-shadow-sm">
-                  {pub.url ? <a href={ext(pub.url)} target="_blank" rel="noreferrer" className="hover:text-indigo-400 transition-colors">{pub.title} ↗</a> : pub.title}
-                </h3>
-                <p className="font-semibold tracking-wide text-indigo-300 my-2 text-sm">
-                  {pub.publisher}
-                </p>
-                <div className="mb-4">
-                  <span className="inline-block bg-white/5 border border-white/10 px-3 py-1 rounded-md text-xs font-bold text-gray-400">
-                    {pub.date}
-                  </span>
-                </div>
-                {pub.description && <p className="text-sm text-gray-400 leading-relaxed">{pub.description}</p>}
-              </BranchNode>
-            ))}
-          </div>
-        )}
-
-        {/* Skills */}
-        {sv("skills") && data.skills.length > 0 && (
-          <div>
-            <SectionHeader title="Tech Tree & Skills" />
-            <CenterNode iconColor="indigo">
-              <div className="flex flex-wrap justify-center gap-3 md:gap-4">
-                {data.skills.map((s) => (
-                  <span key={s.id} className="relative group/skill px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-200 shadow-lg hover:scale-110 hover:-translate-y-1 transition-all cursor-default font-bold overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover/skill:opacity-100 transition-opacity" />
-                    <span className="relative z-10 group-hover/skill:text-white group-hover/skill:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">{s.name}</span>
-                  </span>
-                ))}
-              </div>
-            </CenterNode>
-          </div>
-        )}
-
-        {/* Services */}
-        {sv("services") && data.services.length > 0 && (
-          <div>
-            <SectionHeader title="Services Offered" />
-            {data.services.map((s, idx) => (
-              <BranchNode key={s.id} idx={idx}>
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-2xl font-bold text-white drop-shadow-sm">{s.title}</h3>
-                  {s.price && <span className="inline-block self-start text-indigo-200 text-xs font-black tracking-wider bg-indigo-600/30 border border-indigo-500/50 px-4 py-1.5 rounded-md shadow-inner">{s.price}</span>}
-                </div>
-                {s.description && <p className="text-sm md:text-base text-gray-400 mt-5 leading-relaxed">{s.description}</p>}
-              </BranchNode>
-            ))}
-          </div>
-        )}
-
-        {/* Gallery */}
-        {sv("gallery") && data.gallery.length > 0 && (
-          <div>
-            <SectionHeader title="Visual Gallery" />
-            <CenterNode iconColor="purple">
-              <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 w-full">
-                {data.gallery.map((g) => (
-                  <figure 
-                    key={g.id} 
-                    onClick={() => setLightboxImage({ src: g.image_url, caption: g.caption || undefined })}
-                    className="relative group overflow-hidden rounded-2xl bg-[#0a0a0f] border border-white/10 shadow-[0_10px_20px_rgba(0,0,0,0.5)] cursor-pointer break-inside-avoid transform transition-all duration-500 hover:scale-[1.03] hover:-translate-y-2 active:scale-95 mobile-3d-float"
-                  >
-                    <img 
-                      src={g.image_url} 
-                      alt={g.caption || "Gallery image"} 
-                      loading="lazy"
-                      className="w-full h-auto object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0F]/90 via-[#0A0A0F]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-5">
-                      <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 delay-100">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                      </div>
-                      {g.caption && (
-                        <figcaption className="text-sm font-bold text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                          {g.caption}
-                        </figcaption>
-                      )}
-                    </div>
-                  </figure>
-                ))}
-              </div>
-            </CenterNode>
-          </div>
-        )}
-
-        {/* Videos */}
-        {sv("videos") && data.videos.length > 0 && (
-          <div>
-            <SectionHeader title="Videos" />
-            <CenterNode iconColor="indigo">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                {data.videos.map((v) => {
-                  const embed = videoEmbed(v.url);
-                  return (
-                    <div key={v.id} className="relative group overflow-hidden rounded-2xl bg-[#0a0a0f] border border-white/10 shadow-[0_10px_20px_rgba(0,0,0,0.5)] transform transition-transform duration-500 hover:scale-[1.03] hover:-translate-y-1">
-                      {embed ? (
-                        <div className="aspect-video w-full">
-                          <iframe src={embed} title={v.title || "Video"} allowFullScreen className="w-full h-full border-0" />
-                        </div>
-                      ) : (
-                        <div className="p-8 flex items-center justify-center h-full aspect-video">
-                          <a href={ext(v.url)} target="_blank" rel="noreferrer" className="flex flex-col items-center gap-3 text-white hover:text-indigo-400 transition-colors text-center">
-                            <svg className="w-10 h-10 opacity-70" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                            <span className="font-bold text-lg">{v.title || v.url}</span>
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CenterNode>
-          </div>
-        )}
-
-        {/* Testimonials */}
-        {sv("testimonials") && data.testimonials.length > 0 && (
-          <div>
-            <SectionHeader title="Kind Words" />
-            {data.testimonials.map((t, idx) => (
-              <BranchNode key={t.id} idx={idx}>
-                <div className="relative">
-                  <svg className="absolute -top-6 -left-6 w-12 h-12 text-indigo-500/20 transform -rotate-12 drop-shadow-md" fill="currentColor" viewBox="0 0 32 32"><path d="M10 8c-3.3 0-6 2.7-6 6v10h10V14H8c0-2.2 1.8-4 4-4V8zm14 0c-3.3 0-6 2.7-6 6v10h10V14h-6c0-2.2 1.8-4 4-4V8z"/></svg>
-                  <p className="text-gray-300 italic relative z-10 mb-8 text-lg leading-relaxed font-light">"{t.quote}"</p>
-                  <div className={`flex items-center gap-5 ${idx % 2 === 0 ? 'md:flex-row-reverse md:text-left' : ''}`}>
-                    {t.avatar_url && (
-                       <div className="relative p-1 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 shadow-lg">
-                         <img className="w-14 h-14 rounded-full object-cover border-2 border-[#0A0A0F]" src={t.avatar_url} alt={t.author} />
-                       </div>
-                    )}
-                    <div>
-                      <p className="font-extrabold text-white text-lg tracking-wide">{t.author}</p>
-                      {t.role && <p className="text-xs text-indigo-400 font-bold uppercase tracking-widest mt-1">{t.role}</p>}
-                    </div>
-                  </div>
-                </div>
-              </BranchNode>
-            ))}
-          </div>
-        )}
-
-        {/* Contact Roots */}
-        <div className="mt-24">
-          <SectionHeader title="Connect" />
-          <CenterNode iconColor="indigo">
-            <div className="flex flex-col items-center text-center">
-              {p?.availability && <p className="text-indigo-300 font-bold tracking-widest uppercase mb-10 bg-indigo-500/10 px-8 py-3 rounded-full shadow-[inset_0_0_20px_rgba(99,102,241,0.2)] border border-indigo-500/30 animate-pulse">{p.availability}</p>}
-              
-              <div className="flex flex-wrap justify-center gap-6 mb-16">
-                {p?.email && (
-                  <a href={`mailto:${p.email}`} className="group relative flex items-center gap-3 text-sm md:text-base text-white font-bold bg-white/5 px-8 py-4 rounded-2xl border border-white/10 hover:-translate-y-2 hover:shadow-[0_15px_30px_rgba(99,102,241,0.3)] active:scale-95 transition-all overflow-hidden">
-                    <div className="absolute inset-0 bg-indigo-500/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                    <svg className="w-5 h-5 text-indigo-400 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                    <span className="relative z-10">Email Me</span>
-                  </a>
-                )}
-                {p?.website && (
-                  <a href={ext(p.website)} target="_blank" rel="noreferrer" className="group relative flex items-center gap-3 text-sm md:text-base text-white font-bold bg-white/5 px-8 py-4 rounded-2xl border border-white/10 hover:-translate-y-2 hover:shadow-[0_15px_30px_rgba(168,85,247,0.3)] active:scale-95 transition-all overflow-hidden">
-                    <div className="absolute inset-0 bg-purple-500/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                    <svg className="w-5 h-5 text-purple-400 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
-                    <span className="relative z-10">Visit Website</span>
-                  </a>
-                )}
-                {p?.resume_url && (
-                  <a href={ext(p.resume_url)} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-sm md:text-base text-black bg-gradient-to-r from-gray-100 to-white hover:from-white hover:to-white font-extrabold transition-all px-8 py-4 rounded-2xl shadow-[0_10px_30px_rgba(255,255,255,0.2)] hover:shadow-[0_15px_40px_rgba(255,255,255,0.4)] active:scale-95 hover:-translate-y-2">
-                    Download Résumé
-                  </a>
-                )}
-              </div>
-
-              {data.username && (
-                <div className="w-full max-w-xl mx-auto text-left relative z-10 bg-[#0A0A0F]/50 p-8 rounded-3xl border border-white/5 shadow-2xl backdrop-blur-xl">
-                  <h3 className="text-2xl font-extrabold mb-8 text-center text-white drop-shadow-md">Send a Message</h3>
-                  <ContactForm username={data.username} />
-                </div>
-              )}
-            </div>
-          </CenterNode>
-        </div>
-
-      </div>
-
-      {/* Footer */}
-      {!data.hide_branding && (
-        <footer className="relative z-20 text-center text-gray-500 font-medium text-sm pb-10 pt-16">
-          Crafted with precision &middot; Folio
-        </footer>
-      )}
-
-      {/* ================= LIGHTBOX OVERLAY ================= */}
-      {lightboxImage && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-xl animate-[fadeIn_0.3s_ease-out] p-4 md:p-10"
-          onClick={() => setLightboxImage(null)}
-        >
-          <button 
-            className="absolute top-6 right-6 md:top-10 md:right-10 w-12 h-12 flex items-center justify-center text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-full transition-all hover:scale-110 active:scale-95 z-50 backdrop-blur-md shadow-2xl"
-            onClick={(e) => { e.stopPropagation(); setLightboxImage(null); }}
-          >
-            <svg className="w-6 h-6 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          <div className="relative max-w-[95vw] max-h-[90vh] animate-zoom-in" onClick={(e) => e.stopPropagation()}>
-            <img 
-              src={lightboxImage.src} 
-              alt={lightboxImage.caption || "Fullscreen image"} 
-              className="max-w-full max-h-[85vh] md:max-h-[90vh] object-contain rounded-xl shadow-[0_0_60px_rgba(255,255,255,0.15)] ring-1 ring-white/10" 
-            />
-            {lightboxImage.caption && (
-              <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 w-max max-w-[90vw]">
-                <p className="text-white bg-black/60 px-6 py-2 rounded-full backdrop-blur-md text-sm md:text-base font-semibold tracking-wide border border-white/10 text-center shadow-xl">
-                  {lightboxImage.caption}
-                </p>
-              </div>
+          <div className="aup-foot-right">
+            <span>© {new Date().getFullYear()} {name}</span>
+            {!data.hide_branding && (
+              <a href="https://folio.assetprim.com" target="_blank" rel="noopener noreferrer" className="aup-madewith">
+                Made with Folio
+              </a>
             )}
           </div>
         </div>
-      )}
+      </footer>
     </div>
   );
 }
+
+export default GlassTemplate;
+
+/* =====================================================================
+   STYLES — self-contained, all prefixed `.aup-` and scoped under
+   `.aup-root` so nothing leaks into the app or other templates.
+   ===================================================================== */
+
+const AUP_CSS = `
+.aup-root{
+  --aup-bg:#F7F7FA; --aup-bg2:#F1F1F7;
+  --aup-ink:#11131A; --aup-ink2:#6F7280;
+  --aup-white:#fff; --aup-lilac:#E9E1FF; --aup-blue:#E5E7FF;
+  --aup-accent: var(--tpl-accent, #7c6cff);
+  --aup-accent2: color-mix(in srgb, var(--aup-accent) 55%, #6366F1);
+  --aup-tint: color-mix(in srgb, var(--aup-accent) 14%, #ffffff);
+  --aup-glass: rgba(255,255,255,0.55);
+  --aup-glass-2: rgba(255,255,255,0.72);
+  --aup-border: rgba(255,255,255,0.70);
+  --aup-hair: rgba(17,19,26,0.07);
+  --aup-shadow: 0 24px 60px -30px rgba(84,72,160,0.35);
+  --aup-shadow-sm: 0 12px 30px -18px rgba(84,72,160,0.30);
+  --aup-r: 24px; --aup-r-lg: 30px;
+  --aup-font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --aup-display: "Bricolage Grotesque", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  position:relative; isolation:isolate;
+  background:
+    radial-gradient(1200px 700px at 85% -5%, color-mix(in srgb, var(--aup-accent) 10%, transparent), transparent 60%),
+    radial-gradient(900px 600px at 0% 10%, var(--aup-blue), transparent 55%),
+    var(--aup-bg);
+  color:var(--aup-ink); font-family:var(--aup-font);
+  line-height:1.62; font-size:16px; -webkit-font-smoothing:antialiased;
+  overflow-x:clip; min-height:100%; scroll-behavior:smooth;
+}
+.aup-root *{ box-sizing:border-box; }
+.aup-root img{ max-width:100%; display:block; }
+.aup-root a{ color:inherit; }
+.aup-root h1,.aup-root h2,.aup-root h3{ overflow-wrap:anywhere; }
+.aup-root p, .aup-root blockquote{ overflow-wrap:anywhere; }
+
+/* ---- decorative background ---- */
+.aup-bg{ position:absolute; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+.aup-blob{ position:absolute; border-radius:50%; filter:blur(80px); opacity:.55; }
+.aup-blob-1{ width:460px;height:460px; top:-120px; right:-80px;
+  background:radial-gradient(circle at 30% 30%, color-mix(in srgb,var(--aup-accent) 45%, #fff), transparent 70%); }
+.aup-blob-2{ width:520px;height:520px; top:520px; left:-160px;
+  background:radial-gradient(circle at 40% 40%, var(--aup-blue), transparent 70%); opacity:.7; }
+.aup-blob-3{ width:400px;height:400px; bottom:60px; right:-120px;
+  background:radial-gradient(circle at 50% 50%, var(--aup-lilac), transparent 70%); opacity:.6; }
+
+/* ---- shell ---- */
+.aup-shell{ width:100%; max-width:1220px; margin-inline:auto; padding-inline:clamp(16px,4vw,40px); }
+
+/* ---- typography helpers ---- */
+.aup-eyebrow{ display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;
+  font-size:.72rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--aup-accent); }
+.aup-h2{ font-family:var(--aup-display); font-weight:700; margin:0;
+  font-size:clamp(1.7rem,3.4vw,2.6rem); letter-spacing:-.02em; line-height:1.08; }
+.aup-lead{ color:var(--aup-ink2); font-size:1.02rem; margin:14px 0 0; max-width:46ch; }
+.aup-muted{ color:var(--aup-ink2); margin:6px 0 0; }
+.aup-small{ font-size:.85rem; }
+.aup-mt{ margin-top:16px; }
+.aup-clamp-3,.aup-clamp-4{ display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
+.aup-clamp-3{ -webkit-line-clamp:3; }
+.aup-clamp-4{ -webkit-line-clamp:4; }
+
+/* ---- glass + buttons ---- */
+.aup-glass{ background:var(--aup-glass); backdrop-filter:blur(20px) saturate(150%);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  border:1px solid var(--aup-border); box-shadow:var(--aup-shadow); }
+.aup-btn{ display:inline-flex; align-items:center; gap:8px; padding:12px 20px;
+  border-radius:14px; font-weight:600; font-size:.94rem; text-decoration:none;
+  border:1px solid transparent; cursor:pointer; white-space:nowrap;
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease; }
+.aup-btn:focus-visible{ outline:2px solid var(--aup-accent); outline-offset:3px; }
+.aup-btn-primary{ color:#fff;
+  background:linear-gradient(135deg,var(--aup-accent),var(--aup-accent2));
+  box-shadow:0 16px 30px -14px color-mix(in srgb,var(--aup-accent) 75%, transparent); }
+.aup-btn-primary:hover{ transform:translateY(-2px); }
+.aup-btn-ghost{ background:var(--aup-glass-2); color:var(--aup-ink); border-color:var(--aup-border);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+.aup-btn-ghost:hover{ transform:translateY(-2px); }
+
+/* ---- sections ---- */
+.aup-section{ padding-block:clamp(46px,7vw,92px); scroll-margin-top:96px; }
+.aup-sechead{ display:flex; align-items:flex-end; justify-content:space-between;
+  gap:16px; flex-wrap:wrap; margin-bottom:clamp(24px,3vw,40px); }
+.aup-count-pill{ padding:8px 14px; border-radius:999px; font-size:.82rem; font-weight:600;
+  color:var(--aup-accent); background:var(--aup-tint);
+  border:1px solid color-mix(in srgb,var(--aup-accent) 22%, transparent); }
+
+/* ---- navbar ---- */
+.aup-navwrap{ position:sticky; top:14px; z-index:60; padding-top:16px; }
+.aup-nav{ display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:10px 12px 10px 16px; border-radius:20px; }
+.aup-brand{ display:flex; align-items:center; gap:10px; text-decoration:none; min-width:0; }
+.aup-brand-logo{ width:38px; height:38px; flex:0 0 auto; border-radius:11px; display:grid;
+  place-items:center; font-weight:800; font-size:.9rem; color:#fff;
+  background:linear-gradient(135deg,var(--aup-accent),var(--aup-accent2)); }
+.aup-brand-txt{ display:flex; flex-direction:column; line-height:1.1; min-width:0; }
+.aup-brand-txt b{ font-weight:700; font-size:.92rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:38vw; }
+.aup-brand-txt em{ font-style:normal; font-size:.72rem; color:var(--aup-ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:38vw; }
+.aup-navlinks{ display:flex; gap:4px; list-style:none; margin:0; padding:0; }
+.aup-navlinks a{ text-decoration:none; color:var(--aup-ink2); font-weight:500; font-size:.9rem;
+  padding:8px 12px; border-radius:11px; transition:background .16s, color .16s; }
+.aup-navlinks a:hover{ color:var(--aup-ink); background:var(--aup-glass-2); }
+.aup-nav-right{ display:flex; align-items:center; gap:8px; }
+.aup-nav-cta{ padding:10px 16px; }
+
+/* mobile disclosure menu (pure HTML/CSS, no JS) */
+.aup-menu{ display:none; position:relative; }
+.aup-menu summary{ list-style:none; width:42px; height:42px; border-radius:12px; cursor:pointer;
+  display:grid; place-items:center; gap:4px; background:var(--aup-glass-2); border:1px solid var(--aup-border); }
+.aup-menu summary::-webkit-details-marker{ display:none; }
+.aup-menu summary span{ display:block; width:18px; height:2px; border-radius:2px; background:var(--aup-ink); }
+.aup-menu ul{ position:absolute; right:0; top:52px; min-width:180px; list-style:none; margin:0; padding:8px;
+  border-radius:16px; background:var(--aup-glass-2); backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px); border:1px solid var(--aup-border); box-shadow:var(--aup-shadow); }
+.aup-menu ul a{ display:block; padding:10px 12px; border-radius:10px; text-decoration:none;
+  color:var(--aup-ink); font-weight:500; font-size:.92rem; }
+.aup-menu ul a:hover{ background:var(--aup-tint); }
+
+/* ---- hero ---- */
+.aup-hero{ display:grid; grid-template-columns:1.05fr .95fr; gap:clamp(28px,4vw,56px);
+  align-items:center; padding-block:clamp(34px,5vw,66px) clamp(40px,6vw,84px); }
+.aup-hero-name{ font-family:var(--aup-display); font-weight:700; margin:6px 0 0;
+  font-size:clamp(2.4rem,6.4vw,4.1rem); line-height:1.02; letter-spacing:-.03em; }
+.aup-hero-title{ margin:6px 0 0; font-family:var(--aup-display); font-weight:700;
+  font-size:clamp(1.3rem,3.4vw,2rem); letter-spacing:-.01em;
+  background:linear-gradient(100deg,var(--aup-accent),var(--aup-accent2));
+  -webkit-background-clip:text; background-clip:text; color:transparent; }
+.aup-hero-intro{ margin:18px 0 0; color:var(--aup-ink2); font-size:1.06rem; max-width:44ch; }
+.aup-hero-cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:26px; }
+.aup-hero-meta{ display:flex; flex-wrap:wrap; gap:16px 20px; margin-top:22px;
+  color:var(--aup-ink2); font-size:.9rem; }
+.aup-dot-avail{ color:color-mix(in srgb, #12b76a 80%, var(--aup-ink)); font-weight:600; }
+.aup-hero-socials{ margin-top:22px; }
+
+.aup-hero-right{ display:flex; justify-content:center; }
+.aup-portrait{ position:relative; width:min(420px,100%); }
+.aup-portrait-frame{ position:relative; border-radius:36px 36px 36px 64px; overflow:hidden;
+  aspect-ratio:4/5; background:linear-gradient(160deg, #fff, var(--aup-blue)); }
+.aup-portrait-frame img{ width:100%; height:100%; object-fit:cover; }
+.aup-portrait-ph{ width:100%; height:100%; display:grid; place-items:center;
+  font-family:var(--aup-display); font-size:4rem; font-weight:700; color:#fff;
+  background:linear-gradient(150deg,var(--aup-accent),var(--aup-accent2)); }
+.aup-float{ position:absolute; display:flex; flex-direction:column; gap:1px;
+  padding:12px 16px; border-radius:16px; box-shadow:var(--aup-shadow-sm); }
+.aup-float b{ font-family:var(--aup-display); font-size:1.15rem; line-height:1; }
+.aup-float span{ font-size:.74rem; color:var(--aup-ink2); }
+.aup-float-a{ top:20px; right:-10px; }
+.aup-float-b{ bottom:26px; left:-14px; }
+.aup-orb{ position:absolute; width:94px; height:94px; right:-24px; bottom:-18px; border-radius:50%;
+  background:radial-gradient(circle at 32% 30%, #fff, var(--aup-blue) 55%, color-mix(in srgb,var(--aup-accent) 30%, transparent) 100%);
+  box-shadow:var(--aup-shadow-sm); opacity:.9; }
+
+/* ---- about ---- */
+.aup-about{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,4vw,48px); align-items:start; }
+.aup-about-right{ padding:clamp(22px,3vw,32px); border-radius:var(--aup-r-lg); }
+.aup-about-right p{ margin:0 0 14px; }
+.aup-about-right p:last-child{ margin-bottom:0; }
+.aup-stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:12px;
+  padding:18px; border-radius:20px; margin-top:22px; }
+.aup-stat{ display:flex; flex-direction:column; gap:2px; }
+.aup-stat b{ font-family:var(--aup-display); font-size:1.7rem; line-height:1;
+  color:var(--aup-accent); }
+.aup-stat span{ font-size:.82rem; color:var(--aup-ink2); }
+
+/* ---- cards / grids ---- */
+.aup-grid-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:clamp(14px,1.6vw,20px); }
+.aup-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(16px,2vw,24px); }
+.aup-grid-2{ display:grid; grid-template-columns:repeat(2,1fr); gap:clamp(16px,2vw,22px); }
+.aup-grid-5{ display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+
+.aup-card{ position:relative; display:flex; flex-direction:column; gap:8px;
+  padding:22px; border-radius:22px; background:var(--aup-glass);
+  backdrop-filter:blur(20px) saturate(150%); -webkit-backdrop-filter:blur(20px) saturate(150%);
+  border:1px solid var(--aup-border); box-shadow:var(--aup-shadow-sm);
+  transition:transform .2s ease, box-shadow .2s ease; text-decoration:none; color:inherit; }
+.aup-card-link:hover, .aup-card:hover{ transform:translateY(-4px); box-shadow:var(--aup-shadow); }
+.aup-icon{ width:46px; height:46px; border-radius:14px; display:grid; place-items:center;
+  font-family:var(--aup-display); font-weight:700; font-size:.95rem; color:var(--aup-accent);
+  background:var(--aup-tint);
+  border:1px solid color-mix(in srgb,var(--aup-accent) 18%, transparent); }
+.aup-icon-sm{ width:38px; height:38px; border-radius:11px; font-size:.9rem; }
+.aup-card-title{ font-family:var(--aup-display); font-weight:700; font-size:1.1rem; margin:4px 0 0; letter-spacing:-.01em; }
+.aup-card-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:8px; flex-wrap:wrap; }
+.aup-price{ font-weight:700; color:var(--aup-accent); }
+.aup-arrow{ color:var(--aup-accent); font-weight:700; }
+
+/* ---- skills panel ---- */
+.aup-panel{ padding:clamp(20px,3vw,32px); border-radius:26px; }
+.aup-chips{ display:flex; flex-wrap:wrap; gap:10px; }
+.aup-chip{ display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border-radius:12px;
+  background:var(--aup-glass-2); border:1px solid var(--aup-border); font-weight:600; font-size:.9rem;
+  text-decoration:none; color:inherit; transition:transform .16s ease, box-shadow .16s ease; }
+.aup-chip-link:hover{ transform:translateY(-2px); box-shadow:var(--aup-shadow-sm); }
+.aup-chip-mono{ width:22px; height:22px; border-radius:7px; display:grid; place-items:center;
+  font-size:.66rem; color:#fff; background:linear-gradient(135deg,var(--aup-accent),var(--aup-accent2)); }
+.aup-chip-level{ font-size:.72rem; color:var(--aup-ink2); font-weight:500;
+  padding-left:8px; margin-left:2px; border-left:1px solid var(--aup-hair); }
+
+/* ---- projects ---- */
+.aup-proj{ position:relative; display:flex; flex-direction:column; padding:12px;
+  border-radius:24px; text-decoration:none; color:inherit;
+  transition:transform .2s ease, box-shadow .2s ease; }
+.aup-proj-link:hover{ transform:translateY(-5px); box-shadow:var(--aup-shadow); }
+.aup-proj-media{ position:relative; border-radius:16px; overflow:hidden; aspect-ratio:16/11;
+  background:linear-gradient(150deg,#fff,var(--aup-blue)); }
+.aup-proj-media img{ width:100%; height:100%; object-fit:cover; }
+.aup-proj-media :where(button, .zoom, span, div){ height:100%; }
+.aup-proj-ph{ width:100%; height:100%; display:grid; place-items:center;
+  font-family:var(--aup-display); font-size:2.4rem; font-weight:700; color:#fff;
+  background:linear-gradient(150deg,var(--aup-accent),var(--aup-accent2)); }
+.aup-badge{ position:absolute; top:10px; left:10px; padding:5px 10px; border-radius:999px;
+  font-size:.7rem; font-weight:700; color:#fff; background:color-mix(in srgb,var(--aup-accent) 85%, #000 4%); }
+.aup-proj-body{ padding:14px 8px 6px; display:flex; flex-direction:column; gap:6px; }
+.aup-proj-cat{ color:var(--aup-accent); font-weight:600; font-size:.85rem; margin:0; }
+.aup-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.aup-tag{ font-size:.72rem; padding:4px 9px; border-radius:8px; color:var(--aup-ink2);
+  background:var(--aup-bg2); border:1px solid var(--aup-hair); }
+.aup-proj-arrow{ position:absolute; top:22px; right:22px; color:#fff; font-weight:700;
+  width:30px; height:30px; border-radius:9px; display:grid; place-items:center;
+  background:color-mix(in srgb,var(--aup-accent) 80%, transparent); }
+
+/* ---- timeline (experience / education / publications) ---- */
+.aup-time{ display:flex; flex-direction:column; gap:14px; }
+.aup-time-item{ padding:20px 22px; border-radius:20px; text-decoration:none; color:inherit;
+  transition:transform .18s ease, box-shadow .18s ease; }
+.aup-time-link:hover{ transform:translateY(-3px); box-shadow:var(--aup-shadow); }
+.aup-time-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.aup-time-role{ font-family:var(--aup-display); font-weight:700; font-size:1.14rem; margin:0; letter-spacing:-.01em; }
+.aup-time-date{ font-size:.84rem; color:var(--aup-accent); font-weight:600; white-space:nowrap; }
+.aup-time-meta{ color:var(--aup-ink2); font-size:.92rem; margin:4px 0 0; }
+
+/* ---- process ---- */
+.aup-step{ padding:22px 20px; border-radius:20px; display:flex; flex-direction:column; gap:6px; }
+.aup-step-n{ font-family:var(--aup-display); font-weight:700; font-size:1.5rem; color:var(--aup-accent); opacity:.55; }
+.aup-step-t{ font-family:var(--aup-display); font-weight:700; font-size:1.08rem; margin:2px 0 0; }
+
+/* ---- gallery ---- */
+.aup-gallery{ columns:3 260px; column-gap:16px; }
+.aup-gitem{ break-inside:avoid; margin:0 0 16px; padding:8px; border-radius:18px; }
+.aup-gitem img{ width:100%; border-radius:12px; }
+.aup-gitem figcaption{ padding:8px 6px 4px; }
+
+/* ---- videos ---- */
+.aup-video{ padding:8px; border-radius:18px; }
+.aup-video-frame{ position:relative; aspect-ratio:16/9; border-radius:12px; overflow:hidden; background:#000; }
+.aup-video-frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+.aup-video figcaption{ padding:8px 6px 4px; }
+
+/* ---- testimonials ---- */
+.aup-tgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.aup-quote{ position:relative; padding:26px 24px; border-radius:22px; display:flex; flex-direction:column; gap:14px; }
+.aup-quote-mark{ font-family:var(--aup-display); font-size:3rem; line-height:.4; color:var(--aup-accent); opacity:.35; height:22px; }
+.aup-quote blockquote{ margin:0; font-size:1rem; color:var(--aup-ink); }
+.aup-quote-by{ display:flex; align-items:center; gap:12px; margin-top:auto; }
+.aup-quote-by span{ display:flex; flex-direction:column; line-height:1.2; }
+.aup-quote-by b{ font-weight:700; font-size:.94rem; }
+.aup-quote-by em{ font-style:normal; font-size:.82rem; }
+.aup-avatar{ width:44px; height:44px; flex:0 0 auto; border-radius:50%; overflow:hidden; display:grid; place-items:center;
+  font-weight:700; font-size:.85rem; color:#fff;
+  background:linear-gradient(135deg,var(--aup-accent),var(--aup-accent2)); }
+.aup-avatar img{ width:100%; height:100%; object-fit:cover; }
+
+/* ---- contact ---- */
+.aup-contact{ display:grid; grid-template-columns:.9fr 1.1fr; gap:clamp(24px,4vw,48px); align-items:start; }
+.aup-contact-rows{ display:flex; flex-direction:column; gap:10px; margin-top:22px; }
+.aup-contact-row{ display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit;
+  font-weight:500; word-break:break-word; }
+.aup-contact-row:hover .aup-icon-sm{ transform:translateY(-2px); }
+.aup-formcard{ position:relative; padding:clamp(22px,3vw,34px); border-radius:var(--aup-r-lg); overflow:hidden; }
+.aup-orb-contact{ position:absolute; right:-30px; bottom:-30px; width:120px; height:120px; opacity:.8; }
+
+/* ---- footer ---- */
+.aup-footer{ margin-top:clamp(40px,6vw,72px); border-top:1px solid var(--aup-hair);
+  background:color-mix(in srgb, var(--aup-white) 55%, transparent);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.aup-footer-inner{ display:flex; align-items:center; justify-content:space-between; gap:16px;
+  flex-wrap:wrap; padding-block:26px; }
+.aup-brand-foot b{ font-weight:700; }
+.aup-foot-links{ display:flex; flex-wrap:wrap; gap:16px; }
+.aup-foot-links a{ text-decoration:none; color:var(--aup-ink2); font-size:.88rem; }
+.aup-foot-links a:hover{ color:var(--aup-ink); }
+.aup-foot-right{ display:flex; align-items:center; gap:14px; color:var(--aup-ink2); font-size:.85rem; flex-wrap:wrap; }
+.aup-madewith{ text-decoration:none; font-weight:600; color:var(--aup-accent); }
+
+/* ---- responsive ---- */
+@media (max-width:1000px){
+  .aup-grid-4{ grid-template-columns:repeat(2,1fr); }
+  .aup-grid-5{ grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width:900px){
+  .aup-hero{ grid-template-columns:1fr; }
+  .aup-hero-right{ order:-1; }
+  .aup-portrait{ width:min(360px,100%); }
+  .aup-grid-3{ grid-template-columns:repeat(2,1fr); }
+  .aup-tgrid{ display:flex; overflow-x:auto; gap:16px; scroll-snap-type:x mandatory;
+    padding-bottom:8px; margin-inline:calc(-1 * clamp(16px,4vw,40px)); padding-inline:clamp(16px,4vw,40px); }
+  .aup-tgrid .aup-quote{ flex:0 0 82%; scroll-snap-align:start; }
+  .aup-navlinks{ display:none; }
+  .aup-menu{ display:block; }
+}
+@media (max-width:820px){
+  .aup-about{ grid-template-columns:1fr; }
+  .aup-contact{ grid-template-columns:1fr; }
+}
+@media (max-width:700px){
+  .aup-grid-5{ grid-template-columns:repeat(2,1fr); }
+  .aup-grid-2{ grid-template-columns:1fr; }
+  .aup-gallery{ columns:2 160px; }
+}
+@media (max-width:560px){
+  .aup-grid-4{ grid-template-columns:1fr; }
+  .aup-grid-3{ grid-template-columns:1fr; }
+  .aup-grid-5{ grid-template-columns:1fr; }
+  .aup-nav-cta{ display:none; }
+  .aup-brand-txt em{ display:none; }
+  .aup-float-a{ right:6px; }
+  .aup-float-b{ left:6px; }
+}
+@media (max-width:420px){
+  .aup-gallery{ columns:1; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .aup-root{ scroll-behavior:auto; }
+  .aup-root *{ transition:none !important; }
+}
+`;
