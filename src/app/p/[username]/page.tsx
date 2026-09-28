@@ -5,6 +5,8 @@ import { TemplateRenderer } from "@/templates";
 import { ViewBeacon } from "@/components/ViewBeacon";
 import { ReportLink } from "@/components/ReportLink";
 import { SectionReorder } from "@/components/SectionReorder";
+import { PasswordGate } from "@/components/PasswordGate";
+import { Tracking } from "@/components/Tracking";
 import { fontStack } from "@/lib/fonts";
 
 async function getData(username: string): Promise<PublicPortfolio | null> {
@@ -58,6 +60,10 @@ export default async function PublicPortfolioPage({
   const { username } = await params;
   const data = await getData(username);
   if (!data) notFound();
+  if ((data as { protected?: boolean }).protected) {
+    const pd = data as unknown as { username?: string; display_name?: string };
+    return <PasswordGate username={pd.username ?? username} name={pd.display_name ?? "Private portfolio"} />;
+  }
   const stack = fontStack(data.settings?.font);
   const p = data.profile;
   const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
@@ -81,6 +87,7 @@ export default async function PublicPortfolioPage({
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <ViewBeacon username={data.username ?? ""} />
+      <Tracking gaId={data.settings?.ga_id} pixelId={data.settings?.pixel_id} />
       <SectionReorder order={data.settings?.section_order} />
       <div id="folio-font"><TemplateRenderer data={data} /></div>
       <div className="report-wrap"><ReportLink username={data.username ?? ""} /></div>

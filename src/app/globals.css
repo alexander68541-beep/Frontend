@@ -1031,3 +1031,14 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing:
 .period-btn { border: none; background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; padding: 8px 18px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s; }
 .period-btn.on { background: linear-gradient(90deg, var(--iris), var(--teal)); color: #fff; }
 .period-btn:hover:not(.on) { color: var(--text); }
+
+/* password gate */
+.pw-gate { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.pw-card { width: 100%; max-width: 380px; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 36px 28px; display: flex; flex-direction: column; gap: 14px; }
+.pw-lock { font-size: 40px; }
+.pw-card h1 { font-family: var(--font-display); font-size: 24px; }
+
+/* share / QR card */
+.share-card { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.share-qr { background: rgba(124,108,255,0.1); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; place-items: center; }
+.share-info { flex: 1; min-width: 220px; }

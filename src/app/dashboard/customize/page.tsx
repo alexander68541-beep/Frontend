@@ -15,6 +15,8 @@ export default function CustomizePage() {
   const [font, setFont] = useState("");
   const [hidden, setHidden] = useState<string[]>([]);
   const [order, setOrder] = useState<string[]>(SECTION_KEYS.map((s) => s.key));
+  const [gaId, setGaId] = useState("");
+  const [pixelId, setPixelId] = useState("");
 
   useEffect(() => {
     const st = portfolio.data?.settings;
@@ -24,11 +26,13 @@ export default function CustomizePage() {
       const saved = st.section_order ?? [];
       const merged = [...saved.filter((k) => SECTION_KEYS.some((s) => s.key === k)), ...SECTION_KEYS.map((s) => s.key).filter((k) => !saved.includes(k))];
       setOrder(merged);
+      setGaId(st.ga_id ?? "");
+      setPixelId(st.pixel_id ?? "");
     }
   }, [portfolio.data?.settings]);
 
   const save = useMutation({
-    mutationFn: () => apiFetch<Portfolio>("/portfolio/settings", { method: "PATCH", body: JSON.stringify({ font, hidden, section_order: order }) }),
+    mutationFn: () => apiFetch<Portfolio>("/portfolio/settings", { method: "PATCH", body: JSON.stringify({ font, hidden, section_order: order, ga_id: gaId, pixel_id: pixelId }) }),
     onSuccess: (d) => qc.setQueryData(["portfolio"], d),
   });
 
@@ -84,6 +88,15 @@ export default function CustomizePage() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">Integrations</h2>
+        <p className="muted small">Add your own tracking. Leave blank to disable. (Re-publish after changing.)</p>
+        <div className="form-grid mt-4">
+          <div className="field"><label className="label">Google Analytics ID</label><input className="input" value={gaId} onChange={(e) => setGaId(e.target.value)} placeholder="G-XXXXXXXXXX" /></div>
+          <div className="field"><label className="label">Meta (Facebook) Pixel ID</label><input className="input" value={pixelId} onChange={(e) => setPixelId(e.target.value)} placeholder="1234567890" /></div>
         </div>
       </div>
 

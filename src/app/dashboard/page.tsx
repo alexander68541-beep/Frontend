@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from "@/lib/api";
 import type { Portfolio } from "@/lib/types";
 import { useAccount, usePortfolio } from "@/lib/hooks";
 import { UsernamePicker } from "@/components/UsernamePicker";
+import { ShareCard } from "@/components/ShareCard";
 import { Button } from "@/components/ui/Button";
 import { portfolioLabel } from "@/lib/urls";
 
@@ -59,6 +60,7 @@ export default function OverviewPage() {
 
   return (
     <div className="stack gap-6">
+      <ShareCard />
       <div>
         <h1 className="page-title">Welcome back</h1>
         <p className="muted">{account.data?.email}</p>
