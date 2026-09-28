@@ -1,3 +1,4 @@
+"use client";
 import type { PublicPortfolio } from "@/lib/publicTypes";
 import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { fontStack } from "@/lib/fonts";
