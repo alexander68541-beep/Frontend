@@ -9,6 +9,7 @@ import { ArtisanTemplate } from "./ArtisanTemplate";
 import { PopTemplate } from "./PopTemplate";
 import { NovaTemplate } from "./NovaTemplate";
 import { FuturisticTemplete } from "./FuturisticTemplete";
+import { JournalTemplate } from "./JournalTemplate";
 
 
 // ============================================================================
@@ -37,6 +38,7 @@ export const TEMPLATE_COMPONENTS: Record<string, TemplateComponent> = {
   Pop: ({ data }) => <PopTemplate data={data} />,
   Nova: ({ data }) => <NovaTemplate data={data} />,
   Futuristic: ({ data }) => <FuturisticTemplete data={data} />,
+  Journal: ({ data }) => <JournalTemplate data={data} />,
 };
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATE_COMPONENTS);
