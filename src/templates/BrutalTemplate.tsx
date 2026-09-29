@@ -9,7 +9,7 @@ import { ZoomImage } from "@/components/ZoomImage";
 
 /* =====================================================================
    BrutalTemplate — "Brutal" — neo-brutalist Web3-marketplace theme.
-   UPDATED: Bento Grid Layout, Horizontal Snapping Gallery, Export Fixed.
+   UPDATED: Auto-adjusting Flex-Bento Grid, Enhanced Mobile Gallery (Snap & Full Page Click).
    ===================================================================== */
 
 const DEFAULT_ORDER = [
@@ -362,15 +362,17 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       <div className="br-window">
         {bar("GALLERY")}
         <div className="br-window-in" style={{ paddingRight: 0, paddingBottom: "24px" }}>
-          {/* HORIZONTAL SNAP SCROLLING GALLERY */}
           <div className="br-gallery">
             {data.gallery.map((g) => g.image_url ? (
-              <figure key={g.id} className="br-gitem">
-                <div className="br-zoom-wrap"><ZoomImage src={g.image_url} alt={g.caption || "Gallery image"} /></div>
+              <figure key={g.id} className="br-gitem" title="Click to view full screen">
+                <div className="br-zoom-wrap">
+                  <div className="br-zoom-hint" aria-hidden>Click to enlarge</div>
+                  <ZoomImage src={g.image_url} alt={g.caption || "Gallery image"} />
+                </div>
                 {g.caption && <figcaption className="br-muted br-small">{g.caption}</figcaption>}
               </figure>
             ) : null)}
-            {/* Empty spacer to allow snapping past the last item on mobile */}
+            {/* Empty spacer to allow snapping past the last item smoothly on mobile */}
             <div className="br-gallery-spacer" aria-hidden></div>
           </div>
         </div>
@@ -464,7 +466,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
         </div>
       </div>
 
-      {/* MAIN CONTENT STACK - BENTO GRID */}
+      {/* MAIN CONTENT STACK - Auto-Adjusting Flex-Bento */}
       <main className="br-shell br-stack">
         
         {/* HERO SECTION */}
@@ -563,7 +565,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
 }
 
 /* =====================================================================
-   STYLES — Neo-Brutalist. Bento Grid & Horizontal Scroll
+   STYLES — Neo-Brutalist. Auto-Flowing Flex-Bento & Custom Gallery
    ===================================================================== */
 const BR_CSS = `
 .br-root {
@@ -673,34 +675,31 @@ const BR_CSS = `
 .br-ticker-track span { padding-right: 0.5em; }
 @keyframes br-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-/* ================== BENTO GRID LAYOUT ================== */
+/* ================== AUTO-FLOWING FLEX BENTO GRID ================== */
 .br-stack { 
-  display: grid; 
-  grid-template-columns: repeat(12, 1fr);
+  display: flex; 
+  flex-wrap: wrap;
   gap: clamp(20px, 3vw, 40px); 
   padding-block: clamp(40px, 8vh, 100px); 
   align-items: stretch;
 }
 
-/* Base panel setting */
-.br-panel { grid-column: span 12; display: flex; flex-direction: column; }
+/* Base Panel */
+.br-panel { 
+  flex: 1 1 100%; 
+  display: flex; 
+  flex-direction: column; 
+  min-width: 0; /* Prevents flex children from blowing out container */
+}
 
-/* Desktop Bento Adjustments */
-@media (min-width: 992px) {
-  .br-hero-sec { grid-column: span 12; }
-  .br-about-sec { grid-column: span 7; }
-  .br-skills-sec { grid-column: span 5; }
-  .br-projects-sec { grid-column: span 12; }
-  .br-experience-sec { grid-column: span 6; }
-  .br-education-sec { grid-column: span 6; }
-  .br-services-sec { grid-column: span 12; }
-  .br-gallery-sec { grid-column: span 12; }
-  .br-videos-sec { grid-column: span 12; }
-  .br-testimonials-sec { grid-column: span 12; }
-  .br-certifications-sec { grid-column: span 6; }
-  .br-achievements-sec { grid-column: span 6; }
-  .br-publications-sec { grid-column: span 12; }
-  .br-contact-sec { grid-column: span 12; }
+/* Auto half-width scaling on Desktop */
+@media (min-width: 850px) {
+  /* These specific sections will naturally sit side by side if both exist. 
+     If one is missing or there is an odd number, the last one stretches to 100% beautifully. */
+  .br-about-sec, .br-skills-sec, .br-experience-sec, .br-education-sec, 
+  .br-certifications-sec, .br-achievements-sec {
+    flex: 1 1 calc(50% - 20px);
+  }
 }
 
 /* hero */
@@ -729,7 +728,7 @@ const BR_CSS = `
 .br-dots i:nth-child(3) { border-radius: 0px; }
 .br-bar-title { font-family: var(--display); font-weight: 800; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-main); }
 .br-bar-x { margin-left: auto; color: var(--text-main); font-weight: 800; font-size: 1.2rem; }
-.br-window-in { padding: clamp(20px, 3vw, 40px); flex: 1 1 auto; }
+.br-window-in { padding: clamp(20px, 3vw, 40px); flex: 1 1 auto; display: flex; flex-direction: column;}
 
 /* Specific Card Themes */
 .br-window-lime { background: var(--accent); color: var(--on-accent); }
@@ -743,15 +742,16 @@ const BR_CSS = `
 .br-bar-dark .br-dots i { border-color: var(--text-light); }
 
 /* Fluid Grid System inside panels */
-.br-grid-fluid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: clamp(20px, 3vw, 32px); }
+.br-grid-fluid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: clamp(20px, 3vw, 32px); height: 100%;}
 
 /* Card components (Projects etc) */
 .br-card { border: 3px solid var(--border); border-radius: 4px; background: var(--card); box-shadow: var(--sh-sm); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s ease, box-shadow 0.15s ease; color: var(--text-main); }
 .br-card:hover { transform: translate(-3px,-3px); box-shadow: 6px 6px 0 var(--border); }
 .br-card-media { position: relative; aspect-ratio: 16/10; border-bottom: 3px solid var(--border); background:#000; overflow:hidden;}
-.br-zoom-wrap { width: 100%; height: 100%; display:block;}
-.br-zoom-wrap img { width: 100%; height: 100%; object-fit: cover; }
-.br-card-badge { position: absolute; top: 12px; left: 12px; width: 34px; height: 34px; display: grid; place-items: center; border: 3px solid var(--border); background: var(--accent); color: var(--on-accent); font-weight: 900; z-index: 2; }
+.br-zoom-wrap { width: 100%; height: 100%; display:block; position: relative; cursor: zoom-in;}
+.br-zoom-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+.br-card:hover .br-zoom-wrap img { transform: scale(1.05); }
+.br-card-badge { position: absolute; top: 12px; left: 12px; width: 34px; height: 34px; display: grid; place-items: center; border: 3px solid var(--border); background: var(--accent); color: var(--on-accent); font-weight: 900; z-index: 2; pointer-events: none; }
 .br-card-body { padding: 20px; flex-grow:1; display:flex; flex-direction:column; }
 .br-card-titlerow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .br-card-title { font-family: var(--display); font-weight: 900; text-transform: uppercase; font-size: 1.15rem; margin: 0; }
@@ -761,7 +761,7 @@ const BR_CSS = `
 .br-tag { display: inline-block; padding: 4px 10px; font-family: var(--mono); font-weight: 800; font-size: 0.75rem; color: var(--text-main); background: #eee; border: 2px solid var(--border); text-transform: uppercase; }
 
 /* leaderboard / skills */
-.br-lead { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; height: 100%;}
+.br-lead { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; height: 100%; justify-content: center;}
 .br-lead-row { display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 16px; padding: 12px 16px; border: 3px solid var(--border); background: var(--card); box-shadow: var(--sh-sm); transition: transform .1s; }
 .br-lead-row:hover { transform: translateX(4px); }
 .br-rank { font-family: var(--display); font-weight: 900; color: var(--text-main); font-size: 1.2rem; width: 28px; }
@@ -783,31 +783,39 @@ const BR_CSS = `
 .br-tl-row:last-child { border-bottom: none; padding-bottom: 0;}
 .br-tl-date { font-family: var(--mono); font-weight: 800; color: var(--accent); font-size: 0.9rem; }
 
-.br-mini { border: 3px solid var(--border); border-radius: 4px; background: var(--card); padding: 20px; display: flex; flex-direction: column; gap: 10px; text-decoration: none; color: inherit; box-shadow: var(--sh-sm); transition: transform 0.15s ease;}
+.br-mini { border: 3px solid var(--border); border-radius: 4px; background: var(--card); padding: 20px; display: flex; flex-direction: column; gap: 10px; text-decoration: none; color: inherit; box-shadow: var(--sh-sm); transition: transform 0.15s ease; height: 100%;}
 .br-mini-link:hover { transform: translate(-3px,-3px); box-shadow: 6px 6px 0 var(--border); }
 .br-mini-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap:wrap;}
 
 .br-list { display: flex; flex-direction: column; gap: 16px; }
 .br-listitem { border: 3px solid var(--border); border-radius: 4px; background: var(--card); padding: 20px 24px; text-decoration: none; color: inherit; box-shadow: var(--sh-sm);}
 
-/* ================== HORIZONTAL GALLERY ================== */
+/* ================== OPTIMIZED HORIZONTAL GALLERY ================== */
 .br-gallery { 
   display: flex; 
   overflow-x: auto; 
   scroll-snap-type: x mandatory; 
   gap: 24px; 
   padding: 4px 24px 24px 24px; 
-  margin: -4px -24px 0 -24px; /* offset inner padding to make scroll full width */
+  margin: -4px -24px 0 -24px; 
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  /* Hide scrollbar on mobile, show on desktop */
+  scrollbar-width: none; 
 }
-/* Custom Brutalist Scrollbar */
-.br-gallery::-webkit-scrollbar { height: 16px; }
-.br-gallery::-webkit-scrollbar-track { background: #f0f0f0; border-top: 3px solid var(--border); }
-.br-gallery::-webkit-scrollbar-thumb { background: var(--accent); border: 3px solid var(--border); border-radius: 0px; cursor: pointer;}
-.br-gallery::-webkit-scrollbar-thumb:hover { background: var(--acc-bg); }
+.br-gallery::-webkit-scrollbar { display: none; }
+
+@media (min-width: 850px) {
+  .br-gallery { scrollbar-width: auto; }
+  .br-gallery::-webkit-scrollbar { display: block; height: 16px; }
+  .br-gallery::-webkit-scrollbar-track { background: #f0f0f0; border-top: 3px solid var(--border); }
+  .br-gallery::-webkit-scrollbar-thumb { background: var(--accent); border: 3px solid var(--border); border-radius: 0px; cursor: pointer;}
+  .br-gallery::-webkit-scrollbar-thumb:hover { background: var(--acc-bg); }
+}
 
 .br-gitem { 
-  flex: 0 0 clamp(280px, 60vw, 500px); 
-  scroll-snap-align: start; 
+  flex: 0 0 clamp(280px, 85vw, 450px); /* Much wider on mobile for perfect view */
+  scroll-snap-align: center; 
   border: 4px solid var(--border); 
   border-radius: 4px; 
   overflow: hidden; 
@@ -816,7 +824,14 @@ const BR_CSS = `
   display: flex;
   flex-direction: column;
 }
-.br-gitem .br-zoom-wrap { width: 100%; flex: 1; min-height: 250px; background:#000; } 
+.br-gitem .br-zoom-wrap { width: 100%; flex: 1; min-height: 250px; background:#000; position: relative; cursor: zoom-in; overflow: hidden;} 
+.br-gitem .br-zoom-wrap img { transition: transform 0.4s ease; width: 100%; height: 100%; object-fit: cover;}
+.br-gitem:hover .br-zoom-wrap img { transform: scale(1.05); }
+
+/* Small hint indicating click to view */
+.br-zoom-hint { position: absolute; inset: 0; background: rgba(0,0,0,0.4); color: #fff; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; font-family: var(--display); font-weight: 800; font-size: 1.2rem; text-transform: uppercase; z-index: 10; pointer-events: none; }
+.br-gitem:hover .br-zoom-hint { opacity: 1; }
+
 .br-gitem figcaption { padding: 14px 16px; font-weight: 800; border-top: 3px solid var(--border); font-size: 0.95rem; background: var(--card);}
 .br-gallery-spacer { flex: 0 0 1px; width: 1px; }
 
@@ -827,7 +842,7 @@ const BR_CSS = `
 .br-video figcaption { padding: 14px 16px; font-weight: 700; }
 
 /* testimonials */
-.br-quote { border: 3px solid var(--border); border-radius: 4px; background: var(--card); padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--sh-sm);}
+.br-quote { border: 3px solid var(--border); border-radius: 4px; background: var(--card); padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--sh-sm); height: 100%; justify-content: space-between;}
 .br-quote-mark { font-family: var(--display); font-weight: 900; color: var(--acc-bg); font-size: 4rem; line-height: 0.4; height: 24px; }
 .br-quote blockquote { margin: 0; font-weight: 700; font-size: 1.05rem; }
 .br-quote-by { display: flex; align-items: center; gap: 16px; margin-top: auto; padding-top: 16px; border-top: 2px solid #eee;}
