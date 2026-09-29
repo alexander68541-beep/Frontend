@@ -188,11 +188,11 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
       <span aria-hidden>{theme === "dark" ? "☀" : "☾"}</span>
     </button>
   );
-  const ZImg = ({ src, alt, cap, className }: { src: string; alt: string; cap?: string; className?: string }) => (
+  const ZImg = useCallback(({ src, alt, cap, className }: { src: string; alt: string; cap?: string; className?: string }) => (
     <button type="button" className={`art-zoom ${className || ""}`} onClick={() => openLb(src, alt, cap)} aria-label={alt ? `View image: ${alt}` : "View image"}>
       <img src={src} alt={alt} loading="lazy" />
     </button>
-  );
+  ), [openLb]);
   const socialRow = (extra?: string) =>
     data.links.length > 0 ? (
       <div className={`art-socials ${extra || ""}`}>
@@ -203,7 +203,9 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
     ) : null;
 
   // editorial section shell: handwritten margin (number + tag) + content
-  const Sec = ({ id, sec, tag, heading, children }: { id: string; sec?: string; tag: string; heading?: ReactNode; children: ReactNode }) => (
+  // useCallback keeps the component identity stable so a theme toggle
+  // re-render never remounts sections (which would drop the reveal class).
+  const Sec = useCallback(({ id, sec, tag, heading, children }: { id: string; sec?: string; tag: string; heading?: ReactNode; children: ReactNode }) => (
     <section id={id} data-sec={sec} data-reveal className="art-section">
       <aside className="art-margin">
         <span className="art-num" aria-hidden />
@@ -215,7 +217,7 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
         {children}
       </div>
     </section>
-  );
+  ), []);
 
   const sections: Record<string, () => ReactNode> = {
     about: () => {
@@ -613,7 +615,8 @@ const ART_CSS = `
   font-family:var(--body); font-weight:600; font-size:.94rem; text-decoration:none; cursor:pointer; border:1px solid transparent;
   transition:transform .18s ease, box-shadow .2s ease, background .2s, border-color .2s; }
 .art-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
-.art-btn-dark{ background:var(--ink); color:var(--bg); box-shadow:0 12px 24px -12px rgba(28,26,22,.55); }
+.art-btn-dark{ background:#18161c; color:#ffffff; box-shadow:0 12px 24px -12px rgba(28,26,22,.55); }
+.art-root[data-theme="dark"] .art-btn-dark{ background:#f2f0ea; color:#18161c; }
 .art-btn-dark:hover{ transform:translateY(-2px); box-shadow:0 18px 32px -14px rgba(28,26,22,.6); }
 .art-btn-ghost{ background:var(--panel); color:var(--ink); border-color:var(--line2); box-shadow:0 10px 22px -14px rgba(28,26,22,.4); }
 .art-btn-ghost:hover{ transform:translateY(-2px); border-color:var(--accent); color:var(--accent); }
@@ -802,7 +805,8 @@ const ART_CSS = `
 .art-formcard :where(input, textarea, select):focus{ outline:none; border-color:var(--accent); }
 .art-formcard :where(input, textarea, select)::placeholder{ color:var(--ink2); }
 .art-formcard textarea{ min-height:120px; resize:vertical; }
-.art-formcard :where(button, [type="submit"]){ width:100%; font-family:var(--body); font-weight:700; cursor:pointer; color:var(--bg); background:var(--ink); border:1px solid var(--ink); border-radius:999px; padding:13px 18px; box-shadow:0 12px 24px -12px rgba(28,26,22,.5); transition:transform .18s, box-shadow .18s; }
+.art-formcard :where(button, [type="submit"]){ width:100%; font-family:var(--body); font-weight:700; cursor:pointer; color:#ffffff; background:#18161c; border:1px solid #18161c; border-radius:999px; padding:13px 18px; box-shadow:0 12px 24px -12px rgba(28,26,22,.5); transition:transform .18s, box-shadow .18s; }
+.art-root[data-theme="dark"] .art-formcard :where(button, [type="submit"]){ color:#18161c; background:#f2f0ea; border-color:#f2f0ea; }
 .art-formcard :where(button, [type="submit"]):hover{ transform:translateY(-2px); box-shadow:0 18px 30px -14px rgba(28,26,22,.55); }
 .art-formcard label{ color:var(--ink2); font-size:.84rem; }
 
