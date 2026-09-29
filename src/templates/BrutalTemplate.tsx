@@ -555,8 +555,8 @@ const BR_CSS = `
 /* hero */
 .br-hero{ display:grid; grid-template-columns:1.12fr .88fr; gap:clamp(20px,3vw,44px); align-items:center; }
 .br-eyebrow{ display:inline-block; font-family:var(--mono); text-transform:uppercase; font-weight:700; letter-spacing:.2em; font-size:.8rem; color:#0b0b10; background:var(--accent); padding:6px 14px; border:2px solid #000; box-shadow:3px 3px 0 #0a0a12; }
-.br-headline{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(2.4rem,6.4vw,4.6rem); line-height:.94; letter-spacing:-.01em; margin:22px 0 0; color:#0b0b10; }
-.br-hl{ background:var(--wht); color:#0b0b10; box-shadow:4px 4px 0 #0a0a12; padding:0 .1em; margin-right:.06em; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+.br-headline{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(2.4rem,6.4vw,4.6rem); line-height:.94; letter-spacing:-.01em; margin:22px 0 0; color:#6969f2; }
+.br-hl{ background:var(--wht); color:#6969f2; box-shadow:4px 4px 0 #0a0a12; padding:0 .1em; margin-right:.06em; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
 .br-hlx{ margin-right:.06em; }
 .br-sub{ margin:24px 0 0; color:var(--wht); font-size:1.12rem; font-weight:700; max-width:48ch; }
 .br-hero-soc{ margin-top:26px; }
@@ -581,7 +581,7 @@ const BR_CSS = `
 
 /* windows */
 .br-window{ background:var(--card); border:3px solid #000; border-radius:12px; box-shadow:var(--sh); overflow:hidden; }
-.br-bar{ display:flex; align-items:center; gap:12px; padding:12px 18px; background:#0b0b10; border-bottom:3px solid #000; }
+.br-bar{ display:flex; align-items:center; gap:12px; padding:12px 18px; background:#6969f2; border-bottom:3px solid #000; }
 .br-dots{ display:flex; gap:8px; }
 .br-dots i{ width:14px; height:14px; border:2px solid var(--wht); }
 .br-dots i:nth-child(1){ border-radius:50%; }
@@ -590,12 +590,12 @@ const BR_CSS = `
 .br-bar-title{ font-family:var(--mono); font-weight:700; font-size:.76rem; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
 .br-bar-x{ margin-left:auto; color:var(--muted); font-weight:800; font-size:1.1rem; }
 .br-window-in{ padding:clamp(20px,3vw,32px); }
-.br-window-lime{ background:var(--accent); color:#0b0b10; }
+.br-window-lime{ background:var(--accent); color:#6969f2; }
 .br-window-lime .br-bar{ background:var(--accent); }
-.br-window-lime .br-bar-title{ color:#0b0b10; }
-.br-window-lime .br-dots i{ border-color:#0b0b10; }
+.br-window-lime .br-bar-title{ color:#6969f2; }
+.br-window-lime .br-dots i{ border-color:#6969f2; }
 .br-window-lime .br-bar-x{ color:rgba(11,11,16,.7); }
-.br-lime-h{ font-family:var(--display); font-weight:900; font-size:clamp(1.6rem,3.4vw,2.6rem); text-transform:uppercase; line-height:1.02; margin:0; color:#0b0b10; }
+.br-lime-h{ font-family:var(--display); font-weight:900; font-size:clamp(1.6rem,3.4vw,2.6rem); text-transform:uppercase; line-height:1.02; margin:0; color:#6969f2; }
 .br-lime-p{ margin:16px 0 0; max-width:62ch; color:#111119; font-weight:700; font-size:1.05rem; }
 .br-window-lime .br-btn-dark{ margin-top:22px; }
 
@@ -623,7 +623,7 @@ const BR_CSS = `
 .br-lead-row{ display:grid; grid-template-columns:auto auto 1fr 1.2fr auto; align-items:center; gap:14px; padding:14px 0; border-bottom:2px solid rgba(255,255,255,.15); }
 .br-lead-row:last-child{ border-bottom:0; }
 .br-rank{ font-family:var(--display); font-weight:800; color:var(--accent); font-size:1.1rem; width:28px; }
-.br-lead-ic{ width:40px; height:40px; flex:0 0 auto; display:grid; place-items:center; border:2px solid #000; border-radius:8px; background:var(--accent); color:#0b0b10; font-family:var(--display); font-weight:800; font-size:.85rem; overflow:hidden; }
+.br-lead-ic{ width:40px; height:40px; flex:0 0 auto; display:grid; place-items:center; border:2px solid #000; border-radius:8px; background:var(--accent); color:#6969f2; font-family:var(--display); font-weight:800; font-size:.85rem; overflow:hidden; }
 .br-lead-ic img{ width:100%; height:100%; object-fit:cover; }
 .br-lead-name{ font-weight:800; min-width:0; font-size:1.05rem; }
 .br-lead-name em{ display:block; font-style:normal; font-family:var(--mono); font-weight:700; font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
