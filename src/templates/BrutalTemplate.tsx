@@ -459,7 +459,7 @@ export default BrutalTemplate;
 const BR_CSS = `
 .br-root{
   --acc-bg:var(--tpl-accent,#6B4CF0); --bg-solid:var(--acc-bg);
-  --accent:#14161f; --on-accent:#0b0b10;
+  --accent:#8051d6; --on-accent:#0b0b10;
   --card:#101018; --card2:#181826; --wht:#ffffff; --muted:rgba(246,246,252,.82);
   --nav-h:66px;
   --sh:6px 6px 0 #08060f; --sh-sm:4px 4px 0 #08060f;
