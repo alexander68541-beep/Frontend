@@ -123,6 +123,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
 
   const [lb, setLb] = useState<{ src: string; alt: string; cap?: string } | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const tiltRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const openLb = useCallback((src: string, alt: string, cap?: string) => setLb({ src, alt, cap }), []);
 
@@ -147,6 +148,26 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
     closeRef.current?.focus();
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [lb]);
+
+  // 3D pointer tilt on the hero widget cluster (desktop, fine pointer)
+  useEffect(() => {
+    const el = tiltRef.current;
+    if (!el) return;
+    const mm = (q: string) => (typeof window.matchMedia === "function" ? window.matchMedia(q) : null);
+    if (mm("(prefers-reduced-motion: reduce)")?.matches) return;
+    if (mm("(pointer: fine)") && !mm("(pointer: fine)")!.matches) return;
+    const onMove = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      el.style.setProperty("--rx", `${(-y * 6).toFixed(2)}deg`);
+      el.style.setProperty("--ry", `${(x * 8).toFixed(2)}deg`);
+    };
+    const reset = () => { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); };
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerleave", reset);
+    return () => { el.removeEventListener("pointermove", onMove); el.removeEventListener("pointerleave", reset); };
+  }, []);
 
   const has = {
     about: sv("about") && !!(p?.about || p?.bio || p?.tagline),
@@ -348,7 +369,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
                 {socialRow("br-hero-soc")}
               </div>
 
-              <div className="br-hero-right">
+              <div className="br-hero-right br-tilt" ref={tiltRef}>
                 {p?.avatar_url && (
                   <div className="br-window br-photo">
                     {bar("PROFILE")}
@@ -377,16 +398,16 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
         </section>
 
         {/* DATA SECTION PANELS */}
-        {order.map((k) => (
-          <section key={k} id={SEC_ID[k] || k} className="br-panel">
-            <div className="br-shell br-panel-in" data-reveal>{sections[k] ? sections[k]() : null}</div>
+        {order.map((k, i) => (
+          <section key={k} id={SEC_ID[k] || k} className="br-panel" data-reveal style={{ zIndex: 2 + i } as CSSProperties}>
+            <div className="br-shell br-panel-in">{sections[k] ? sections[k]() : null}</div>
           </section>
         ))}
 
         {/* CONTACT PANEL */}
         {username && (
-          <section id="contact" className="br-panel">
-            <div className="br-shell br-panel-in" data-reveal>
+          <section id="contact" className="br-panel" data-reveal style={{ zIndex: 2 + order.length } as CSSProperties}>
+            <div className="br-shell br-panel-in">
               <div className="br-window">
                 {bar("JOIN THE FUTURE")}
                 <div className="br-window-in br-contact">
@@ -437,17 +458,21 @@ export default BrutalTemplate;
 
 const BR_CSS = `
 .br-root{
-  --bg:var(--tpl-accent,#6B4CF0);
-  --accent:#c9f31d; --on-accent:#0b0b10;
-  --card:#0e0e14; --card2:#16161f; --wht:#f5f5f7; --muted:rgba(245,245,247,.62);
+  --acc-bg:var(--tpl-accent,#6B4CF0); --bg-solid:var(--acc-bg);
+  --accent:#d4ff33; --on-accent:#0b0b10;
+  --card:#101018; --card2:#181826; --wht:#ffffff; --muted:rgba(246,246,252,.82);
   --nav-h:66px;
-  --sh:6px 6px 0 #0a0a12; --sh-sm:4px 4px 0 #0a0a12;
+  --sh:6px 6px 0 #08060f; --sh-sm:4px 4px 0 #08060f;
   --display:"Archivo Black","Bricolage Grotesque","Inter",ui-sans-serif,system-ui,sans-serif;
   --mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
   --body:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  position:relative; isolation:isolate; background:var(--bg); color:var(--wht);
-  font-family:var(--body); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  position:relative; isolation:isolate; color:var(--wht);
+  font-family:var(--body); font-size:16px; font-weight:500; line-height:1.55; -webkit-font-smoothing:antialiased;
   overflow-x:clip; min-height:100%; scroll-behavior:smooth;
+  background-color:var(--acc-bg);
+  background-image:
+    radial-gradient(120% 80% at 50% -12%, color-mix(in srgb, var(--acc-bg) 74%, #ffffff 26%), transparent 62%),
+    linear-gradient(180deg, var(--acc-bg), color-mix(in srgb, var(--acc-bg) 74%, #07050e 26%));
 }
 .br-root *{ box-sizing:border-box; }
 .br-root img{ max-width:100%; display:block; }
@@ -458,8 +483,8 @@ const BR_CSS = `
 .br-small{ font-size:.84rem; }
 .br-mt{ margin-top:16px; }
 
-/* content fade-up inside a panel */
-.br-root.br-ready [data-reveal]{ opacity:0; transform:translateY(30px); transition:opacity .5s ease, transform .7s cubic-bezier(.2,.85,.25,1); }
+/* content rises up from below as it enters view */
+.br-root.br-ready [data-reveal]{ opacity:0; transform:translateY(72px) scale(.985); transition:opacity .55s ease, transform .85s cubic-bezier(.16,.84,.28,1); will-change:opacity, transform; }
 .br-root.br-ready [data-reveal].br-in{ opacity:1; transform:none; }
 
 /* buttons */
@@ -498,15 +523,14 @@ const BR_CSS = `
 .br-ticker-track span{ padding-right:.5em; }
 @keyframes br-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
 
-/* ---- STACKING PANELS ---- */
+/* ---- OVERLAP-STACKING PANELS (normal scroll; each covers the previous) ---- */
 .br-stack{ position:relative; }
-.br-panel{ position:sticky; top:var(--nav-h); min-height:calc(100svh - var(--nav-h)); display:flex; flex-direction:column; justify-content:center;
-  background:var(--bg); border-top:3px solid #000; border-radius:26px 26px 0 0;
-  box-shadow:0 -14px 40px -8px rgba(10,8,30,.5);
-  background-image:linear-gradient(rgba(0,0,0,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.05) 1px, transparent 1px);
-  background-size:36px 36px; }
-.br-panel-first{ border-radius:0; border-top:0; box-shadow:none; }
-.br-panel-in{ padding-block:clamp(28px,5vh,64px); }
+.br-panel{ position:relative; margin-top:-40px; border:3px solid #000; border-bottom:0; border-radius:34px 34px 0 0;
+  background-color:var(--bg-solid);
+  background-image:linear-gradient(180deg, color-mix(in srgb, var(--acc-bg) 82%, #ffffff 18%), var(--acc-bg) 44%);
+  box-shadow:0 -22px 54px -12px rgba(6,4,22,.6), inset 0 3px 0 rgba(255,255,255,.18); }
+.br-panel-first{ margin-top:0; border:0; border-radius:0; box-shadow:none; background:transparent; background-image:none; }
+.br-panel-in{ min-height:calc(100svh - var(--nav-h)); display:flex; flex-direction:column; justify-content:center; padding-block:clamp(44px,7vh,92px); }
 
 /* hero */
 .br-hero{ display:grid; grid-template-columns:1.12fr .88fr; gap:clamp(20px,3vw,44px); align-items:center; }
@@ -514,9 +538,11 @@ const BR_CSS = `
 .br-headline{ font-family:var(--display); text-transform:uppercase; font-size:clamp(2.4rem,6.4vw,4.6rem); line-height:.94; letter-spacing:-.01em; margin:20px 0 0; color:#0b0b10; }
 .br-hl{ background:var(--wht); color:#0b0b10; box-shadow:4px 4px 0 #0a0a12; padding:0 .1em; margin-right:.06em; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
 .br-hlx{ margin-right:.06em; }
-.br-sub{ margin:22px 0 0; color:var(--wht); font-size:1.05rem; max-width:48ch; }
+.br-sub{ margin:22px 0 0; color:var(--wht); font-size:1.08rem; font-weight:600; max-width:48ch; }
 .br-hero-soc{ margin-top:24px; }
-.br-hero-right{ display:flex; flex-direction:column; gap:16px; }
+.br-hero-right{ display:flex; flex-direction:column; gap:16px; perspective:1100px; }
+.br-tilt{ transform-style:preserve-3d; transform:perspective(1100px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .2s ease; }
+.br-tilt .br-window{ transform:translateZ(0); }
 .br-photo .br-photo-in{ aspect-ratio:16/10; border-top:2.5px solid #000; }
 .br-photo .br-zoom{ width:100%; height:100%; }
 
@@ -526,6 +552,8 @@ const BR_CSS = `
 .br-ov-big{ font-family:var(--display); font-size:1.5rem; text-transform:uppercase; margin-top:4px; color:var(--accent); }
 .br-ov-chip{ font-family:var(--mono); font-size:.72rem; padding:5px 10px; border:2px solid #000; border-radius:4px; background:var(--accent); color:#0b0b10; }
 .br-chart{ width:100%; height:74px; }
+.br-chart path:first-child{ stroke-dasharray:640; stroke-dashoffset:640; animation:br-draw 1.9s .3s cubic-bezier(.2,.8,.25,1) forwards; }
+@keyframes br-draw{ to{ stroke-dashoffset:0; } }
 .br-ov-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
 .br-ov-stat{ border:2px solid #000; border-radius:6px; padding:10px 12px; background:#0b0b10; }
 .br-ov-stat b{ display:block; font-family:var(--display); font-size:1.4rem; color:var(--accent); }
@@ -548,7 +576,7 @@ const BR_CSS = `
 .br-window-lime .br-dots i{ border-color:#0b0b10; }
 .br-window-lime .br-bar-x{ color:rgba(11,11,16,.55); }
 .br-lime-h{ font-family:var(--display); font-size:clamp(1.5rem,3.4vw,2.4rem); text-transform:uppercase; line-height:1.02; margin:0; color:#0b0b10; }
-.br-lime-p{ margin:14px 0 0; max-width:62ch; color:#1a1a24; }
+.br-lime-p{ margin:14px 0 0; max-width:62ch; color:#111119; font-weight:600; }
 .br-window-lime .br-btn-dark{ margin-top:20px; }
 
 /* sections */
@@ -557,8 +585,8 @@ const BR_CSS = `
 .br-list{ display:flex; flex-direction:column; gap:12px; }
 
 /* nft cards */
-.br-nft{ border:2.5px solid #000; border-radius:8px; background:#0b0b10; box-shadow:var(--sh-sm); overflow:hidden; display:flex; flex-direction:column; transition:transform .12s ease, box-shadow .12s ease; }
-.br-nft:hover{ transform:translate(-2px,-2px); box-shadow:7px 7px 0 #0a0a12; }
+.br-nft{ border:2.5px solid #000; border-radius:8px; background:#0c0c14; box-shadow:var(--sh-sm); overflow:hidden; display:flex; flex-direction:column; transform-style:preserve-3d; transition:transform .16s ease, box-shadow .16s ease; }
+.br-nft:hover{ transform:perspective(760px) rotateX(4deg) translate(-2px,-4px); box-shadow:9px 11px 0 #08060f; }
 .br-nft-media{ position:relative; aspect-ratio:1/1; border-bottom:2.5px solid #000; }
 .br-nft-media .br-zoom{ width:100%; height:100%; }
 .br-ph{ width:100%; height:100%; display:grid; place-items:center; font-family:var(--display); font-size:2rem; color:#0b0b10; background:var(--accent); }
@@ -650,7 +678,7 @@ const BR_CSS = `
 .br-formcard label{ color:var(--muted); font-size:.84rem; }
 
 /* footer */
-.br-footer{ position:relative; z-index:2; border-top:3px solid #000; background:#0b0b10; }
+.br-footer{ position:relative; z-index:20; border-top:4px solid var(--accent); background:linear-gradient(180deg,#151024,#0a0812); box-shadow:0 -20px 50px -14px rgba(6,4,22,.6); }
 .br-footer-in{ display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; padding-block:26px; }
 .br-footer-nav{ display:flex; flex-wrap:wrap; gap:8px 18px; }
 .br-footer-nav a{ text-decoration:none; color:var(--muted); font-family:var(--display); text-transform:uppercase; font-size:.74rem; }
@@ -694,5 +722,7 @@ const BR_CSS = `
   .br-root *{ animation:none !important; transition:none !important; }
   .br-root.br-ready [data-reveal]{ opacity:1 !important; transform:none !important; }
   .br-root.br-ready [data-reveal] .br-lead-fill{ width:var(--pct); }
+  .br-chart path{ stroke-dashoffset:0 !important; }
+  .br-tilt{ transform:none !important; }
 }
 `;
