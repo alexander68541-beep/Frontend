@@ -490,7 +490,7 @@ const BR_CSS = `
 .br-btn:hover, .br-btn:active{ transform:translate(3px,3px); box-shadow:1px 1px 0 #0a0a12; }
 .br-btn:focus-visible{ outline:3px solid #000; outline-offset:2px; }
 .br-btn-lime{ background:var(--accent); color:var(--on-accent); }
-.br-btn-dark{ background:#0b0b10; color:var(--wht); }
+.br-btn-dark{ background:#6969f2; color:var(--wht); }
 .br-btnrow{ display:flex; flex-wrap:wrap; gap:14px; margin-top:26px; }
 
 /* nav */
@@ -519,7 +519,7 @@ const BR_CSS = `
 .br-menu ul a:hover{ background:var(--accent); color:#0b0b10; }
 
 /* ticker */
-.br-ticker{ position:relative; z-index:50; background:#0b0b10; border-bottom:3px solid #000; overflow:hidden; padding:10px 0; }
+.br-ticker{ position:relative; z-index:50; background:#6969f2; border-bottom:3px solid #000; overflow:hidden; padding:10px 0; }
 .br-ticker-track{ display:flex; white-space:nowrap; font-family:var(--display); font-weight:700; text-transform:uppercase; font-size:.86rem; letter-spacing:.14em; color:var(--accent); animation:br-scroll 26s linear infinite; }
 .br-ticker-track span{ padding-right:.5em; }
 @keyframes br-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
@@ -610,7 +610,7 @@ const BR_CSS = `
 .br-nft-media{ position:relative; aspect-ratio:1/1; border-bottom:2.5px solid #000; }
 .br-nft-media .br-zoom{ width:100%; height:100%; }
 .br-ph{ width:100%; height:100%; display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:2.2rem; color:#0b0b10; background:var(--accent); }
-.br-nft-badge{ position:absolute; top:10px; left:10px; width:30px; height:30px; display:grid; place-items:center; border:2px solid #000; border-radius:6px; background:var(--accent); color:#0b0b10; font-weight:800; z-index:2; }
+.br-nft-badge{ position:absolute; top:10px; left:10px; width:30px; height:30px; display:grid; place-items:center; border:2px solid #000; border-radius:6px; background:var(--accent); color:#6969f2; font-weight:800; z-index:2; }
 .br-nft-body{ padding:14px 16px; }
 .br-nft-titlerow{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .br-nft-title{ font-family:var(--display); font-weight:800; text-transform:uppercase; font-size:.98rem; margin:0; }
