@@ -8,6 +8,7 @@ import { TerminalTemplate } from "./TerminalTemplate";
 import { ArtisanTemplate } from "./ArtisanTemplate";
 import { PopTemplate } from "./PopTemplate";
 import { NovaTemplate } from "./NovaTemplate";
+import { GlassTemplete } from "./GlassTemplete";
 
 // ============================================================================
 // TEMPLATE REGISTRY — the ONE place to register a coded template.
@@ -34,6 +35,7 @@ export const TEMPLATE_COMPONENTS: Record<string, TemplateComponent> = {
   Artisan: ({ data }) => <ArtisanTemplate data={data} />,
   Pop: ({ data }) => <PopTemplate data={data} />,
   Nova: ({ data }) => <NovaTemplate data={data} />,
+  Glass: ({ data }) => <GlassTemplete data={data} />,
 };
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATE_COMPONENTS);
