@@ -5,6 +5,7 @@ import { EditorialTemplate } from "./EditorialTemplate";
 import { AuroraTemplate } from "./AuroraTemplate";
 import { GlassTemplate } from "./GlassTemplate";
 import { TerminalTemplate } from "./TerminalTemplate";
+import { ArtisanTemplate } from "./ArtisanTemplate";
 
 // ============================================================================
 // TEMPLATE REGISTRY — the ONE place to register a coded template.
@@ -28,6 +29,7 @@ export const TEMPLATE_COMPONENTS: Record<string, TemplateComponent> = {
   aurora: ({ data }) => <AuroraTemplate data={data} />,
   glass: ({ data }) => <GlassTemplate data={data} />,
   Terminal: ({ data }) => <TerminalTemplate data={data} />,
+  Artisan: ({ data }) => <ArtisanTemplate data={data} />,
 };
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATE_COMPONENTS);
