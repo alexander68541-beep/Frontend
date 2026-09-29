@@ -7,10 +7,9 @@ import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
-   NovaTemplate — "Nova OS" — futuristic dark glass phone-UI portfolio.
-   Normal vertical scroll (no nav bar). Sections reveal / slide in from
+   NovaTemplate — Modern Dark Glass Portfolio (Desktop First)
+   Normal vertical scroll. Sections reveal / slide in from
    alternating sides as they scroll into view. DARK ONLY.
-   PURE PRESENTATION from `data`. Prefixed `.nova-`.
    ===================================================================== */
 
 const DEFAULT_ORDER = [
@@ -100,13 +99,6 @@ function SocialIcon({ name }: { name: string }) {
   return (<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden focusable="false"><path d={SOCIAL_ICONS[name] || SOCIAL_ICONS.globe} /></svg>);
 }
 
-function GSignal() { return (<svg viewBox="0 0 24 16" width="20" height="14" aria-hidden fill="currentColor"><rect x="0" y="10" width="3.4" height="6" rx="1" /><rect x="6" y="7" width="3.4" height="9" rx="1" /><rect x="12" y="4" width="3.4" height="12" rx="1" /><rect x="18" y="1" width="3.4" height="15" rx="1" opacity=".5" /></svg>); }
-function GWifi() { return (<svg viewBox="0 0 24 18" width="20" height="15" aria-hidden fill="currentColor"><path d="M12 3C7.5 3 3.7 4.7 1 7.4l2 2C5.3 7.1 8.5 5.8 12 5.8s6.7 1.3 9 3.6l2-2C20.3 4.7 16.5 3 12 3zm0 5.6c-2.6 0-5 1-6.7 2.7l2 2A6.6 6.6 0 0112 11.3c1.8 0 3.5.7 4.7 2l2-2A9.4 9.4 0 0012 8.6zm0 5.4a3 3 0 100 6 3 3 0 000-6z" /></svg>); }
-function GBattery() { return (<svg viewBox="0 0 30 16" width="26" height="14" aria-hidden><rect x="1" y="2" width="24" height="12" rx="3" fill="none" stroke="currentColor" strokeWidth="1.5" opacity=".6" /><rect x="3" y="4" width="18" height="8" rx="1.5" fill="currentColor" /><rect x="26.5" y="5.5" width="2.5" height="5" rx="1" fill="currentColor" opacity=".6" /></svg>); }
-function GMoon() { return (<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden fill="currentColor"><path d="M12.3 2a10 10 0 109.4 13.3A8 8 0 0112.3 2z" /></svg>); }
-function GPlane() { return (<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden fill="currentColor"><path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0011.5 2 1.5 1.5 0 0010 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" /></svg>); }
-function GBt() { return (<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden fill="currentColor"><path d="M12 2l5 4-3.5 3L17 12l-5 4v-6.5L8.5 12 7 10.5 10.5 9 7 6l1.5-1.5L12 8V2zm0 4.8v2.4l1.2-1.2L12 6.8zm0 8v2.4l1.2-1.2L12 14.8z" /></svg>); }
-function GFinger() { return (<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M12 10a2 2 0 012 2c0 3-1 5-2 6" /><path d="M9 8a5 5 0 018 4c0 3-1 5-2 7" /><path d="M6.5 7A8 8 0 0119 12c0 2-.3 4-1 6" /><path d="M12 13c0 3-.7 5-1.5 7" /></svg>); }
 
 /* ------------------------------ component ------------------------------ */
 
@@ -119,16 +111,14 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
   const username = data.username;
   const name = p?.display_name || username || "Your Name";
   const mono = initials(p?.display_name, username);
-  const first = (name.split(/\s+/)[0] || name).toUpperCase();
 
   const [lb, setLb] = useState<{ src: string; alt: string; cap?: string } | null>(null);
-  const [clock, setClock] = useState("");
   const rootRef = useRef<HTMLDivElement | null>(null);
   const tiltRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const openLb = useCallback((src: string, alt: string, cap?: string) => setLb({ src, alt, cap }), []);
 
-  // scroll-reveal: sections + skill bars slide/fade in as they enter view
+  // scroll-reveal
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -141,14 +131,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     return () => io.disconnect();
   }, []);
 
-  useEffect(() => {
-    const tick = () => setClock(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
-    tick();
-    const id = window.setInterval(tick, 30000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  // 3D parallax tilt on the hero cluster (desktop pointer only)
+  // 3D parallax tilt on the hero image (desktop pointer only)
   useEffect(() => {
     const el = tiltRef.current;
     if (!el) return;
@@ -159,8 +142,8 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       const r = el.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width - 0.5;
       const y = (e.clientY - r.top) / r.height - 0.5;
-      el.style.setProperty("--rx", `${(-y * 4).toFixed(2)}deg`);
-      el.style.setProperty("--ry", `${(x * 5).toFixed(2)}deg`);
+      el.style.setProperty("--rx", `${(-y * 6).toFixed(2)}deg`);
+      el.style.setProperty("--ry", `${(x * 8).toFixed(2)}deg`);
     };
     const reset = () => { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); };
     el.addEventListener("pointermove", onMove);
@@ -220,7 +203,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       const photo = data.gallery.find((g) => g.image_url)?.image_url || p?.avatar_url || null;
       return (
         <section id="about" className="nova-section">
-          {head("PENULIS", "Introduce My Self")}
+          {head("PROFILE", "About Me")}
           <div className="nova-glass nova-about">
             {photo && <div className="nova-about-photo"><ZImg src={photo} alt={name} /></div>}
             <div className="nova-about-txt">
@@ -235,7 +218,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       const ordered = [...data.projects].sort((a, b) => Number(!!b.is_featured) - Number(!!a.is_featured));
       return (
         <section id="work" className="nova-section">
-          {head("DESIGN", "Selected Work")}
+          {head("PORTFOLIO", "Selected Work")}
           <div className="nova-grid-3">
             {ordered.map((pr) => {
               const category = pr.role || (pr.tags && pr.tags[0]) || null;
@@ -261,7 +244,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       const sorted = [...data.skills].sort((a, b) => (a.category || "").localeCompare(b.category || ""));
       return (
         <section id="skills" className="nova-section">
-          {head("GRAFIS", "Skills")}
+          {head("EXPERTISE", "Skills")}
           <div className="nova-skills">
             {sorted.map((s) => {
               const lvl = levelPct(s.level);
@@ -279,7 +262,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     },
     services: () => (
       <section id="services" className="nova-section">
-        {head("WRITER", "What I Do")}
+        {head("OFFERINGS", "What I Do")}
         <div className="nova-grid-3">
           {data.services.map((s) => (
             <article key={s.id} className="nova-glass nova-card">
@@ -294,7 +277,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     ),
     experience: () => (
       <section id="experience" className="nova-section">
-        {head("TIMELINE", "Experience")}
+        {head("CAREER", "Experience")}
         <div className="nova-timeline">
           {data.experience.map((e) => (
             <article key={e.id} className="nova-glass nova-tl-item">
@@ -307,7 +290,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     ),
     education: () => (
       <section id="education" className="nova-section">
-        {head("STUDY", "Education")}
+        {head("ACADEMIC", "Education")}
         <div className="nova-grid-2">
           {data.education.map((ed) => (
             <article key={ed.id} className="nova-glass nova-card">
@@ -397,60 +380,35 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       </div>
 
       <div className="nova-shell">
-        {/* HERO — phone-UI widget cluster */}
+        {/* DESKTOP-FIRST HERO SECTION */}
         <header className="nova-hero-sec">
-          <span className="nova-glass nova-porto">P O R T O F O L I O <i className="nova-dots" aria-hidden><b /><b /><b /></i></span>
-
-          <div className="nova-hero">
-            {/* left tool rail (decorative) */}
-            <aside className="nova-rail nova-rail-l" aria-hidden>
-              <span className="nova-rail-ic">Aa</span><span className="nova-rail-ic">∞</span><span className="nova-rail-ic">⊞</span>
-              <span className="nova-rail-ic">◎</span><span className="nova-rail-ic">▣</span><span className="nova-rail-ic">︿</span>
-              <span className="nova-rail-fp"><GFinger /></span>
-            </aside>
-
-            <div className="nova-bento" ref={tiltRef}>
-              <div className="nova-glass nova-w nova-profile">
-                <span className="nova-avatar-ring">{p?.avatar_url ? <img src={p.avatar_url} alt={name} loading="eager" /> : <span className="nova-avatar-mono" aria-hidden>{mono}</span>}</span>
-                <b className="nova-profile-name">{name}</b>
-                {socialRow("nova-profile-soc")}
-                <span className="nova-bell">{p?.availability ? p.availability : "New Post"}</span>
+          <div className="nova-hero-desktop">
+            <div className="nova-glass nova-hero-content">
+              <span className="nova-pill">WELCOME</span>
+              <h1 className="nova-name">{name}</h1>
+              {p?.title && <p className="nova-role">{p.title}</p>}
+              {(p?.tagline || p?.bio) && <p className="nova-intro">{p?.tagline || p?.bio}</p>}
+              <div className="nova-hero-cta">
+                {has.projects && <a className="nova-btn nova-btn-accent" href="#work">View Work <span aria-hidden>→</span></a>}
+                {p?.resume_url && <a className="nova-btn nova-btn-ghost" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">Download CV <span aria-hidden>↓</span></a>}
               </div>
-
-              <div className="nova-glass nova-w nova-portrait">
-                {p?.avatar_url ? <ZImg src={p.avatar_url} alt={name} /> : <div className="nova-ph nova-portrait-ph" aria-hidden>{mono}</div>}
-                <div className="nova-selbar" aria-hidden><span>Select</span><span className="nova-sel-mid">Select All</span><span>Paste</span></div>
-                <span className="nova-seltag" aria-hidden>{first}</span>
-                <div className="nova-portrait-info">
-                  <h1 className="nova-name">{name}</h1>
-                  {p?.title && <p className="nova-role">{p.title}</p>}
-                  {(p?.tagline || p?.bio) && <p className="nova-intro">{p?.tagline || p?.bio}</p>}
-                  <div className="nova-hero-cta">
-                    {has.projects && <a className="nova-btn nova-btn-accent" href="#work">View Work <span aria-hidden>→</span></a>}
-                    {p?.resume_url && <a className="nova-btn nova-btn-ghost" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">CV <span aria-hidden>↓</span></a>}
-                  </div>
-                </div>
-              </div>
-
-              <div className="nova-glass nova-w nova-status"><span className="nova-clock">{clock || "—"}</span><span className="nova-sys"><GSignal /><GWifi /><GBattery /></span></div>
-              <div className="nova-glass nova-w nova-weather"><GMoon /><span>{p?.location || "Online"}</span></div>
-
-              <div className="nova-glass nova-w nova-cc">
-                <span className="nova-cc-ic" aria-hidden><GPlane /></span>
-                <span className="nova-cc-ic nova-cc-green" aria-hidden><GWifi /></span>
-                <span className="nova-cc-ic" aria-hidden><GWifi /></span>
-                <span className="nova-cc-ic nova-cc-blue" aria-hidden><GBt /></span>
+              
+              <div className="nova-hero-soc">
+                {socialRow()}
               </div>
             </div>
 
-            {/* right dock (decorative) */}
-            <aside className="nova-rail nova-rail-r" aria-hidden>
-              <span className="nova-rail-ic">⌂</span><span className="nova-rail-ic">◍</span><span className="nova-rail-ic">⚙</span><span className="nova-rail-ic">⚡</span>
-            </aside>
+            <div className="nova-glass nova-hero-visual" ref={tiltRef}>
+              {p?.avatar_url ? (
+                <ZImg src={p.avatar_url} alt={name} className="nova-zoom" />
+              ) : (
+                <div className="nova-ph nova-portrait-ph" aria-hidden>{mono}</div>
+              )}
+            </div>
           </div>
         </header>
 
-        {/* SECTIONS — reveal on scroll, sliding in from alternating sides */}
+        {/* SECTIONS */}
         {order.map((k, i) => (
           <div key={k} data-reveal className={`nova-reveal ${RV[i % RV.length]}`}>{sections[k] ? sections[k]() : null}</div>
         ))}
@@ -504,15 +462,15 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
 export default NovaTemplate;
 
 /* =====================================================================
-   STYLES — dark glass phone-UI. Normal scroll; sections reveal on scroll.
+   STYLES — Desktop-first Modern Glassmorphism Portfolio
    ===================================================================== */
 
 const NOVA_CSS = `
 .nova-root{
-  --bg:#06080f; --ink:#eef2fb; --ink2:#96a0b8;
-  --glass: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.015));
-  --glass-2: rgba(255,255,255,.05);
-  --line: rgba(255,255,255,.13); --line2: rgba(255,255,255,.22);
+  --bg:#04060b; --ink:#eef2fb; --ink2:#96a0b8;
+  --glass: linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+  --glass-2: rgba(255,255,255,.04);
+  --line: rgba(255,255,255,.09); --line2: rgba(255,255,255,.18);
   --accent:var(--tpl-accent,#4d9fff); --on-accent:#04101f;
   --display: "Bricolage Grotesque", "Inter", ui-sans-serif, system-ui, sans-serif;
   --body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -520,9 +478,9 @@ const NOVA_CSS = `
   position:relative; isolation:isolate; color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.58;
   -webkit-font-smoothing:antialiased; overflow-x:clip; min-height:100%; scroll-behavior:smooth;
   background:
-    radial-gradient(900px 600px at 20% 0%, #17213f, transparent 55%),
-    radial-gradient(800px 600px at 100% 30%, #1a2033, transparent 55%),
-    #06080f;
+    radial-gradient(1200px 800px at 0% 0%, #0a1128, transparent 60%),
+    radial-gradient(1000px 800px at 100% 40%, #0d1222, transparent 60%),
+    var(--bg);
 }
 .nova-root *{ box-sizing:border-box; }
 .nova-root img{ max-width:100%; display:block; }
@@ -531,232 +489,206 @@ const NOVA_CSS = `
 
 /* fixed background glow + scrolling text */
 .nova-bg{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
-.nova-glow{ position:absolute; border-radius:50%; filter:blur(120px); opacity:.4; }
-.nova-glow-1{ width:520px; height:520px; top:-140px; left:-120px; background:radial-gradient(circle, color-mix(in srgb,var(--accent) 70%, #6a5cff), transparent 70%); }
-.nova-glow-2{ width:440px; height:440px; bottom:0; right:-120px; background:radial-gradient(circle,#1f6feb,transparent 70%); opacity:.3; }
-.nova-bgtext{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; opacity:.04; display:flex; flex-direction:column; justify-content:center; gap:3vh; }
-.nova-bgtext-row{ display:flex; white-space:nowrap; font-family:var(--display); font-weight:800; font-size:clamp(4rem,14vw,10rem); line-height:1; }
+.nova-glow{ position:absolute; border-radius:50%; filter:blur(140px); opacity:.3; }
+.nova-glow-1{ width:600px; height:600px; top:-10%; left:-5%; background:radial-gradient(circle, color-mix(in srgb,var(--accent) 70%, #6a5cff), transparent 70%); }
+.nova-glow-2{ width:500px; height:500px; bottom:-10%; right:-5%; background:radial-gradient(circle,#1f6feb,transparent 70%); opacity:.2; }
+.nova-bgtext{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; opacity:.03; display:flex; flex-direction:column; justify-content:center; gap:5vh; }
+.nova-bgtext-row{ display:flex; white-space:nowrap; font-family:var(--display); font-weight:800; font-size:clamp(4rem,16vw,12rem); line-height:1; }
 .nova-bgtext-row span{ padding-right:.4em; }
-.nova-bgtext-a{ animation:nova-scroll-l 40s linear infinite; }
-.nova-bgtext-b{ animation:nova-scroll-r 55s linear infinite; }
+.nova-bgtext-a{ animation:nova-scroll-l 50s linear infinite; }
+.nova-bgtext-b{ animation:nova-scroll-r 65s linear infinite; }
 @keyframes nova-scroll-l{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
 @keyframes nova-scroll-r{ from{ transform:translateX(-50%); } to{ transform:translateX(0); } }
 
-.nova-shell{ position:relative; z-index:1; width:100%; max-width:1180px; margin-inline:auto; padding-inline:clamp(12px,3vw,28px); }
+.nova-shell{ position:relative; z-index:1; width:100%; max-width:1200px; margin-inline:auto; padding-inline:clamp(16px,4vw,32px); }
 
-/* glass */
+/* Premium glass */
 .nova-glass{ background:var(--glass); border:1px solid var(--line); border-radius:var(--r);
-  backdrop-filter:blur(26px) saturate(1.4); -webkit-backdrop-filter:blur(26px) saturate(1.4);
-  box-shadow:0 24px 60px -30px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.14); }
+  backdrop-filter:blur(32px) saturate(1.2); -webkit-backdrop-filter:blur(32px) saturate(1.2);
+  box-shadow:0 30px 60px -30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,.08); }
 
 /* type */
-.nova-h2{ font-family:var(--display); font-weight:800; font-size:clamp(1.5rem,3.4vw,2.2rem); letter-spacing:-.01em; margin:0; }
-.nova-pill{ display:inline-block; padding:6px 16px; border-radius:999px; background:var(--glass-2); border:1px solid var(--line); font-size:.7rem; font-weight:700; letter-spacing:.24em; color:var(--ink2); }
-.nova-sec-head{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
-.nova-muted{ color:var(--ink2); margin:6px 0 0; }
-.nova-small{ font-size:.84rem; }
-.nova-mt{ margin-top:16px; }
+.nova-h2{ font-family:var(--display); font-weight:800; font-size:clamp(1.8rem,4vw,2.6rem); letter-spacing:-.02em; margin:0; }
+.nova-pill{ display:inline-block; padding:6px 18px; border-radius:999px; background:var(--glass-2); border:1px solid var(--line); font-size:.75rem; font-weight:700; letter-spacing:.2em; color:var(--ink2); }
+.nova-sec-head{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:32px; }
+.nova-muted{ color:var(--ink2); margin:8px 0 0; }
+.nova-small{ font-size:.85rem; }
+.nova-mt{ margin-top:20px; }
 .nova-clamp-3{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; }
 
 /* buttons */
-.nova-btn{ display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:999px; font-weight:700; font-size:.92rem; text-decoration:none; cursor:pointer; border:1px solid var(--line2); transition:transform .16s ease, box-shadow .18s ease, background .18s; font-family:var(--body); }
+.nova-btn{ display:inline-flex; align-items:center; gap:10px; padding:12px 24px; border-radius:999px; font-weight:700; font-size:.95rem; text-decoration:none; cursor:pointer; border:1px solid var(--line2); transition:transform .2s ease, box-shadow .2s ease, background .2s; font-family:var(--body); }
 .nova-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
 .nova-btn-accent{ background:var(--accent); border-color:var(--accent); color:var(--on-accent); box-shadow:0 12px 26px -12px var(--accent); }
-.nova-btn-accent:hover{ transform:translateY(-2px); }
+.nova-btn-accent:hover{ transform:translateY(-3px); }
 .nova-btn-ghost{ background:var(--glass-2); color:var(--ink); }
-.nova-btn-ghost:hover{ transform:translateY(-2px); border-color:var(--accent); }
-.nova-hero-cta{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+.nova-btn-ghost:hover{ transform:translateY(-3px); border-color:var(--accent); }
+.nova-hero-cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
 
-/* scroll reveal (slide in from a side) */
-.nova-root.nova-anim-ready [data-reveal]{ opacity:0; transition:opacity .6s ease, transform .8s cubic-bezier(.2,.8,.2,1); will-change:opacity, transform; }
-.nova-root.nova-anim-ready .nova-rv-left{ transform:translateX(-46px); }
-.nova-root.nova-anim-ready .nova-rv-right{ transform:translateX(46px); }
-.nova-root.nova-anim-ready .nova-rv-up{ transform:translateY(42px); }
+/* scroll reveal */
+.nova-root.nova-anim-ready [data-reveal]{ opacity:0; transition:opacity .7s ease, transform .9s cubic-bezier(.2,.8,.2,1); will-change:opacity, transform; }
+.nova-root.nova-anim-ready .nova-rv-left{ transform:translateX(-50px); }
+.nova-root.nova-anim-ready .nova-rv-right{ transform:translateX(50px); }
+.nova-root.nova-anim-ready .nova-rv-up{ transform:translateY(50px); }
 .nova-root.nova-anim-ready [data-reveal].nova-in{ opacity:1; transform:none; }
 
-/* hero */
-.nova-hero-sec{ padding-block:clamp(20px,3vw,44px) clamp(10px,2vw,20px); }
-.nova-porto{ display:flex; align-items:center; gap:12px; width:max-content; margin:0 auto 18px; padding:8px 24px; border-radius:999px; font-family:var(--display); font-weight:700; letter-spacing:.42em; font-size:.78rem; color:var(--ink2); }
-.nova-dots{ display:inline-flex; gap:5px; }
-.nova-dots b{ width:6px; height:6px; border-radius:50%; background:var(--ink2); }
-.nova-hero{ display:grid; grid-template-columns:54px 1fr 54px; gap:14px; align-items:stretch; }
-.nova-rail{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px 6px; border-radius:999px; background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px); box-shadow:inset 0 1px 0 rgba(255,255,255,.12); }
-.nova-rail-ic{ width:38px; height:38px; display:grid; place-items:center; border-radius:12px; background:var(--glass-2); color:var(--ink2); font-size:1rem; }
-.nova-rail-fp{ margin-top:auto; color:var(--ink2); }
-.nova-rail-r{ justify-content:flex-start; }
-
-.nova-bento{ display:grid; grid-template-columns:0.92fr 1.5fr 0.92fr; grid-template-areas:"profile portrait status" "cc portrait weather"; gap:14px; align-items:stretch; perspective:1400px; }
-.nova-w{ transform-style:preserve-3d; transform:perspective(1400px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .25s ease; }
-.nova-profile{ grid-area:profile; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:20px 16px; }
-.nova-avatar-ring{ width:84px; height:84px; border-radius:50%; overflow:hidden; border:2px solid var(--line2); display:grid; place-items:center; background:var(--glass-2); }
-.nova-avatar-ring img{ width:100%; height:100%; object-fit:cover; }
-.nova-avatar-mono{ font-family:var(--display); font-weight:800; font-size:1.5rem; }
-.nova-profile-name{ font-weight:700; font-size:1rem; }
-.nova-profile-soc{ justify-content:center; }
-.nova-bell{ font-size:.76rem; color:var(--ink2); padding:6px 14px; border-radius:999px; background:var(--glass-2); border:1px solid var(--line); }
-
-.nova-portrait{ grid-area:portrait; position:relative; overflow:hidden; min-height:min(56vh,440px); padding:0; }
-.nova-portrait .nova-zoom{ position:absolute; inset:0; width:100%; height:100%; border-radius:var(--r); }
+/* Desktop Hero Section */
+.nova-hero-sec{ padding-block:clamp(40px,8vw,80px) clamp(20px,4vw,40px); }
+.nova-hero-desktop{ display:grid; grid-template-columns:1.3fr 0.9fr; gap:clamp(24px,4vw,48px); align-items:stretch; perspective:1600px; }
+.nova-hero-content{ padding:clamp(24px,5vw,56px); display:flex; flex-direction:column; justify-content:center; align-items:flex-start; text-align:left; }
+.nova-hero-visual{ position:relative; overflow:hidden; min-height:420px; transform-style:preserve-3d; transform:perspective(1600px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .2s ease-out; }
+.nova-hero-visual .nova-zoom{ position:absolute; inset:0; width:100%; height:100%; }
 .nova-portrait-ph{ position:absolute; inset:0; width:100%; height:100%; }
-.nova-selbar{ position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); z-index:3; display:flex; align-items:center; gap:2px; padding:4px; border-radius:12px; background:rgba(10,12,20,.82); border:1px solid var(--line); font-size:.78rem; }
-.nova-selbar span{ padding:6px 12px; border-radius:9px; }
-.nova-sel-mid{ background:var(--glass-2); }
-.nova-seltag{ position:absolute; top:53%; left:50%; transform:translateX(-50%); z-index:3; padding:3px 12px; border-radius:8px; background:var(--accent); color:var(--on-accent); font-size:.72rem; font-weight:700; }
-.nova-portrait-info{ position:absolute; left:0; right:0; bottom:0; z-index:2; padding:24px; pointer-events:none; background:linear-gradient(to top, rgba(4,6,14,.94) 8%, rgba(4,6,14,.5) 52%, transparent); }
-.nova-portrait-info > *{ pointer-events:auto; }
-.nova-name{ font-family:var(--display); font-weight:800; font-size:clamp(2rem,5.5vw,3.6rem); line-height:.95; letter-spacing:-.02em; text-transform:uppercase; margin:0; background:linear-gradient(180deg,#ffffff,#aeb7cc 55%,#5b6683); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 4px 14px rgba(0,0,0,.5)); }
-.nova-role{ margin:8px 0 0; font-weight:600; color:var(--accent); }
-.nova-intro{ margin:8px 0 0; color:#cfd6e6; max-width:46ch; font-size:.96rem; }
 
-.nova-status{ grid-area:status; display:flex; flex-direction:column; justify-content:center; gap:10px; padding:16px 18px; }
-.nova-clock{ font-family:var(--display); font-weight:800; font-size:1.7rem; }
-.nova-sys{ display:flex; align-items:center; gap:8px; }
-.nova-weather{ grid-area:weather; display:flex; align-items:center; gap:12px; padding:16px 18px; }
-.nova-weather span{ font-weight:600; }
-.nova-cc{ grid-area:cc; display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:16px; align-content:center; }
-.nova-cc-ic{ display:grid; place-items:center; aspect-ratio:1/1; border-radius:50%; background:var(--glass-2); border:1px solid var(--line); color:var(--ink2); }
-.nova-cc-green{ background:#1f9d55; border-color:#28c06a; color:#fff; }
-.nova-cc-blue{ background:#1f6feb; border-color:#3b8bff; color:#fff; }
+.nova-name{ font-family:var(--display); font-weight:800; font-size:clamp(2.5rem,6vw,4.5rem); line-height:1.05; letter-spacing:-.03em; margin:16px 0 0; background:linear-gradient(180deg,#ffffff,#b3bfdb 65%,#5b6683); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 8px 16px rgba(0,0,0,.4)); }
+.nova-role{ margin:12px 0 0; font-size:1.1rem; font-weight:600; color:var(--accent); letter-spacing:0.02em; text-transform:uppercase; }
+.nova-intro{ margin:16px 0 0; color:#cfd6e6; max-width:48ch; font-size:1.05rem; line-height:1.6; }
+.nova-hero-soc{ margin-top:32px; border-top:1px solid var(--line); padding-top:24px; width:100%; }
 
 /* sections shared */
-.nova-section{ padding-block:clamp(30px,5vw,58px); }
-.nova-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
-.nova-grid-2{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
-.nova-list{ display:flex; flex-direction:column; gap:12px; }
-.nova-card{ padding:20px; display:flex; flex-direction:column; gap:8px; text-decoration:none; color:inherit; transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
-.nova-card:hover, .nova-card-link:hover{ transform:translateY(-4px); border-color:var(--line2); box-shadow:0 30px 50px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.16); }
-.nova-card-ic{ width:44px; height:44px; display:grid; place-items:center; border-radius:14px; font-family:var(--display); font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); }
-.nova-card-title{ font-family:var(--display); font-weight:700; font-size:1.06rem; margin:6px 0 0; }
-.nova-card-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:8px; flex-wrap:wrap; }
+.nova-section{ padding-block:clamp(40px,6vw,70px); }
+.nova-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.nova-grid-2{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+.nova-list{ display:flex; flex-direction:column; gap:16px; }
+.nova-card{ padding:24px; display:flex; flex-direction:column; gap:12px; text-decoration:none; color:inherit; transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+.nova-card:hover, .nova-card-link:hover{ transform:translateY(-6px); border-color:var(--line2); box-shadow:0 35px 60px -25px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.2); }
+.nova-card-ic{ width:48px; height:48px; display:grid; place-items:center; border-radius:14px; font-family:var(--display); font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); }
+.nova-card-title{ font-family:var(--display); font-weight:700; font-size:1.15rem; margin:8px 0 0; }
+.nova-card-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:12px; flex-wrap:wrap; }
 .nova-card-foot-top{ margin-top:0; padding-top:0; align-items:baseline; }
-.nova-price{ color:var(--accent); font-weight:700; font-size:.86rem; }
-.nova-arrow{ color:var(--accent); font-weight:700; }
-.nova-listitem{ padding:18px 20px; text-decoration:none; color:inherit; }
+.nova-price{ color:var(--accent); font-weight:700; font-size:.9rem; }
+.nova-arrow{ color:var(--accent); font-weight:700; font-size:1.2rem; }
+.nova-listitem{ padding:20px 24px; text-decoration:none; color:inherit; transition:border-color .2s; }
 .nova-listitem:hover{ border-color:var(--line2); }
 
-.nova-about{ display:grid; grid-template-columns:.8fr 1.2fr; gap:clamp(16px,3vw,32px); align-items:center; padding:clamp(16px,2.4vw,28px); }
-.nova-about-photo{ border-radius:18px; overflow:hidden; aspect-ratio:4/3; }
+.nova-about{ display:grid; grid-template-columns:1fr 1.3fr; gap:clamp(20px,4vw,40px); align-items:center; padding:clamp(20px,3vw,32px); }
+.nova-about-photo{ border-radius:16px; overflow:hidden; aspect-ratio:1/1; box-shadow:0 12px 30px rgba(0,0,0,.4); }
 .nova-about-photo .nova-zoom{ width:100%; height:100%; }
-.nova-about-txt p{ margin:0 0 12px; color:#cfd6e6; }
+.nova-about-txt p{ margin:0 0 16px; color:#cfd6e6; font-size:1.05rem; }
 
-.nova-proj{ padding:10px; display:flex; flex-direction:column; transition:transform .2s ease, box-shadow .2s ease; }
-.nova-proj:hover{ transform:translateY(-5px); box-shadow:0 34px 56px -32px rgba(0,0,0,.9); }
-.nova-proj-media{ position:relative; border-radius:16px; overflow:hidden; aspect-ratio:4/3; }
+.nova-proj{ padding:12px; display:flex; flex-direction:column; transition:transform .25s ease, box-shadow .25s ease; }
+.nova-proj:hover{ transform:translateY(-6px); box-shadow:0 35px 60px -25px rgba(0,0,0,.7); border-color:var(--line2); }
+.nova-proj-media{ position:relative; border-radius:14px; overflow:hidden; aspect-ratio:4/3; }
 .nova-proj-media .nova-zoom{ width:100%; height:100%; }
-.nova-ph{ width:100%; height:100%; display:grid; place-items:center; font-family:var(--display); font-size:2rem; font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); border-radius:16px; }
-.nova-badge{ position:absolute; top:8px; left:8px; width:26px; height:26px; display:grid; place-items:center; border-radius:50%; font-size:.8rem; color:var(--on-accent); background:var(--accent); z-index:2; }
-.nova-proj-body{ padding:12px 8px 8px; }
+.nova-ph{ width:100%; height:100%; display:grid; place-items:center; font-family:var(--display); font-size:2.5rem; font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); border-radius:14px; }
+.nova-badge{ position:absolute; top:12px; left:12px; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; font-size:.85rem; color:var(--on-accent); background:var(--accent); z-index:2; box-shadow:0 4px 10px rgba(0,0,0,.3); }
+.nova-proj-body{ padding:16px 10px 8px; }
 .nova-proj-titlerow{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.nova-proj-title{ font-family:var(--display); font-weight:700; font-size:1rem; margin:0; }
-.nova-go{ width:30px; height:30px; flex:0 0 auto; display:grid; place-items:center; border-radius:50%; background:var(--glass-2); border:1px solid var(--line); color:var(--ink); text-decoration:none; }
-.nova-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-.nova-tag{ font-size:.7rem; padding:3px 10px; border-radius:999px; border:1px solid var(--line); color:var(--ink2); }
+.nova-go{ width:36px; height:36px; flex:0 0 auto; display:grid; place-items:center; border-radius:50%; background:var(--glass-2); border:1px solid var(--line); color:var(--ink); text-decoration:none; transition:background .2s; }
+.nova-go:hover{ background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+.nova-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.nova-tag{ font-size:.75rem; padding:4px 12px; border-radius:999px; border:1px solid var(--line); color:var(--ink2); background:rgba(255,255,255,.02); }
 
-.nova-skills{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
-.nova-skill{ padding:16px 14px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; transition:transform .2s ease; }
-.nova-skill:hover{ transform:translateY(-4px); }
-.nova-skill-ic{ width:50px; height:50px; border-radius:15px; display:grid; place-items:center; font-family:var(--display); font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); }
-.nova-skill-name{ font-weight:600; font-size:.9rem; }
-.nova-skill-bar{ width:82%; height:6px; border-radius:99px; background:var(--glass-2); overflow:hidden; }
-.nova-skill-fill{ display:block; height:100%; width:var(--pct); border-radius:99px; background:linear-gradient(90deg,var(--accent),#7a6cff); transition:width 1.1s cubic-bezier(.2,.8,.2,1); }
+.nova-skills{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:16px; }
+.nova-skill{ padding:20px 16px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; transition:transform .2s ease; }
+.nova-skill:hover{ transform:translateY(-5px); border-color:var(--line2); }
+.nova-skill-ic{ width:56px; height:56px; border-radius:16px; display:grid; place-items:center; font-family:var(--display); font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); font-size:1.1rem; }
+.nova-skill-name{ font-weight:600; font-size:.95rem; }
+.nova-skill-bar{ width:85%; height:6px; border-radius:99px; background:rgba(0,0,0,.4); overflow:hidden; border:1px solid var(--line); }
+.nova-skill-fill{ display:block; height:100%; width:var(--pct); border-radius:99px; background:linear-gradient(90deg,var(--accent),#7a6cff); transition:width 1.2s cubic-bezier(.2,.8,.2,1); }
 .nova-root.nova-anim-ready .nova-skill[data-bar] .nova-skill-fill{ width:0; }
 .nova-root.nova-anim-ready .nova-skill[data-bar].nova-in .nova-skill-fill{ width:var(--pct); }
 
-.nova-timeline{ display:flex; flex-direction:column; gap:12px; }
-.nova-tl-item{ display:grid; grid-template-columns:120px 1fr; gap:16px; padding:18px 20px; }
-.nova-tl-date{ color:var(--accent); font-weight:700; font-size:.85rem; }
+.nova-timeline{ display:flex; flex-direction:column; gap:16px; }
+.nova-tl-item{ display:grid; grid-template-columns:140px 1fr; gap:20px; padding:24px; transition:transform .2s; }
+.nova-tl-item:hover{ transform:translateX(6px); border-color:var(--line2); }
+.nova-tl-date{ color:var(--accent); font-weight:700; font-size:.9rem; }
 
-.nova-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; }
-.nova-gitem{ padding:8px; }
-.nova-gitem .nova-zoom{ width:100%; aspect-ratio:1/1; border-radius:16px; }
-.nova-gitem figcaption{ padding:8px 8px 2px; }
+.nova-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; }
+.nova-gitem{ padding:10px; }
+.nova-gitem .nova-zoom{ width:100%; aspect-ratio:1/1; border-radius:14px; }
+.nova-gitem figcaption{ padding:12px 8px 4px; }
 
-.nova-video{ padding:8px; }
-.nova-video-frame{ position:relative; aspect-ratio:16/9; border-radius:16px; overflow:hidden; background:#000; }
+.nova-video{ padding:10px; }
+.nova-video-frame{ position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden; background:#000; }
 .nova-video-frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
-.nova-video figcaption{ padding:10px 8px 2px; }
+.nova-video figcaption{ padding:12px 8px 4px; }
 
-/* zoom blur-fill (fits any photo) */
+/* zoom blur-fill */
 .nova-zoom{ position:relative; display:block; padding:0; border:0; cursor:zoom-in; color:inherit; overflow:hidden; background:#0a0e18; }
-.nova-zoom-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(28px) saturate(1.3); transform:scale(1.25); opacity:.55; }
+.nova-zoom-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(32px) saturate(1.4); transform:scale(1.25); opacity:.4; }
 .nova-zoom-img{ position:relative; z-index:1; width:100%; height:100%; object-fit:contain; transition:transform .4s ease; }
-.nova-zoom:hover .nova-zoom-img{ transform:scale(1.03); }
+.nova-zoom:hover .nova-zoom-img{ transform:scale(1.04); }
 .nova-zoom:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
-.nova-quote{ padding:22px; display:flex; flex-direction:column; gap:12px; }
-.nova-quote-mark{ font-family:var(--display); color:var(--accent); font-size:3rem; line-height:.4; height:22px; }
-.nova-quote blockquote{ margin:0; }
-.nova-quote-by{ display:flex; align-items:center; gap:12px; margin-top:auto; }
-.nova-quote-by span{ display:flex; flex-direction:column; line-height:1.2; }
-.nova-quote-by b{ font-weight:700; font-size:.9rem; }
-.nova-quote-by em{ font-style:normal; font-size:.8rem; }
-.nova-avatar{ width:46px; height:46px; flex:0 0 auto; border-radius:50%; overflow:hidden; display:grid; place-items:center; font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); }
+.nova-quote{ padding:28px; display:flex; flex-direction:column; gap:16px; }
+.nova-quote-mark{ font-family:var(--display); color:var(--accent); font-size:3.5rem; line-height:.4; height:26px; }
+.nova-quote blockquote{ margin:0; font-size:1.05rem; font-style:italic; }
+.nova-quote-by{ display:flex; align-items:center; gap:14px; margin-top:auto; }
+.nova-quote-by span{ display:flex; flex-direction:column; line-height:1.3; }
+.nova-quote-by b{ font-weight:700; font-size:.95rem; }
+.nova-quote-by em{ font-style:normal; font-size:.85rem; }
+.nova-avatar{ width:50px; height:50px; flex:0 0 auto; border-radius:50%; overflow:hidden; display:grid; place-items:center; font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); }
 .nova-avatar img{ width:100%; height:100%; object-fit:cover; }
 
-.nova-socials{ display:flex; flex-wrap:wrap; gap:10px; }
-.nova-soc{ width:40px; height:40px; display:grid; place-items:center; border-radius:50%; border:1px solid var(--line); background:var(--glass-2); color:var(--ink); text-decoration:none; transition:transform .16s, color .16s, border-color .16s; }
-.nova-soc:hover{ transform:translateY(-2px); color:var(--accent); border-color:var(--accent); }
-.nova-soc svg{ width:16px; height:16px; }
+.nova-socials{ display:flex; flex-wrap:wrap; gap:12px; }
+.nova-soc{ width:44px; height:44px; display:grid; place-items:center; border-radius:50%; border:1px solid var(--line); background:var(--glass-2); color:var(--ink); text-decoration:none; transition:transform .2s, color .2s, border-color .2s; }
+.nova-soc:hover{ transform:translateY(-3px); color:var(--accent); border-color:var(--accent); }
+.nova-soc svg{ width:18px; height:18px; }
 
-.nova-contact{ display:grid; grid-template-columns:.85fr 1.15fr; gap:clamp(16px,3vw,32px); align-items:start; }
-.nova-contact-left{ padding:clamp(16px,2.4vw,26px); }
-.nova-contact-rows{ display:flex; flex-direction:column; gap:12px; margin-bottom:18px; }
-.nova-crow{ display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; word-break:break-word; }
-.nova-crow span:first-child{ color:var(--accent); width:22px; text-align:center; flex:0 0 auto; font-size:1.1rem; }
+.nova-contact{ display:grid; grid-template-columns:1fr 1.3fr; gap:clamp(20px,4vw,40px); align-items:start; }
+.nova-contact-left{ padding:clamp(20px,3vw,32px); }
+.nova-contact-rows{ display:flex; flex-direction:column; gap:16px; margin-bottom:24px; }
+.nova-crow{ display:flex; align-items:center; gap:14px; text-decoration:none; color:inherit; word-break:break-word; font-size:1.05rem; }
+.nova-crow span:first-child{ color:var(--accent); width:24px; text-align:center; flex:0 0 auto; font-size:1.2rem; }
 .nova-crow:hover{ color:var(--accent); }
-.nova-formcard{ padding:clamp(16px,2.4vw,28px); }
-.nova-formcard :where(input, textarea, select){ width:100%; font-family:var(--body); font-size:.95rem; color:var(--ink); background:var(--glass-2); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:12px; }
+.nova-formcard{ padding:clamp(20px,4vw,32px); }
+.nova-formcard :where(input, textarea, select){ width:100%; font-family:var(--body); font-size:.95rem; color:var(--ink); background:rgba(0,0,0,.2); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:16px; transition:border-color .2s; }
 .nova-formcard :where(input, textarea, select):focus{ outline:none; border-color:var(--accent); }
 .nova-formcard :where(input, textarea, select)::placeholder{ color:var(--ink2); }
-.nova-formcard textarea{ min-height:110px; resize:vertical; }
-.nova-formcard :where(button, [type="submit"]){ width:100%; font-family:var(--body); font-weight:700; cursor:pointer; color:var(--on-accent); background:var(--accent); border:0; border-radius:999px; padding:13px 18px; transition:transform .18s; }
-.nova-formcard :where(button, [type="submit"]):hover{ transform:translateY(-2px); }
-.nova-formcard label{ color:var(--ink2); font-size:.84rem; }
+.nova-formcard textarea{ min-height:120px; resize:vertical; }
+.nova-formcard :where(button, [type="submit"]){ width:100%; font-family:var(--body); font-weight:700; cursor:pointer; color:var(--on-accent); background:var(--accent); border:0; border-radius:999px; padding:14px 20px; font-size:1rem; transition:transform .2s, box-shadow .2s; }
+.nova-formcard :where(button, [type="submit"]):hover{ transform:translateY(-2px); box-shadow:0 10px 20px -10px var(--accent); }
+.nova-formcard label{ color:var(--ink2); font-size:.85rem; margin-bottom:6px; display:block; }
 
 /* marquee */
-.nova-marquee{ margin:clamp(20px,3vw,36px) 0 0; border-radius:999px; overflow:hidden; padding:12px 0; }
-.nova-marquee-track{ display:flex; white-space:nowrap; font-family:var(--display); font-weight:700; letter-spacing:.26em; font-size:.84rem; color:var(--ink2); animation:nova-scroll-l 22s linear infinite; }
+.nova-marquee{ margin:clamp(30px,5vw,50px) 0 0; border-radius:999px; overflow:hidden; padding:16px 0; border:1px solid var(--line); }
+.nova-marquee-track{ display:flex; white-space:nowrap; font-family:var(--display); font-weight:700; letter-spacing:.3em; font-size:.9rem; color:var(--ink2); animation:nova-scroll-l 25s linear infinite; }
 .nova-marquee-track span{ padding-right:1em; text-transform:uppercase; }
 
 /* footer */
-.nova-footbar{ position:relative; z-index:1; border-top:1px solid var(--line); margin-top:clamp(24px,4vw,44px); }
-.nova-footbar-in{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding-block:20px 26px; }
-.nova-foot-soc .nova-soc{ width:36px; height:36px; }
-.nova-foot-copy{ color:var(--ink2); font-size:.82rem; }
-.nova-madewith{ color:var(--accent); text-decoration:none; }
+.nova-footbar{ position:relative; z-index:1; border-top:1px solid var(--line); margin-top:clamp(40px,6vw,80px); background:rgba(0,0,0,.2); }
+.nova-footbar-in{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-block:24px 32px; }
+.nova-foot-soc .nova-soc{ width:40px; height:40px; }
+.nova-foot-copy{ color:var(--ink2); font-size:.85rem; }
+.nova-madewith{ color:var(--accent); text-decoration:none; font-weight:600; }
 
 /* lightbox */
-.nova-lb{ position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:clamp(16px,4vw,48px); background:rgba(3,5,10,.9); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); animation:nova-fade .2s ease both; }
-.nova-lb-fig{ margin:0; max-width:94vw; max-height:92vh; display:flex; flex-direction:column; gap:10px; align-items:center; animation:nova-pop .3s cubic-bezier(.2,.8,.2,1) both; }
-.nova-lb-fig img{ max-width:92vw; max-height:84vh; width:auto; height:auto; object-fit:contain; border-radius:16px; border:1px solid var(--line2); }
-.nova-lb-fig figcaption{ color:#eef2fb; font-size:.9rem; text-align:center; }
-.nova-lb-close{ position:fixed; top:18px; right:18px; z-index:1001; width:46px; height:46px; border-radius:50%; cursor:pointer; color:var(--on-accent); background:var(--accent); border:0; font-size:1.05rem; font-weight:700; transition:transform .18s; }
-.nova-lb-close:hover{ transform:rotate(90deg) scale(1.05); }
+.nova-lb{ position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:clamp(16px,4vw,48px); background:rgba(3,5,10,.95); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); animation:nova-fade .25s ease both; }
+.nova-lb-fig{ margin:0; max-width:94vw; max-height:92vh; display:flex; flex-direction:column; gap:12px; align-items:center; animation:nova-pop .35s cubic-bezier(.2,.8,.2,1) both; }
+.nova-lb-fig img{ max-width:92vw; max-height:84vh; width:auto; height:auto; object-fit:contain; border-radius:16px; border:1px solid var(--line2); box-shadow:0 20px 40px rgba(0,0,0,.6); }
+.nova-lb-fig figcaption{ color:#eef2fb; font-size:.95rem; text-align:center; }
+.nova-lb-close{ position:fixed; top:24px; right:24px; z-index:1001; width:48px; height:48px; border-radius:50%; cursor:pointer; color:var(--on-accent); background:var(--accent); border:0; font-size:1.1rem; font-weight:700; transition:transform .2s; }
+.nova-lb-close:hover{ transform:rotate(90deg) scale(1.1); }
 .nova-lb-close:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
 @keyframes nova-fade{ from{opacity:0;} to{opacity:1;} }
-@keyframes nova-pop{ from{opacity:0; transform:scale(.94);} to{opacity:1; transform:none;} }
+@keyframes nova-pop{ from{opacity:0; transform:scale(.95);} to{opacity:1; transform:none;} }
 
-/* responsive */
-@media (max-width:1040px){ .nova-grid-3{ grid-template-columns:repeat(2,1fr); } }
+/* responsive adjustments */
+@media (max-width:1040px){
+  .nova-grid-3{ grid-template-columns:repeat(2,1fr); }
+  .nova-hero-desktop{ grid-template-columns:1fr 1fr; }
+}
 @media (max-width:900px){
-  .nova-hero{ grid-template-columns:1fr; }
-  .nova-rail{ display:none; }
-  .nova-bento{ grid-template-columns:1fr 1fr; grid-template-areas:"portrait portrait" "profile status" "cc weather"; }
-  .nova-portrait{ min-height:min(46vh,380px); }
-  .nova-w{ transform:none !important; }
+  .nova-hero-desktop{ grid-template-columns:1fr; }
+  .nova-hero-visual{ min-height:360px; order:-1; } /* Image on top for mobile */
+  .nova-hero-content{ align-items:center; text-align:center; }
+  .nova-hero-soc{ display:flex; justify-content:center; }
   .nova-about{ grid-template-columns:1fr; }
   .nova-contact{ grid-template-columns:1fr; }
+  .nova-tl-item{ grid-template-columns:120px 1fr; gap:16px; }
 }
 @media (max-width:600px){
-  .nova-bento{ grid-template-columns:1fr; grid-template-areas:"portrait" "profile" "status" "weather" "cc"; }
   .nova-grid-2, .nova-grid-3{ grid-template-columns:1fr; }
-  .nova-tl-item{ grid-template-columns:1fr; gap:6px; }
+  .nova-tl-item{ grid-template-columns:1fr; gap:8px; padding:16px; }
+  .nova-hero-sec{ padding-block:30px; }
+  .nova-hero-visual{ min-height:300px; }
 }
 
 @media (prefers-reduced-motion: reduce){
   .nova-root{ scroll-behavior:auto; }
   .nova-root *{ animation:none !important; transition:none !important; }
-  .nova-w{ transform:none !important; }
+  .nova-hero-visual{ transform:none !important; }
   .nova-root.nova-anim-ready [data-reveal]{ opacity:1 !important; transform:none !important; }
   .nova-skill-fill{ width:var(--pct); }
 }
