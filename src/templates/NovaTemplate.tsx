@@ -8,7 +8,7 @@ import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
    NovaTemplate — "Nova OS" — futuristic dark glassmorphism widget UI.
-   REMASTERED: Horizontal Scroll-Jacking Layout. Data slides in from Left/Right.
+   REMASTERED: Omni-Directional Reveal & Full-Viewport Hero Layout.
    ===================================================================== */
 
 const DEFAULT_ORDER = [
@@ -106,56 +106,32 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    
     let isScrolling = false;
-
     const onWheel = (e: WheelEvent) => {
-      // Allow native trackpad horizontal scrolling
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-
-      // Smart Inner-Scroll: Check if the cursor is hovering over a vertically scrollable slide
       const target = e.target as HTMLElement;
       const slide = target.closest('.nova-slide');
       if (slide) {
          const isScrollable = slide.scrollHeight > slide.clientHeight;
          const atTop = slide.scrollTop === 0;
          const atBottom = Math.ceil(slide.scrollTop + slide.clientHeight) >= slide.scrollHeight - 1;
-
          if (isScrollable) {
-            // Let the user scroll vertically inside the section naturally
             if (e.deltaY > 0 && !atBottom) return; 
             if (e.deltaY < 0 && !atTop) return;    
          }
       }
-
-      // Prevent native vertical scroll of the whole page
       e.preventDefault();
-
       if (isScrolling) return;
       isScrolling = true;
-
-      // Snap exactly one slide width
-      const direction = e.deltaY > 0 ? 1 : -1;
-      track.scrollBy({
-        left: direction * window.innerWidth,
-        behavior: 'smooth'
-      });
-
-      // Throttle the scroll to prevent spinning past multiple slides at once
+      track.scrollBy({ left: (e.deltaY > 0 ? 1 : -1) * window.innerWidth, behavior: 'smooth' });
       if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-      scrollTimeout.current = setTimeout(() => {
-        isScrolling = false;
-      }, 700);
+      scrollTimeout.current = setTimeout(() => { isScrolling = false; }, 700);
     };
-
     track.addEventListener('wheel', onWheel, { passive: false });
-    return () => {
-      track.removeEventListener('wheel', onWheel);
-      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-    };
+    return () => { track.removeEventListener('wheel', onWheel); if (scrollTimeout.current) clearTimeout(scrollTimeout.current); };
   }, []);
 
-  // Intersection Observer for the awesome reveal effect
+  // Intersection Observer for Omni-Reveal Effect
   useEffect(() => {
     const root = rootRef.current;
     const track = trackRef.current;
@@ -163,7 +139,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     
     root.classList.add("nova-anim-ready");
     const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const targets = root.querySelectorAll("[data-reveal],[data-bar]");
+    const targets = root.querySelectorAll("[data-reveal]");
     
     if (reduce || typeof IntersectionObserver === "undefined") { 
         targets.forEach((el) => el.classList.add("nova-in")); 
@@ -172,12 +148,8 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     
     const io = new IntersectionObserver((entries) => {
         entries.forEach((e) => { 
-            if (e.isIntersecting) { 
-                e.target.classList.add("nova-in"); 
-            } else {
-                // Remove the class when sliding away so it flies back in next time!
-                e.target.classList.remove("nova-in"); 
-            }
+            if (e.isIntersecting) e.target.classList.add("nova-in"); 
+            else e.target.classList.remove("nova-in"); // Removes class so it flies in again next time!
         });
     }, { root: track, threshold: 0.1 });
     
@@ -193,7 +165,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     return () => window.clearInterval(id);
   }, []);
 
-  // 3D Parallax Tilt for Desktop pointer only
+  // 3D Parallax Tilt for Desktop
   useEffect(() => {
     const el = tiltRef.current;
     if (!el) return;
@@ -213,7 +185,6 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     return () => { el.removeEventListener("pointermove", onMove); el.removeEventListener("pointerleave", reset); };
   }, []);
 
-  // Lightbox keybinding
   useEffect(() => {
     if (!lb) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLb(null); };
@@ -260,11 +231,14 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     ) : null;
 
   const head = (label: string, heading: string) => (
-    <div className="nova-sec-head">
+    <div className="nova-sec-head" data-reveal="top">
       <span className="nova-pill">{label}</span>
       <h2 className="nova-h2">{heading}</h2>
     </div>
   );
+
+  // Direction array for dynamic lists
+  const DIRS = ["left", "bottom", "right"];
 
   const sections: Record<string, () => ReactNode> = {
     about: () => {
@@ -273,11 +247,11 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       const photo = data.gallery.find((g) => g.image_url)?.image_url || p?.avatar_url || null;
       return (
         <section id="about" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("PENULIS", "Introduce My Self")}
-              <div className="nova-glass nova-about">
-                {photo && <div className="nova-about-photo"><ZImg src={photo} alt={name} className="nova-zoom-fill" /></div>}
-                <div className="nova-about-txt">
+              <div className="nova-about">
+                {photo && <div className="nova-glass nova-about-photo" data-reveal="left"><ZImg src={photo} alt={name} className="nova-zoom-fill" /></div>}
+                <div className="nova-glass nova-about-txt" data-reveal="right">
                   {aboutText && aboutText.split(/\n{2,}/).map((para, i) => <p key={i}>{para}</p>)}
                   {p?.resume_url && <a className="nova-btn nova-btn-accent nova-mt" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">Download CV <span aria-hidden>↓</span></a>}
                 </div>
@@ -292,13 +266,13 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       const ordered = [...data.projects].sort((a, b) => Number(!!b.is_featured) - Number(!!a.is_featured));
       return (
         <section id="work" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("DESIGN", "Selected Work")}
               <div className="nova-grid-3">
-                {ordered.map((pr) => {
+                {ordered.map((pr, i) => {
                   const category = pr.role || (pr.tags && pr.tags[0]) || null;
                   return (
-                    <article key={pr.id} className="nova-glass nova-proj">
+                    <article key={pr.id} className="nova-glass nova-proj" data-reveal={DIRS[i % 3]}>
                       <div className="nova-proj-media">
                         {pr.image_url ? <ZImg src={pr.image_url} alt={pr.title || "Project image"} cap={pr.title || undefined} /> : <div className="nova-ph" aria-hidden>{initials(pr.title, "P")}</div>}
                         {pr.is_featured && <span className="nova-badge">★</span>}
@@ -325,13 +299,13 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       const sorted = [...data.skills].sort((a, b) => (a.category || "").localeCompare(b.category || ""));
       return (
         <section id="skills" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("GRAFIS", "Skills")}
               <div className="nova-skills">
-                {sorted.map((s) => {
+                {sorted.map((s, i) => {
                   const lvl = levelPct(s.level);
                   return (
-                    <div key={s.id} className="nova-glass nova-skill" data-bar style={{ ["--pct" as string]: `${lvl ?? 0}%` } as CSSProperties}>
+                    <div key={s.id} className="nova-glass nova-skill" data-reveal={i % 2 === 0 ? "left" : "right"} style={{ ["--pct" as string]: `${lvl ?? 0}%` } as CSSProperties}>
                       <span className="nova-skill-ic" aria-hidden>{initials(s.name, "•")}</span>
                       <span className="nova-skill-name">{s.name}</span>
                       {lvl != null && <span className="nova-skill-bar" role="progressbar" aria-valuenow={Math.round(lvl)} aria-valuemin={0} aria-valuemax={100} aria-label={`${s.name} level`}><span className="nova-skill-fill" /></span>}
@@ -348,11 +322,11 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       if (!has.services) return null;
       return (
         <section id="services" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("WRITER", "What I Do")}
               <div className="nova-grid-3">
-                {data.services.map((s) => (
-                  <article key={s.id} className="nova-glass nova-card">
+                {data.services.map((s, i) => (
+                  <article key={s.id} className="nova-glass nova-card" data-reveal={DIRS[i % 3]}>
                     <span className="nova-card-ic" aria-hidden>{initials(s.title, "S")}</span>
                     <h3 className="nova-card-title">{s.title}</h3>
                     {s.description && <p className="nova-muted nova-clamp-3">{s.description}</p>}
@@ -369,11 +343,11 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       if (!has.experience) return null;
       return (
         <section id="experience" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("TIMELINE", "Experience")}
               <div className="nova-timeline">
-                {data.experience.map((e) => (
-                  <article key={e.id} className="nova-glass nova-tl-item">
+                {data.experience.map((e, i) => (
+                  <article key={e.id} className="nova-glass nova-tl-item" data-reveal={i % 2 === 0 ? "left" : "right"}>
                     <span className="nova-tl-dot" aria-hidden />
                     <span className="nova-tl-date">{dateRange(e.start_date, e.end_date, e.is_current)}</span>
                     <div>
@@ -393,11 +367,11 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       if (!(sv("education") && data.education.length > 0)) return null;
       return (
         <section id="education" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("STUDY", "Education")}
               <div className="nova-grid-2">
-                {data.education.map((ed) => (
-                  <article key={ed.id} className="nova-glass nova-card">
+                {data.education.map((ed, i) => (
+                  <article key={ed.id} className="nova-glass nova-card" data-reveal={i % 2 === 0 ? "left" : "right"}>
                     <div className="nova-card-foot nova-card-foot-top"><h3 className="nova-card-title">{ed.school || "School"}</h3><span className="nova-price">{dateRange(ed.start_date, ed.end_date)}</span></div>
                     {(ed.degree || ed.field) && <p className="nova-muted">{[ed.degree, ed.field].filter(Boolean).join(", ")}</p>}
                     {ed.description && <p className="nova-muted">{ed.description}</p>}
@@ -413,12 +387,12 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       if (!(sv("certifications") && data.certifications.length > 0)) return null;
       return (
         <section id="certifications" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("CREDENTIALS", "Certifications")}
               <div className="nova-grid-3">
-                {data.certifications.map((c) => {
+                {data.certifications.map((c, i) => {
                   const body = (<><span className="nova-card-ic" aria-hidden>✓</span><h3 className="nova-card-title">{c.name}</h3>{c.issuer && <p className="nova-muted">{c.issuer}</p>}<div className="nova-card-foot">{oneDate(c.issue_date) && <span className="nova-price">{oneDate(c.issue_date)}</span>}{c.credential_id && <span className="nova-muted nova-small">#{c.credential_id}</span>}</div></>);
-                  return c.url ? <a key={c.id} className="nova-glass nova-card nova-card-link" href={ext(c.url)} target="_blank" rel="noopener noreferrer">{body}</a> : <article key={c.id} className="nova-glass nova-card">{body}</article>;
+                  return c.url ? <a key={c.id} className="nova-glass nova-card nova-card-link" href={ext(c.url)} target="_blank" rel="noopener noreferrer" data-reveal={DIRS[i % 3]}>{body}</a> : <article key={c.id} className="nova-glass nova-card" data-reveal={DIRS[i % 3]}>{body}</article>;
                 })}
               </div>
           </div>
@@ -430,11 +404,11 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       if (!(sv("achievements") && data.achievements.length > 0)) return null;
       return (
         <section id="achievements" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("WINS", "Achievements")}
               <div className="nova-grid-3">
-                {data.achievements.map((a) => (
-                  <article key={a.id} className="nova-glass nova-card"><span className="nova-card-ic" aria-hidden>★</span><h3 className="nova-card-title">{a.title}</h3>{oneDate(a.date) && <span className="nova-price">{oneDate(a.date)}</span>}{a.description && <p className="nova-muted nova-clamp-3">{a.description}</p>}</article>
+                {data.achievements.map((a, i) => (
+                  <article key={a.id} className="nova-glass nova-card" data-reveal={DIRS[i % 3]}><span className="nova-card-ic" aria-hidden>★</span><h3 className="nova-card-title">{a.title}</h3>{oneDate(a.date) && <span className="nova-price">{oneDate(a.date)}</span>}{a.description && <p className="nova-muted nova-clamp-3">{a.description}</p>}</article>
                 ))}
               </div>
           </div>
@@ -446,13 +420,13 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       if (!(sv("publications") && data.publications.length > 0)) return null;
       return (
         <section id="publications" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("WORDS", "Publications")}
               <div className="nova-list">
-                {data.publications.map((pub) => {
+                {data.publications.map((pub, i) => {
                   const meta = [pub.publisher, oneDate(pub.date)].filter(Boolean).join(" · ");
                   const body = (<><div className="nova-card-foot nova-card-foot-top"><h3 className="nova-card-title">{pub.title}</h3>{pub.url && <span className="nova-arrow" aria-hidden>↗</span>}</div>{meta && <p className="nova-muted nova-small">{meta}</p>}{pub.description && <p className="nova-muted">{pub.description}</p>}</>);
-                  return pub.url ? <a key={pub.id} className="nova-glass nova-listitem nova-card-link" href={ext(pub.url)} target="_blank" rel="noopener noreferrer">{body}</a> : <article key={pub.id} className="nova-glass nova-listitem">{body}</article>;
+                  return pub.url ? <a key={pub.id} className="nova-glass nova-listitem nova-card-link" href={ext(pub.url)} target="_blank" rel="noopener noreferrer" data-reveal={i % 2 === 0 ? "left" : "right"}>{body}</a> : <article key={pub.id} className="nova-glass nova-listitem" data-reveal={i % 2 === 0 ? "left" : "right"}>{body}</article>;
                 })}
               </div>
           </div>
@@ -464,11 +438,11 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       if (!(sv("gallery") && data.gallery.length > 0)) return null;
       return (
         <section id="gallery" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("PHOTO", "Gallery")}
               <div className="nova-gallery">
-                {data.gallery.map((g) => g.image_url ? (
-                  <figure key={g.id} className="nova-glass nova-gitem">
+                {data.gallery.map((g, i) => g.image_url ? (
+                  <figure key={g.id} className="nova-glass nova-gitem" data-reveal={DIRS[i % 3]}>
                     <ZImg src={g.image_url} alt={g.caption || "Gallery image"} cap={g.caption || undefined} className="nova-zoom-gallery" />
                     {g.caption && <figcaption className="nova-muted nova-small">{g.caption}</figcaption>}
                   </figure>
@@ -483,13 +457,13 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       if (!(sv("videos") && data.videos.length > 0)) return null;
       return (
         <section id="videos" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("REEL", "Videos")}
               <div className="nova-grid-2">
-                {data.videos.map((v) => {
+                {data.videos.map((v, i) => {
                   const src = v.url ? videoEmbed(v.url) : null;
                   if (!src) return null;
-                  return (<figure key={v.id} className="nova-glass nova-video"><div className="nova-video-frame"><iframe src={src} title={v.title || "Video"} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div>{v.title && <figcaption className="nova-muted nova-small">{v.title}</figcaption>}</figure>);
+                  return (<figure key={v.id} className="nova-glass nova-video" data-reveal={i % 2 === 0 ? "left" : "right"}><div className="nova-video-frame"><iframe src={src} title={v.title || "Video"} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div>{v.title && <figcaption className="nova-muted nova-small">{v.title}</figcaption>}</figure>);
                 })}
               </div>
           </div>
@@ -501,11 +475,11 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       if (!has.testimonials) return null;
       return (
         <section id="testimonials" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+          <div className="nova-shell">
               {head("REVIEWS", "What Clients Say")}
               <div className="nova-grid-3">
-                {data.testimonials.map((t) => (
-                  <figure key={t.id} className="nova-glass nova-quote">
+                {data.testimonials.map((t, i) => (
+                  <figure key={t.id} className="nova-glass nova-quote" data-reveal={DIRS[i % 3]}>
                     <span className="nova-quote-mark" aria-hidden>&ldquo;</span>
                     {t.quote && <blockquote>{t.quote}</blockquote>}
                     <figcaption className="nova-quote-by"><span className="nova-avatar" aria-hidden>{t.avatar_url ? <img src={t.avatar_url} alt="" loading="lazy" /> : initials(t.author, "•")}</span><span>{t.author && <b>{t.author}</b>}{t.role && <em className="nova-muted">{t.role}</em>}</span></figcaption>
@@ -551,19 +525,23 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       {/* HORIZONTAL SLIDING TRACK */}
       <main className="nova-track" ref={trackRef}>
         
-        {/* Slide 1: HERO */}
-        <section id="top" className="nova-slide">
-          <div className="nova-shell" data-reveal>
+        {/* Slide 1: FULL HERO SECTION */}
+        <section id="top" className="nova-slide nova-slide-hero">
+          <div className="nova-shell nova-shell-hero">
             <header className="nova-hero">
-              <span className="nova-glass nova-porto">P O R T O F O L I O</span>
+              <span className="nova-glass nova-porto" data-reveal="top">P O R T O F O L I O</span>
+              
               <div className="nova-bento" ref={tiltRef}>
-                <div className="nova-glass nova-w nova-profile">
+                {/* 1. Profile (Flies from Left) */}
+                <div className="nova-glass nova-w nova-profile" data-reveal="left">
                   <span className="nova-avatar-ring">{p?.avatar_url ? <img src={p.avatar_url} alt={name} loading="eager" /> : <span className="nova-avatar-mono" aria-hidden>{mono}</span>}</span>
                   <b className="nova-profile-name">{name}</b>
                   {socialRow("nova-profile-soc")}
                   <span className="nova-bell">{p?.availability ? p.availability : "New Post"}</span>
                 </div>
-                <div className="nova-glass nova-w nova-portrait">
+
+                {/* 2. Portrait (Flies from Bottom) */}
+                <div className="nova-glass nova-w nova-portrait" data-reveal="bottom">
                   {p?.avatar_url ? <ZImg src={p.avatar_url} alt={name} className="nova-zoom-fill" /> : <div className="nova-ph nova-portrait-ph" aria-hidden>{mono}</div>}
                   <div className="nova-portrait-info">
                     <h1 className="nova-name">{name}</h1>
@@ -575,21 +553,34 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
                     </div>
                   </div>
                 </div>
-                <div className="nova-glass nova-w nova-status">
+
+                {/* 3. Status (Flies from Right) */}
+                <div className="nova-glass nova-w nova-status" data-reveal="right">
                   <span className="nova-clock">{clock || "—"}</span>
                   <span className="nova-sys"><GSignal /><GWifi /><GBattery /></span>
                 </div>
-                <div className="nova-glass nova-w nova-weather">
+
+                {/* 4. Weather (Flies from Right) */}
+                <div className="nova-glass nova-w nova-weather" data-reveal="right">
                   <GMoon />
                   <span>{p?.location || "Online"}</span>
                 </div>
-                <div className="nova-glass nova-w nova-toggles">
+
+                {/* 5. Swipe Explore Widget (Flies from Right) */}
+                <div className="nova-glass nova-w nova-explore" data-reveal="right">
+                   <span>Slide to Explore</span>
+                   <span className="nova-arrow-bounce">→</span>
+                </div>
+
+                {/* 6. Toggles (Flies from Left) */}
+                <div className="nova-glass nova-w nova-toggles" data-reveal="left">
                   {p?.email && <a className="nova-toggle" href={`mailto:${p.email}`} aria-label="Email" title="Email">✉</a>}
                   {p?.resume_url && <a className="nova-toggle" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer" aria-label="Resume" title="Resume">↓</a>}
                   {has.projects && <a className="nova-toggle nova-toggle-on" href="#work" aria-label="Work" title="Work">▤</a>}
                   {contactHref && <a className="nova-toggle nova-toggle-on2" href={contactHref} aria-label="Contact" title="Contact">➤</a>}
                 </div>
               </div>
+
             </header>
           </div>
         </section>
@@ -600,10 +591,10 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
         {/* Final Slide: Contact, Marquee & Footer */}
         {username && (
           <section id="contact" className="nova-slide">
-            <div className="nova-shell" data-reveal>
+            <div className="nova-shell">
               {head("ACCOUNT", "Let's Connect")}
               <div className="nova-contact">
-                <div className="nova-glass nova-contact-left">
+                <div className="nova-glass nova-contact-left" data-reveal="left">
                   <div className="nova-contact-rows">
                     {p?.email && <a className="nova-crow" href={`mailto:${p.email}`}><span aria-hidden>✉</span><span>{p.email}</span></a>}
                     {p?.phone && <a className="nova-crow" href={`tel:${p.phone}`}><span aria-hidden>☎</span><span>{p.phone}</span></a>}
@@ -612,16 +603,16 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
                   </div>
                   {socialRow()}
                 </div>
-                <div className="nova-glass nova-formcard"><ContactForm username={username} /></div>
+                <div className="nova-glass nova-formcard" data-reveal="right"><ContactForm username={username} /></div>
               </div>
 
               {/* MARQUEE */}
-              <div className="nova-glass nova-marquee" aria-hidden>
+              <div className="nova-glass nova-marquee" aria-hidden data-reveal="bottom">
                 <div className="nova-marquee-track"><span>{`${marqueeText}  ✦  `.repeat(6)}</span><span>{`${marqueeText}  ✦  `.repeat(6)}</span></div>
               </div>
 
               {/* FOOTER */}
-              <footer className="nova-footer">
+              <footer className="nova-footer" data-reveal="bottom">
                 <div className="nova-footer-in">
                   <b className="nova-foot-name">{name}</b>
                   {navItems.length > 1 && <nav className="nova-footer-nav" aria-label="Footer">{navItems.filter((n) => n.href !== "#top").map((it) => <a key={it.href} href={it.href}>{it.label}</a>)}</nav>}
@@ -710,9 +701,13 @@ const NOVA_CSS = `
   padding-top: 100px; /* Space for the floating nav */
   padding-bottom: 50px;
 }
+.nova-slide-hero {
+  padding-bottom: 20px;
+}
 
 /* SHELL - Constrains content width perfectly inside a full-width slide */
 .nova-shell{ width:100%; max-width:1180px; margin-inline:auto; padding-inline:clamp(14px,3.5vw,32px); }
+.nova-shell-hero { height: 100%; } /* Let hero grid stretch */
 
 /* glow blobs */
 .nova-bg{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
@@ -752,9 +747,17 @@ const NOVA_CSS = `
 .nova-btn-ghost:hover{ transform:translateY(-2px); border-color:var(--accent); }
 .nova-hero-cta{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
 
-/* AWESOME HORIZONTAL FLY-IN ANIMATION */
-.nova-root.nova-anim-ready [data-reveal]{ opacity:0; transform:translateX(60px) scale(0.96); transition:opacity .7s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
-.nova-root.nova-anim-ready [data-reveal].nova-in{ opacity:1; transform:translateX(0) scale(1); }
+/* OMNI-DIRECTIONAL FLY-IN ANIMATIONS */
+.nova-root.nova-anim-ready [data-reveal]{ opacity:0; transition:opacity .7s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
+/* Default if attribute is empty */
+.nova-root.nova-anim-ready [data-reveal=""] { transform: translateY(70px) scale(0.95); }
+.nova-root.nova-anim-ready [data-reveal="left"] { transform: translateX(-80px) scale(0.95); }
+.nova-root.nova-anim-ready [data-reveal="right"] { transform: translateX(80px) scale(0.95); }
+.nova-root.nova-anim-ready [data-reveal="bottom"] { transform: translateY(80px) scale(0.95); }
+.nova-root.nova-anim-ready [data-reveal="top"] { transform: translateY(-80px) scale(0.95); }
+
+/* The trigger class adds the final state */
+.nova-root.nova-anim-ready .nova-in[data-reveal] { opacity:1; transform: translate(0, 0) scale(1); }
 
 /* FLOATING NAV */
 .nova-nav-fixed{ position:absolute; top:12px; left:0; width:100%; z-index:40; pointer-events:none; }
@@ -773,45 +776,69 @@ const NOVA_CSS = `
 .nova-navlinks a.is-active{ color:var(--accent); }
 .nova-nav-cta{ padding:9px 18px; }
 
-/* hero bento */
-.nova-hero{ padding-bottom:clamp(30px,5vw,56px); }
-.nova-porto{ display:block; width:max-content; margin:0 auto 20px; padding:8px 26px; border-radius:999px; font-family:var(--display); font-weight:700; letter-spacing:.44em; font-size:.82rem; color:var(--ink2); }
-.nova-bento{ display:grid; grid-template-columns:0.92fr 1.5fr 0.92fr; grid-template-areas:"profile portrait status" "toggles portrait weather"; gap:16px; align-items:stretch; perspective:1400px; }
+/* HERO BENTO - FULL SCREEN HEIGHT */
+.nova-hero{ 
+  height: calc(100vh - 120px); 
+  display: flex; 
+  flex-direction: column; 
+}
+.nova-porto{ display:block; width:max-content; margin:0 auto 20px; padding:8px 26px; border-radius:999px; font-family:var(--display); font-weight:700; letter-spacing:.44em; font-size:.82rem; color:var(--ink2); flex-shrink: 0; }
+.nova-bento{ 
+  flex: 1; 
+  min-height: 0; /* lets flex children shrink */
+  display:grid; 
+  grid-template-columns: 0.9fr 1.6fr 0.9fr; 
+  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-areas:
+    "profile portrait weather"
+    "profile portrait status"
+    "toggles portrait explore"; 
+  gap:16px; 
+  align-items:stretch; 
+  perspective:1400px; 
+}
 .nova-w{ transform-style:preserve-3d; transform:perspective(1400px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .25s ease; }
-.nova-profile{ grid-area:profile; display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; padding:22px 18px; }
+.nova-profile{ grid-area:profile; display:flex; flex-direction:column; align-items:center; justify-content: center; text-align:center; gap:12px; padding:22px 18px; }
 .nova-avatar-ring{ width:92px; height:92px; border-radius:50%; overflow:hidden; border:2px solid var(--line2); display:grid; place-items:center; background:var(--glass-2); box-shadow:0 0 0 6px rgba(255,255,255,.03); }
 .nova-avatar-ring img{ width:100%; height:100%; object-fit:cover; }
 .nova-avatar-mono{ font-family:var(--display); font-weight:800; font-size:1.6rem; }
 .nova-profile-name{ font-weight:700; font-size:1rem; }
 .nova-profile-soc{ justify-content:center; }
-.nova-bell{ font-size:.78rem; color:var(--ink2); padding:6px 14px; border-radius:999px; background:var(--glass-2); border:1px solid var(--line); }
+.nova-bell{ font-size:.78rem; color:var(--ink2); padding:6px 14px; border-radius:999px; background:var(--glass-2); border:1px solid var(--line); margin-top: auto; }
 
-.nova-portrait{ grid-area:portrait; position:relative; overflow:hidden; min-height:420px; padding:0; }
+.nova-portrait{ grid-area:portrait; position:relative; overflow:hidden; min-height:420px; padding:0; display:flex; flex-direction:column; justify-content:flex-end; }
 .nova-portrait .nova-zoom{ position:absolute; inset:0; width:100%; height:100%; border-radius:var(--r); }
-.nova-portrait-ph{ width:100%; height:100%; border-radius:var(--r); }
-.nova-portrait-info{ position:absolute; left:0; right:0; bottom:0; z-index:2; padding:26px; pointer-events:none;
-  background:linear-gradient(to top, rgba(4,6,14,.92) 8%, rgba(4,6,14,.55) 50%, transparent); }
+.nova-portrait-ph{ position:absolute; inset:0; width:100%; height:100%; border-radius:var(--r); }
+.nova-portrait-info{ position:relative; z-index:2; padding:36px; pointer-events:none;
+  background:linear-gradient(to top, rgba(4,6,14,.95) 8%, rgba(4,6,14,.6) 60%, transparent); }
 .nova-portrait-info > *{ pointer-events:auto; }
-.nova-name{ font-family:var(--display); font-weight:800; font-size:clamp(2.2rem,6vw,4rem); line-height:.95; letter-spacing:-.02em; text-transform:uppercase; margin:0;
+.nova-name{ font-family:var(--display); font-weight:800; font-size:clamp(2.4rem,6vw,4.5rem); line-height:.95; letter-spacing:-.02em; text-transform:uppercase; margin:0;
   background:linear-gradient(180deg,#ffffff,#aeb7cc 55%,#5b6683); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 4px 14px rgba(0,0,0,.5)); }
-.nova-role{ margin:8px 0 0; font-weight:600; color:var(--accent); }
-.nova-intro{ margin:10px 0 0; color:#cfd6e6; max-width:46ch; font-size:.98rem; }
+.nova-role{ margin:8px 0 0; font-weight:600; color:var(--accent); font-size: 1.1rem; }
+.nova-intro{ margin:12px 0 0; color:#cfd6e6; max-width:46ch; font-size:1rem; }
 
 .nova-status{ grid-area:status; display:flex; flex-direction:column; justify-content:center; gap:10px; padding:18px 20px; }
-.nova-clock{ font-family:var(--display); font-weight:800; font-size:1.8rem; }
+.nova-clock{ font-family:var(--display); font-weight:800; font-size:2.4rem; line-height: 1; }
 .nova-sys{ display:flex; align-items:center; gap:8px; color:var(--ink); }
-.nova-weather{ grid-area:weather; display:flex; align-items:center; gap:12px; padding:18px 20px; color:var(--ink); }
-.nova-weather span{ font-weight:600; }
+
+.nova-weather{ grid-area:weather; display:flex; flex-direction:column; justify-content:center; gap:12px; padding:18px 20px; color:var(--ink); }
+.nova-weather span{ font-weight:600; font-size: 1.1rem; }
+
+.nova-explore { grid-area: explore; display: flex; align-items: center; justify-content: space-between; padding: 22px; font-weight: 700; color: var(--accent); font-size: 1.1rem; font-family: var(--display); letter-spacing: .05em; text-transform: uppercase; }
+.nova-arrow-bounce { display: inline-block; animation: nova-bounce-r 1.5s infinite; }
+@keyframes nova-bounce-r { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(6px); } }
+
 .nova-toggles{ grid-area:toggles; display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:18px; }
-.nova-toggle{ display:grid; place-items:center; aspect-ratio:1/1; border-radius:18px; background:var(--glass-2); border:1px solid var(--line); text-decoration:none; color:var(--ink); font-size:1.2rem; transition:transform .16s, background .16s; }
+.nova-toggle{ display:grid; place-items:center; aspect-ratio:1/1; border-radius:18px; background:var(--glass-2); border:1px solid var(--line); text-decoration:none; color:var(--ink); font-size:1.4rem; transition:transform .16s, background .16s; }
 .nova-toggle:hover{ transform:translateY(-2px); }
 .nova-toggle-on{ background:color-mix(in srgb,var(--accent) 30%, transparent); border-color:var(--accent); color:var(--ink); }
 .nova-toggle-on2{ background:#1f9d55; border-color:#28c06a; color:#fff; }
 
 /* about */
-.nova-about{ display:grid; grid-template-columns:.8fr 1.2fr; gap:clamp(18px,3vw,36px); align-items:center; padding:clamp(18px,2.6vw,30px); }
-.nova-about-photo{ border-radius:20px; overflow:hidden; aspect-ratio:4/3; }
-.nova-about-photo .nova-zoom{ width:100%; height:100%; }
+.nova-about{ display:grid; grid-template-columns:.8fr 1.2fr; gap:clamp(18px,3vw,36px); align-items:center; }
+.nova-about-photo{ border-radius:20px; overflow:hidden; aspect-ratio:4/3; padding: 0; }
+.nova-about-photo .nova-zoom{ width:100%; height:100%; border-radius: 20px; }
+.nova-about-txt { padding: clamp(18px,2.6vw,30px); }
 .nova-about-txt p{ margin:0 0 12px; color:#cfd6e6; }
 
 /* grids / cards */
@@ -851,8 +878,8 @@ const NOVA_CSS = `
 .nova-skill-name{ font-weight:600; font-size:.9rem; }
 .nova-skill-bar{ width:82%; height:6px; border-radius:99px; background:var(--glass-2); overflow:hidden; }
 .nova-skill-fill{ display:block; height:100%; width:var(--pct); border-radius:99px; background:linear-gradient(90deg,var(--accent),#7a6cff); transition:width 1.1s cubic-bezier(.2,.8,.2,1); }
-.nova-root.nova-anim-ready .nova-skill[data-bar] .nova-skill-fill{ width:0; }
-.nova-root.nova-anim-ready .nova-skill[data-bar].nova-in .nova-skill-fill{ width:var(--pct); }
+.nova-root.nova-anim-ready .nova-skill.nova-in .nova-skill-fill{ width:var(--pct); }
+.nova-root.nova-anim-ready .nova-skill:not(.nova-in) .nova-skill-fill{ width: 0; }
 
 /* timeline */
 .nova-timeline{ display:flex; flex-direction:column; gap:12px; }
@@ -941,15 +968,16 @@ const NOVA_CSS = `
 /* responsive */
 @media (max-width:1040px){ .nova-grid-3{ grid-template-columns:repeat(2,1fr); } }
 @media (max-width:900px){
-  .nova-bento{ grid-template-columns:1fr 1fr; grid-template-areas:"portrait portrait" "profile status" "toggles weather"; }
-  .nova-portrait{ min-height:340px; }
+  .nova-hero { height: auto; min-height: 100vh; }
+  .nova-bento{ grid-template-columns:1fr 1fr; grid-template-rows: auto; grid-template-areas:"portrait portrait" "profile status" "toggles weather" "explore explore"; }
+  .nova-portrait{ min-height:380px; }
   .nova-w{ transform:none !important; }
   .nova-about{ grid-template-columns:1fr; }
   .nova-contact{ grid-template-columns:1fr; }
   .nova-navlinks{ display:none; }
 }
 @media (max-width:600px){
-  .nova-bento{ grid-template-columns:1fr; grid-template-areas:"portrait" "profile" "status" "weather" "toggles"; }
+  .nova-bento{ grid-template-columns:1fr; grid-template-areas:"portrait" "profile" "status" "weather" "toggles" "explore"; }
   .nova-grid-2, .nova-grid-3{ grid-template-columns:1fr; }
   .nova-tl-item{ grid-template-columns:1fr; gap:6px; }
   .nova-nav-cta{ display:none; }
