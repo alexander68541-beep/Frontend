@@ -7,12 +7,13 @@ import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
-   NovaTemplate — "Nova OS" — futuristic dark glass phone-UI portfolio.
-   FULL-PAGE SLIDER EDITION:
+   NovaTemplate — "Nova OS" — futuristic dark glass portfolio.
+   FULL-PAGE SLIDER + NEW "AURORA SPOTLIGHT" HERO:
    • Page never scrolls — root is locked to the viewport (100dvh).
    • Mouse wheel / touch swipe / keyboard moves between sections.
    • Sections rise up from below with smooth staggered animations.
-   • Long section content scrolls INTERNALLY inside its slide only.
+   • Hero: animated gradient name, typewriter role, count-up stats,
+     conic-gradient avatar ring, floating glass card, aurora backdrop.
    • All data sections (database-driven) are fully preserved.
    DARK ONLY. PURE PRESENTATION from `data`. Prefixed `.nova-`.
    ===================================================================== */
@@ -50,6 +51,42 @@ function levelPct(level: unknown): number | null {
   const map: Record<string, number> = { beginner: 35, basic: 35, novice: 30, elementary: 40, learning: 30, intermediate: 60, competent: 62, proficient: 75, skilled: 72, advanced: 85, expert: 95, master: 100, fluent: 95, native: 100 };
   for (const k in map) if (s.includes(k)) return map[k];
   return null;
+}
+const prefersReduce = () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* typewriter effect for the hero role line */
+function useTypewriter(text: string | null, speed = 55): string {
+  const [out, setOut] = useState("");
+  useEffect(() => {
+    if (!text || prefersReduce()) { setOut(text || ""); return; }
+    setOut("");
+    let i = 0;
+    const id = window.setInterval(() => {
+      i += 1;
+      setOut(text.slice(0, i));
+      if (i >= text.length) window.clearInterval(id);
+    }, speed);
+    return () => window.clearInterval(id);
+  }, [text, speed]);
+  return text ? out : "";
+}
+
+/* count-up number for hero stat chips */
+function CountUp({ to }: { to: number }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (to <= 0 || prefersReduce()) { setN(to); return; }
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - t0) / 1300);
+      setN(Math.round(to * (1 - Math.pow(1 - k, 3))));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [to]);
+  return <>{n}</>;
 }
 
 /* ---- social brand icons (auto-detected) ---- */
@@ -104,14 +141,6 @@ function SocialIcon({ name }: { name: string }) {
   return (<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden focusable="false"><path d={SOCIAL_ICONS[name] || SOCIAL_ICONS.globe} /></svg>);
 }
 
-function GSignal() { return (<svg viewBox="0 0 24 16" width="20" height="14" aria-hidden fill="currentColor"><rect x="0" y="10" width="3.4" height="6" rx="1" /><rect x="6" y="7" width="3.4" height="9" rx="1" /><rect x="12" y="4" width="3.4" height="12" rx="1" /><rect x="18" y="1" width="3.4" height="15" rx="1" opacity=".5" /></svg>); }
-function GWifi() { return (<svg viewBox="0 0 24 18" width="20" height="15" aria-hidden fill="currentColor"><path d="M12 3C7.5 3 3.7 4.7 1 7.4l2 2C5.3 7.1 8.5 5.8 12 5.8s6.7 1.3 9 3.6l2-2C20.3 4.7 16.5 3 12 3zm0 5.6c-2.6 0-5 1-6.7 2.7l2 2A6.6 6.6 0 0112 11.3c1.8 0 3.5.7 4.7 2l2-2A9.4 9.4 0 0012 8.6zm0 5.4a3 3 0 100 6 3 3 0 000-6z" /></svg>); }
-function GBattery() { return (<svg viewBox="0 0 30 16" width="26" height="14" aria-hidden><rect x="1" y="2" width="24" height="12" rx="3" fill="none" stroke="currentColor" strokeWidth="1.5" opacity=".6" /><rect x="3" y="4" width="18" height="8" rx="1.5" fill="currentColor" /><rect x="26.5" y="5.5" width="2.5" height="5" rx="1" fill="currentColor" opacity=".6" /></svg>); }
-function GMoon() { return (<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden fill="currentColor"><path d="M12.3 2a10 10 0 109.4 13.3A8 8 0 0112.3 2z" /></svg>); }
-function GPlane() { return (<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden fill="currentColor"><path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0011.5 2 1.5 1.5 0 0010 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" /></svg>); }
-function GBt() { return (<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden fill="currentColor"><path d="M12 2l5 4-3.5 3L17 12l-5 4v-6.5L8.5 12 7 10.5 10.5 9 7 6l1.5-1.5L12 8V2zm0 4.8v2.4l1.2-1.2L12 6.8zm0 8v2.4l1.2-1.2L12 14.8z" /></svg>); }
-function GFinger() { return (<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M12 10a2 2 0 012 2c0 3-1 5-2 6" /><path d="M9 8a5 5 0 018 4c0 3-1 5-2 7" /><path d="M6.5 7A8 8 0 0119 12c0 2-.3 4-1 6" /><path d="M12 13c0 3-.7 5-1.5 7" /></svg>); }
-
 const SLIDE_LABELS: Record<string, string> = {
   hero: "Home", about: "About", projects: "Work", skills: "Skills",
   services: "Services", experience: "Experience", education: "Education",
@@ -130,13 +159,11 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
   const username = data.username;
   const name = p?.display_name || username || "Your Name";
   const mono = initials(p?.display_name, username);
-  const first = (name.split(/\s+/)[0] || name).toUpperCase();
 
   const [lb, setLb] = useState<{ src: string; alt: string; cap?: string } | null>(null);
   const [clock, setClock] = useState("");
   const [active, setActive] = useState(0);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const tiltRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const activeRef = useRef(0);
   const totalRef = useRef(1);
@@ -144,6 +171,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
   activeRef.current = active;
   lbOpenRef.current = !!lb;
   const openLb = useCallback((src: string, alt: string, cap?: string) => setLb({ src, alt, cap }), []);
+  const typedRole = useTypewriter(p?.title || null);
 
   const has = {
     about: sv("about") && !!(p?.about || p?.bio || p?.tagline),
@@ -168,6 +196,16 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
   const total = slides.length;
   totalRef.current = total;
 
+  const workIdx = slides.indexOf("projects");
+  const contactIdx = slides.indexOf("contact");
+
+  const statChips = [
+    { label: "Projects", value: data.projects.length },
+    { label: "Skills", value: data.skills.length },
+    { label: "Experience", value: data.experience.length },
+    { label: "Services", value: data.services.length },
+  ].filter((s) => s.value > 0);
+
   const go = useCallback((idx: number) => {
     setActive(Math.max(0, Math.min(total - 1, idx)));
   }, [total]);
@@ -187,26 +225,6 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     return () => window.clearInterval(id);
   }, []);
 
-  /* 3D parallax tilt on the hero cluster (desktop pointer only) */
-  useEffect(() => {
-    const el = tiltRef.current;
-    if (!el) return;
-    const mm = (q: string) => (typeof window.matchMedia === "function" ? window.matchMedia(q) : null);
-    if (mm("(prefers-reduced-motion: reduce)")?.matches) return;
-    if (mm("(pointer: fine)") && !mm("(pointer: fine)")!.matches) return;
-    const onMove = (e: PointerEvent) => {
-      const r = el.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5;
-      const y = (e.clientY - r.top) / r.height - 0.5;
-      el.style.setProperty("--rx", `${(-y * 4).toFixed(2)}deg`);
-      el.style.setProperty("--ry", `${(x * 5).toFixed(2)}deg`);
-    };
-    const reset = () => { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); };
-    el.addEventListener("pointermove", onMove);
-    el.addEventListener("pointerleave", reset);
-    return () => { el.removeEventListener("pointermove", onMove); el.removeEventListener("pointerleave", reset); };
-  }, []);
-
   /* lightbox */
   useEffect(() => {
     if (!lb) return;
@@ -223,7 +241,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduce = prefersReduce();
     const scrollable = () => root.querySelector<HTMLElement>(".nova-slide-cur .nova-slide-in");
     const atEdge = (el: HTMLElement, top: boolean) => (top ? el.scrollTop <= 2 : el.scrollTop + el.clientHeight >= el.scrollHeight - 2);
     let lock = false;
@@ -302,8 +320,6 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
   const head = (label: string, heading: string) => (
     <div className="nova-sec-head"><span className="nova-pill">{label}</span><h2 className="nova-h2">{heading}</h2></div>
   );
-
-  const workIdx = slides.indexOf("projects");
 
   const sections: Record<string, () => ReactNode> = {
     about: () => {
@@ -476,48 +492,60 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
   const renderSlide = (k: string): ReactNode => {
     if (k === "hero") {
       return (
-        <div className="nova-hero-wrap">
-          <span className="nova-glass nova-porto">P O R T F O L I O <i className="nova-dots" aria-hidden><b /><b /><b /></i></span>
-          <div className="nova-hero">
-            <aside className="nova-rail nova-rail-l" aria-hidden>
-              <span className="nova-rail-ic">Aa</span><span className="nova-rail-ic">∞</span><span className="nova-rail-ic">⊞</span>
-              <span className="nova-rail-ic">◎</span><span className="nova-rail-ic">▣</span><span className="nova-rail-ic">︿</span>
-              <span className="nova-rail-fp"><GFinger /></span>
-            </aside>
-            <div className="nova-bento" ref={tiltRef}>
-              <div className="nova-glass nova-w nova-profile">
-                <span className="nova-avatar-ring">{p?.avatar_url ? <img src={p.avatar_url} alt={name} loading="eager" /> : <span className="nova-avatar-mono" aria-hidden>{mono}</span>}</span>
-                <b className="nova-profile-name">{name}</b>
-                {socialRow("nova-profile-soc")}
-                <span className="nova-bell">{p?.availability ? p.availability : "New Post"}</span>
-              </div>
-              <div className="nova-glass nova-w nova-portrait">
-                {p?.avatar_url ? <ZImg src={p.avatar_url} alt={name} /> : <div className="nova-ph nova-portrait-ph" aria-hidden>{mono}</div>}
-                <div className="nova-selbar" aria-hidden><span>Select</span><span className="nova-sel-mid">Select All</span><span>Paste</span></div>
-                <span className="nova-seltag" aria-hidden>{first}</span>
-                <div className="nova-portrait-info">
-                  <h1 className="nova-name">{name}</h1>
-                  {p?.title && <p className="nova-role">{p.title}</p>}
-                  {(p?.tagline || p?.bio) && <p className="nova-intro">{p?.tagline || p?.bio}</p>}
-                  <div className="nova-hero-cta">
-                    {has.projects && workIdx > 0 && <button type="button" className="nova-btn nova-btn-accent" onClick={() => go(workIdx)}>View Work <span aria-hidden>→</span></button>}
-                    {p?.resume_url && <a className="nova-btn nova-btn-ghost" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">CV <span aria-hidden>↓</span></a>}
-                  </div>
-                </div>
-              </div>
-              <div className="nova-glass nova-w nova-status"><span className="nova-clock">{clock || "—"}</span><span className="nova-sys"><GSignal /><GWifi /><GBattery /></span></div>
-              <div className="nova-glass nova-w nova-weather"><GMoon /><span>{p?.location || "Online"}</span></div>
-              <div className="nova-glass nova-w nova-cc">
-                <span className="nova-cc-ic" aria-hidden><GPlane /></span>
-                <span className="nova-cc-ic nova-cc-green" aria-hidden><GWifi /></span>
-                <span className="nova-cc-ic" aria-hidden><GWifi /></span>
-                <span className="nova-cc-ic nova-cc-blue" aria-hidden><GBt /></span>
-              </div>
-            </div>
-            <aside className="nova-rail nova-rail-r" aria-hidden>
-              <span className="nova-rail-ic">⌂</span><span className="nova-rail-ic">◍</span><span className="nova-rail-ic">⚙</span><span className="nova-rail-ic">⚡</span>
-            </aside>
+        <div className="nova-hero2">
+          {/* aurora spotlight stage */}
+          <div className="nova-h2-stage" aria-hidden>
+            <span className="nova-h2-spot" />
+            <span className="nova-h2-grid" />
+            <span className="nova-h2-orb nova-h2-orb-1" />
+            <span className="nova-h2-orb nova-h2-orb-2" />
+            <span className="nova-h2-orb nova-h2-orb-3" />
           </div>
+
+          <div className="nova-h2-main">
+            {/* left — identity */}
+            <div className="nova-h2-left">
+              <span className="nova-h2-kicker"><i className="nova-h2-dot" />{p?.availability || "Available for work"}</span>
+              <h1 className="nova-h2-name">{name}</h1>
+              {p?.title && (
+                <p className="nova-h2-role"><span>{typedRole}</span><span className="nova-h2-caret" aria-hidden /></p>
+              )}
+              {(p?.tagline || p?.bio) && <p className="nova-h2-bio">{p?.tagline || p?.bio}</p>}
+
+              {statChips.length > 0 && (
+                <div className="nova-h2-stats">
+                  {statChips.map((s) => (
+                    <div key={s.label} className="nova-h2-stat"><b><CountUp to={s.value} /></b><span>{s.label}</span></div>
+                  ))}
+                </div>
+              )}
+
+              <div className="nova-h2-cta">
+                {has.projects && workIdx > 0 && <button type="button" className="nova-btn nova-btn-accent" onClick={() => go(workIdx)}>View Work <span aria-hidden>→</span></button>}
+                {username && contactIdx > 0 && <button type="button" className="nova-btn nova-btn-ghost" onClick={() => go(contactIdx)}>Contact <span aria-hidden>✦</span></button>}
+                {p?.resume_url && <a className="nova-btn nova-btn-ghost" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">Download CV <span aria-hidden>↓</span></a>}
+              </div>
+
+              {socialRow("nova-h2-soc")}
+            </div>
+
+            {/* right — floating profile card */}
+            <div className="nova-h2-right">
+              <div className="nova-h2-card">
+                <span className="nova-h2-ring">
+                  {p?.avatar_url ? <img src={p.avatar_url} alt={name} loading="eager" /> : <span className="nova-h2-mono" aria-hidden>{mono}</span>}
+                </span>
+                <b className="nova-h2-cardname">{name}</b>
+                {p?.location && <span className="nova-h2-loc">⌖ {p.location}</span>}
+                <span className="nova-h2-clock">{clock || "—"}<i>local time</i></span>
+                <span className="nova-h2-badge"><i />Open to work</span>
+              </div>
+              <span className="nova-h2-float nova-h2-f1" aria-hidden>✦</span>
+              <span className="nova-h2-float nova-h2-f2" aria-hidden>◆</span>
+              <span className="nova-h2-float nova-h2-f3" aria-hidden>✧</span>
+            </div>
+          </div>
+
           <div className="nova-hint" aria-hidden><span className="nova-hint-mouse"><i /></span>scroll / swipe</div>
         </div>
       );
@@ -617,8 +645,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
 export default NovaTemplate;
 
 /* =====================================================================
-   STYLES — dark glass phone-UI. FULLPAGE SLIDER: page locked to viewport,
-   sections slide up from below; inner content scrolls internally only.
+   STYLES — dark glass. FULLPAGE SLIDER + AURORA SPOTLIGHT HERO.
    ===================================================================== */
 
 const NOVA_CSS = `
@@ -731,7 +758,6 @@ const NOVA_CSS = `
 .nova-btn-accent:hover{ transform:translateY(-2px); }
 .nova-btn-ghost{ background:var(--glass-2); color:var(--ink); }
 .nova-btn-ghost:hover{ transform:translateY(-2px); border-color:var(--accent); }
-.nova-hero-cta{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
 
 /* staggered rise-in for content of the ACTIVE slide */
 @keyframes nova-rise{ from{ opacity:0; transform:translateY(46px) scale(.97); } to{ opacity:1; transform:none; } }
@@ -751,59 +777,98 @@ const NOVA_CSS = `
 .nova-slide-cur .nova-stagger > *:nth-child(12){ animation-delay:.7s; }
 .nova-slide:not(.nova-slide-cur) .nova-stagger > *{ animation:none; opacity:0; }
 
-/* hero (slide 1) — fits the viewport */
-.nova-hero-wrap{ flex:1; display:flex; flex-direction:column; gap:14px; min-height:0; }
-.nova-porto{ display:flex; align-items:center; gap:12px; width:max-content; margin:0 auto; padding:7px 22px; border-radius:999px; font-family:var(--display); font-weight:700; letter-spacing:.42em; font-size:.74rem; color:var(--ink2); }
-.nova-dots{ display:inline-flex; gap:5px; }
-.nova-dots b{ width:6px; height:6px; border-radius:50%; background:var(--ink2); }
-.nova-hero{ flex:1; display:grid; grid-template-columns:54px 1fr 54px; gap:14px; align-items:stretch; min-height:0; }
-.nova-rail{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px 6px; border-radius:999px; background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px); box-shadow:inset 0 1px 0 rgba(255,255,255,.12); }
-.nova-rail-ic{ width:38px; height:38px; display:grid; place-items:center; border-radius:12px; background:var(--glass-2); color:var(--ink2); font-size:1rem; }
-.nova-rail-fp{ margin-top:auto; color:var(--ink2); }
-.nova-rail-r{ justify-content:flex-start; }
+/* ==================================================================
+   HERO — "AURORA SPOTLIGHT" (fully new design)
+   ================================================================== */
+.nova-hero2{ position:relative; flex:1; display:flex; flex-direction:column; justify-content:center; min-height:0; }
 
-.nova-bento{ display:grid; grid-template-columns:0.92fr 1.5fr 0.92fr; grid-template-rows:auto 1fr; grid-template-areas:"profile portrait status" "cc portrait weather"; gap:14px; align-items:stretch; min-height:0; perspective:1400px; }
-.nova-w{ transform-style:preserve-3d; transform:perspective(1400px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .25s ease; }
-.nova-slide-cur .nova-bento > *{ animation:nova-rise .7s cubic-bezier(.2,.8,.2,1) both; }
-.nova-slide-cur .nova-bento > *:nth-child(1){ animation-delay:.05s; }
-.nova-slide-cur .nova-bento > *:nth-child(2){ animation-delay:.14s; }
-.nova-slide-cur .nova-bento > *:nth-child(3){ animation-delay:.23s; }
-.nova-slide-cur .nova-bento > *:nth-child(4){ animation-delay:.32s; }
-.nova-slide-cur .nova-bento > *:nth-child(5){ animation-delay:.41s; }
-.nova-slide:not(.nova-slide-cur) .nova-bento > *{ animation:none; opacity:0; }
-.nova-profile{ grid-area:profile; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:18px 16px; }
-.nova-avatar-ring{ width:78px; height:78px; border-radius:50%; overflow:hidden; border:2px solid var(--line2); display:grid; place-items:center; background:var(--glass-2); }
-.nova-avatar-ring img{ width:100%; height:100%; object-fit:cover; }
-.nova-avatar-mono{ font-family:var(--display); font-weight:800; font-size:1.5rem; }
-.nova-profile-name{ font-weight:700; font-size:1rem; }
-.nova-profile-soc{ justify-content:center; }
-.nova-bell{ font-size:.74rem; color:var(--ink2); padding:6px 14px; border-radius:999px; background:var(--glass-2); border:1px solid var(--line); }
+/* aurora stage: spotlight beam + grid + drifting orbs */
+.nova-h2-stage{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.nova-h2-spot{ position:absolute; top:-34%; left:50%; width:min(900px,120vw); aspect-ratio:1; transform:translateX(-50%);
+  background:radial-gradient(circle at center, color-mix(in srgb, var(--accent) 30%, transparent), transparent 62%); filter:blur(12px); }
+.nova-h2-grid{ position:absolute; inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse 90% 78% at 50% 42%, #000 18%, transparent 70%);
+  mask-image:radial-gradient(ellipse 90% 78% at 50% 42%, #000 18%, transparent 70%); }
+.nova-h2-orb{ position:absolute; border-radius:50%; filter:blur(70px); opacity:.5; animation:nova-h2-drift 16s ease-in-out infinite alternate; }
+.nova-h2-orb-1{ width:380px; height:380px; top:4%; left:-6%; background:radial-gradient(circle, color-mix(in srgb,var(--accent) 55%, transparent), transparent 70%); }
+.nova-h2-orb-2{ width:300px; height:300px; bottom:-4%; right:2%; background:radial-gradient(circle, rgba(122,108,255,.45), transparent 70%); animation-delay:-6s; }
+.nova-h2-orb-3{ width:220px; height:220px; top:38%; left:44%; background:radial-gradient(circle, rgba(31,111,235,.4), transparent 70%); animation-delay:-11s; }
+@keyframes nova-h2-drift{ from{ transform:translate(0,0) scale(1);} to{ transform:translate(50px,-40px) scale(1.15);} }
 
-.nova-portrait{ grid-area:portrait; position:relative; overflow:hidden; min-height:0; padding:0; }
-.nova-portrait .nova-zoom{ position:absolute; inset:0; width:100%; height:100%; border-radius:var(--r); }
-.nova-portrait-ph{ position:absolute; inset:0; width:100%; height:100%; }
-.nova-selbar{ position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); z-index:3; display:flex; align-items:center; gap:2px; padding:4px; border-radius:12px; background:rgba(10,12,20,.82); border:1px solid var(--line); font-size:.78rem; }
-.nova-selbar span{ padding:6px 12px; border-radius:9px; }
-.nova-sel-mid{ background:var(--glass-2); }
-.nova-seltag{ position:absolute; top:53%; left:50%; transform:translateX(-50%); z-index:3; padding:3px 12px; border-radius:8px; background:var(--accent); color:var(--on-accent); font-size:.72rem; font-weight:700; }
-.nova-portrait-info{ position:absolute; left:0; right:0; bottom:0; z-index:2; padding:22px; pointer-events:none; background:linear-gradient(to top, rgba(4,6,14,.94) 8%, rgba(4,6,14,.5) 52%, transparent); }
-.nova-portrait-info > *{ pointer-events:auto; }
-.nova-name{ font-family:var(--display); font-weight:800; font-size:clamp(1.8rem,4.6vw,3.2rem); line-height:.95; letter-spacing:-.02em; text-transform:uppercase; margin:0; background:linear-gradient(180deg,#ffffff,#aeb7cc 55%,#5b6683); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 4px 14px rgba(0,0,0,.5)); }
-.nova-role{ margin:8px 0 0; font-weight:600; color:var(--accent); }
-.nova-intro{ margin:8px 0 0; color:#cfd6e6; max-width:46ch; font-size:.94rem; }
+.nova-h2-main{ position:relative; z-index:2; display:grid; grid-template-columns:1.25fr .75fr; gap:clamp(24px,4vw,56px); align-items:center; }
+.nova-slide-cur .nova-h2-main > *{ animation:nova-rise .8s cubic-bezier(.2,.8,.2,1) both; }
+.nova-slide-cur .nova-h2-main > .nova-h2-right{ animation-delay:.18s; }
+.nova-slide:not(.nova-slide-cur) .nova-h2-main > *{ animation:none; opacity:0; }
 
-.nova-status{ grid-area:status; display:flex; flex-direction:column; justify-content:center; gap:10px; padding:14px 18px; }
-.nova-clock{ font-family:var(--display); font-weight:800; font-size:1.6rem; }
-.nova-sys{ display:flex; align-items:center; gap:8px; }
-.nova-weather{ grid-area:weather; display:flex; align-items:center; gap:12px; padding:14px 18px; }
-.nova-weather span{ font-weight:600; }
-.nova-cc{ grid-area:cc; display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px; align-content:center; }
-.nova-cc-ic{ display:grid; place-items:center; aspect-ratio:1/1; border-radius:50%; background:var(--glass-2); border:1px solid var(--line); color:var(--ink2); }
-.nova-cc-green{ background:#1f9d55; border-color:#28c06a; color:#fff; }
-.nova-cc-blue{ background:#1f6feb; border-color:#3b8bff; color:#fff; }
+/* left — identity column */
+.nova-h2-left{ display:flex; flex-direction:column; gap:14px; min-width:0; align-items:flex-start; }
+.nova-h2-kicker{ display:inline-flex; align-items:center; gap:10px; width:max-content; max-width:100%; padding:7px 16px; border-radius:999px;
+  background:var(--glass-2); border:1px solid var(--line); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  font-size:.7rem; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--ink2); }
+.nova-h2-dot{ width:8px; height:8px; flex:0 0 auto; border-radius:50%; background:#2ecc71; animation:nova-h2-pulse 2s infinite; }
+@keyframes nova-h2-pulse{ 0%{ box-shadow:0 0 0 0 rgba(46,204,113,.45);} 70%{ box-shadow:0 0 0 10px rgba(46,204,113,0);} 100%{ box-shadow:0 0 0 0 rgba(46,204,113,0);} }
+
+.nova-h2-name{ margin:0; font-family:var(--display); font-weight:800; font-size:clamp(2.3rem,6.6vw,4.8rem); line-height:1.02; letter-spacing:-.03em; text-transform:uppercase;
+  background:linear-gradient(110deg, #fff 20%, color-mix(in srgb,var(--accent) 85%, #fff) 40%, #aeb7cc 55%, #fff 78%);
+  background-size:220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+  animation:nova-h2-shine 7s linear infinite; filter:drop-shadow(0 10px 34px rgba(0,0,0,.55)); }
+@keyframes nova-h2-shine{ to{ background-position:-220% 0; } }
+
+.nova-h2-role{ margin:0; font-family:var(--display); font-weight:700; font-size:clamp(1.02rem,2.4vw,1.45rem); color:var(--accent); min-height:1.6em; display:flex; align-items:center; }
+.nova-h2-caret{ display:inline-block; width:3px; height:1.05em; margin-left:5px; background:var(--accent); animation:nova-h2-blink 1s steps(1) infinite; }
+@keyframes nova-h2-blink{ 50%{ opacity:0; } }
+
+.nova-h2-bio{ margin:0; color:#cfd6e6; max-width:52ch; font-size:clamp(.92rem,1.4vw,1.02rem); }
+
+.nova-h2-stats{ display:flex; flex-wrap:wrap; gap:12px; margin-top:4px; }
+.nova-h2-stat{ display:flex; flex-direction:column; gap:3px; padding:12px 20px; border-radius:16px;
+  background:var(--glass-2); border:1px solid var(--line); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  transition:transform .2s ease, border-color .2s ease; }
+.nova-h2-stat:hover{ transform:translateY(-3px); border-color:var(--line2); }
+.nova-h2-stat b{ font-family:var(--display); font-weight:800; font-size:1.5rem; color:var(--ink); line-height:1; }
+.nova-h2-stat span{ font-size:.62rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--ink2); }
+
+.nova-h2-cta{ display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; }
+.nova-h2-soc{ margin-top:6px; }
+
+/* right — floating profile card */
+.nova-h2-right{ position:relative; display:flex; justify-content:center; padding:14px 8px; }
+.nova-h2-card{ position:relative; display:flex; flex-direction:column; align-items:center; gap:9px; padding:26px 32px;
+  background:var(--glass); border:1px solid var(--line); border-radius:28px;
+  backdrop-filter:blur(24px) saturate(1.4); -webkit-backdrop-filter:blur(24px) saturate(1.4);
+  box-shadow:0 30px 70px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.14);
+  animation:nova-h2-floaty 7s ease-in-out infinite; }
+@keyframes nova-h2-floaty{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-12px);} }
+
+.nova-h2-ring{ position:relative; width:clamp(120px,15vw,168px); aspect-ratio:1; border-radius:50%; display:grid; place-items:center;
+  background:conic-gradient(from 0deg, var(--accent), #7a6cff, color-mix(in srgb,var(--accent) 40%, #fff), #7a6cff, var(--accent));
+  animation:nova-h2-spin 9s linear infinite; }
+.nova-h2-ring::before{ content:""; position:absolute; inset:5px; border-radius:50%; background:radial-gradient(circle, #0a0e18 62%, #131a2c); }
+.nova-h2-ring img, .nova-h2-mono{ position:absolute; inset:12px; width:calc(100% - 24px); height:calc(100% - 24px); border-radius:50%; object-fit:cover; z-index:1; }
+.nova-h2-mono{ display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:2.3rem; color:var(--ink); }
+@keyframes nova-h2-spin{ to{ transform:rotate(360deg); } }
+
+.nova-h2-cardname{ font-family:var(--display); font-weight:700; font-size:1.02rem; }
+.nova-h2-loc{ font-size:.8rem; color:var(--ink2); }
+.nova-h2-clock{ display:flex; flex-direction:column; align-items:center; font-family:var(--display); font-weight:800; font-size:1.25rem; line-height:1.1; }
+.nova-h2-clock i{ font-style:normal; font-size:.6rem; font-weight:700; letter-spacing:.22em; text-transform:uppercase; color:var(--ink2); }
+.nova-h2-badge{ display:inline-flex; align-items:center; gap:8px; padding:6px 14px; border-radius:999px;
+  background:rgba(46,204,113,.12); border:1px solid rgba(46,204,113,.35); color:#7ee2a8;
+  font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+.nova-h2-badge i{ width:7px; height:7px; border-radius:50%; background:#2ecc71; animation:nova-h2-pulse 2s infinite; }
+
+/* floating deco chips around the card */
+.nova-h2-float{ position:absolute; display:grid; place-items:center; width:44px; height:44px; border-radius:14px;
+  background:var(--glass); border:1px solid var(--line); color:var(--accent); font-size:1rem;
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); animation:nova-h2-floaty 6s ease-in-out infinite; }
+.nova-h2-f1{ top:0; right:10%; animation-delay:-1s; }
+.nova-h2-f2{ bottom:8%; left:2%; animation-delay:-3s; }
+.nova-h2-f3{ top:42%; right:-3%; animation-delay:-5s; }
 
 /* scroll hint */
-.nova-hint{ display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; color:var(--ink2); font-size:.68rem; font-weight:700; letter-spacing:.3em; text-transform:uppercase; }
+.nova-hint{ display:flex; align-items:center; justify-content:center; gap:10px; margin-top:18px; color:var(--ink2); font-size:.68rem; font-weight:700; letter-spacing:.3em; text-transform:uppercase; }
 .nova-hint-mouse{ width:22px; height:34px; border:2px solid var(--line2); border-radius:12px; display:flex; justify-content:center; padding-top:5px; }
 .nova-hint-mouse i{ width:3px; height:7px; border-radius:99px; background:var(--accent); animation:nova-wheel 1.6s ease-in-out infinite; }
 @keyframes nova-wheel{ 0%{ transform:translateY(0); opacity:1; } 70%{ transform:translateY(10px); opacity:0; } 100%{ transform:translateY(0); opacity:0; } }
@@ -920,11 +985,12 @@ const NOVA_CSS = `
 /* responsive */
 @media (max-width:1040px){ .nova-grid-3{ grid-template-columns:repeat(2,1fr); } }
 @media (max-width:900px){
-  .nova-hero{ grid-template-columns:1fr; }
-  .nova-rail{ display:none; }
-  .nova-bento{ grid-template-columns:1fr 1fr; grid-template-rows:auto; grid-template-areas:"portrait portrait" "profile status" "cc weather"; }
-  .nova-portrait{ min-height:min(42vh,340px); }
-  .nova-w{ transform:none !important; }
+  .nova-h2-main{ grid-template-columns:1fr; gap:26px; }
+  .nova-h2-right{ order:-1; padding:10px 8px 4px; }
+  .nova-h2-card{ padding:18px 22px; }
+  .nova-h2-ring{ width:110px; }
+  .nova-h2-f3{ display:none; }
+  .nova-h2-name{ font-size:clamp(2rem,9vw,3rem); }
   .nova-about{ grid-template-columns:1fr; }
   .nova-contact{ grid-template-columns:1fr; }
   .nova-center{ padding:96px 16px 88px; }
@@ -933,25 +999,27 @@ const NOVA_CSS = `
   .nova-navdots{ right:auto; left:50%; top:auto; bottom:44px; transform:translateX(-50%); flex-direction:row; gap:9px; }
   .nova-nd-tip{ display:none; }
   .nova-nd.on .nova-nd-dot{ width:22px; height:8px; }
-  .nova-hint{ margin-top:10px; }
 }
 @media (max-width:600px){
-  .nova-bento{ grid-template-columns:1fr; grid-template-areas:"portrait" "profile" "status" "weather" "cc"; }
   .nova-grid-2, .nova-grid-3{ grid-template-columns:1fr; }
   .nova-tl-item{ grid-template-columns:1fr; gap:6px; }
   .nova-top-soc{ display:none; }
   .nova-brand-ava{ width:34px; height:34px; }
   .nova-counter{ font-size:.8rem; }
-  .nova-portrait{ min-height:min(46vh,360px); }
-  .nova-name{ font-size:1.7rem; }
+  .nova-h2-stats{ gap:9px; }
+  .nova-h2-stat{ padding:10px 15px; }
+  .nova-h2-stat b{ font-size:1.25rem; }
+  .nova-h2-float{ width:34px; height:34px; }
+  .nova-h2-f1{ top:-4%; right:2%; }
+  .nova-h2-f2{ bottom:0; left:-2%; }
+  .nova-h2-cta .nova-btn{ flex:1 1 auto; justify-content:center; }
 }
 
 @media (prefers-reduced-motion: reduce){
   .nova-root *{ animation:none !important; transition:none !important; }
-  .nova-w{ transform:none !important; }
   .nova-slide{ visibility:visible; }
   .nova-slide-above, .nova-slide-below{ display:none; }
-  .nova-slide-cur .nova-stagger > *, .nova-slide-cur .nova-bento > *{ opacity:1; }
+  .nova-slide-cur .nova-stagger > *, .nova-slide-cur .nova-h2-main > *{ opacity:1; }
   .nova-skill-fill{ width:var(--pct); }
 }
 `;
