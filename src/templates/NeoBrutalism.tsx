@@ -187,7 +187,8 @@ export function NeoBrutalism({ data }: { data: PublicPortfolio }) {
   const sections: Record<string, (n: number) => ReactNode> = {
     about: (n) => {
       const aboutText = p?.about ?? p?.bio ?? null;
-      const photo = data.gallery.find((g) => g.image_url)?.image_url || null;
+      // Get the profile avatar URL if it exists
+      const photo = p?.avatar_url || data.gallery.find((g) => g.image_url)?.image_url || null;
       return (
         <section className="neo-section neo-bg-white">
           <SectionHeader title={LABEL.about} />
@@ -411,24 +412,11 @@ export function NeoBrutalism({ data }: { data: PublicPortfolio }) {
                 {(p?.location || p?.availability) && <span className="neo-avail">{[p?.location, p?.availability].filter(Boolean).join(" · ")}</span>}
               </div>
             </div>
-            
-            {/* Added Profile Image to the right side */}
-            {p?.avatar_url && (
-              <div className="neo-hero-image-wrap">
-                <div className="neo-hero-image" style={{ ["--nc" as string]: neoColor(4) } as CSSProperties}>
-                  <img src={p.avatar_url} alt={name} />
-                </div>
-              </div>
-            )}
           </div>
           
-          {/* Abstract Hero Shapes (Shown if no avatar) */}
-          {!p?.avatar_url && (
-            <>
-              <div className="neo-shape neo-shape-1" style={{ ["--nc" as string]: neoColor(0) } as CSSProperties} aria-hidden />
-              <div className="neo-shape neo-shape-2" style={{ ["--nc" as string]: neoColor(1) } as CSSProperties} aria-hidden />
-            </>
-          )}
+          {/* Abstract Hero Shapes */}
+          <div className="neo-shape neo-shape-1" style={{ ["--nc" as string]: neoColor(0) } as CSSProperties} aria-hidden />
+          <div className="neo-shape neo-shape-2" style={{ ["--nc" as string]: neoColor(1) } as CSSProperties} aria-hidden />
         </header>
 
         {/* SECTIONS */}
@@ -467,7 +455,7 @@ export function NeoBrutalism({ data }: { data: PublicPortfolio }) {
                <span>© {new Date().getFullYear()} All rights reserved.</span>
              </div>
              
-             {/* Added Social Row in the Footer */}
+             {/* Social Row in Footer */}
              <div className="neo-footer-socials">
                 {socialRow()}
              </div>
@@ -582,24 +570,6 @@ p { font-weight: 500; font-size: 1rem; }
   flex: 1;
   max-width: 800px;
 }
-.neo-hero-image-wrap {
-  flex: 0 0 350px;
-  display: flex;
-  justify-content: center;
-}
-.neo-hero-image {
-  width: 100%;
-  aspect-ratio: 1;
-  border: var(--border-width) solid var(--border-color);
-  box-shadow: 8px 8px 0px var(--border-color);
-  background: var(--nc, var(--acc));
-  overflow: hidden;
-  border-radius: 12px;
-  transform: rotate(3deg);
-  transition: transform 0.3s ease;
-}
-.neo-hero-image:hover { transform: rotate(0deg); }
-.neo-hero-image img { width: 100%; height: 100%; object-fit: cover; }
 
 .neo-title {
   font-size: clamp(3rem, 8vw, 6rem);
@@ -763,7 +733,11 @@ p { font-weight: 500; font-size: 1rem; }
   box-shadow: var(--shadow);
   padding: 12px;
   margin: 0 auto;
+  border-radius: 12px;
+  transform: rotate(3deg);
+  transition: transform 0.3s ease;
 }
+.neo-about-img:hover { transform: rotate(0deg); }
 .neo-about-img .neo-zoom { aspect-ratio: 1; border: var(--border-width) solid var(--border-color); width: 100%; display: block; overflow: hidden; }
 .neo-about-img img { width: 100%; height: 100%; object-fit: cover; }
 .neo-about-txt { flex: 2 1 300px; font-size: 1.1rem; }
@@ -875,7 +849,6 @@ p { font-weight: 500; font-size: 1rem; }
   /* Hero Specific for smaller screens */
   .neo-hero-container { flex-direction: column-reverse; text-align: center; }
   .neo-hero-actions { justify-content: center; }
-  .neo-hero-image-wrap { flex: 0 0 auto; width: 100%; max-width: 300px; }
 }
 
 @media (max-width: 600px) {
