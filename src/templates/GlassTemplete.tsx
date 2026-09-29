@@ -499,7 +499,7 @@ export function GlassTemplete({ data }: { data: PublicPortfolio }) {
   );
 }
 
-export default NovaTemplate;
+export default GlassTemplete;
 
 /* =====================================================================
    STYLES — single-screen dark glass OS. The root is a fixed 100dvh
