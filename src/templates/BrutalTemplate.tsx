@@ -88,7 +88,7 @@ const SEC_ID: Record<string, string> = {
 
 /* ------------------------------ component ------------------------------ */
 
-export default function BrutalTemplate({ data }: { data: PublicPortfolio }) {
+export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const accent = data.accent || "#D4FF33";
 
