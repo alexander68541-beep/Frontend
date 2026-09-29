@@ -176,7 +176,8 @@ export function PopTemplate({ data }: { data: PublicPortfolio }) {
   // stable helpers
   const ZImg = useCallback(({ src, alt, cap, className }: { src: string; alt: string; cap?: string; className?: string }) => (
     <button type="button" className={`pop-zoom ${className || ""}`} onClick={() => openLb(src, alt, cap)} aria-label={alt ? `View image: ${alt}` : "View image"}>
-      <img src={src} alt={alt} loading="lazy" />
+      <img className="pop-zoom-bg" src={src} alt="" aria-hidden loading="lazy" />
+      <img className="pop-zoom-img" src={src} alt={alt} loading="lazy" />
     </button>
   ), [openLb]);
 
@@ -646,8 +647,7 @@ const POP_CSS = `
 .pop-hero-right{ position:relative; display:flex; justify-content:center; align-items:center; }
 .pop-bubble{ position:absolute; top:-6px; left:-6px; z-index:3; max-width:200px; padding:14px 18px; border-radius:20px 20px 20px 4px; background:var(--accent); color:var(--on-accent); font-size:1.05rem; line-height:1.2; box-shadow:0 12px 26px -12px rgba(0,0,0,.5); transform:rotate(-4deg); }
 .pop-portrait{ position:relative; width:min(360px,90%); aspect-ratio:1/1; border-radius:32px; overflow:visible; margin:0; }
-.pop-portrait .pop-zoom{ width:100%; height:100%; border-radius:32px; overflow:hidden; display:block; border:2px solid var(--line2); background:var(--panel2); }
-.pop-portrait .pop-zoom img{ width:100%; height:100%; object-fit:cover; }
+.pop-portrait .pop-zoom{ width:100%; height:100%; border-radius:32px; border:2px solid var(--line2); }
 .pop-portrait-ph{ width:100%; height:100%; display:grid; place-items:center; border-radius:32px; font-family:var(--display); font-size:4rem; font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#8b5cf6); }
 .pop-p-star{ position:absolute; top:-18px; right:-10px; width:40px; height:40px; color:#ffd23d; }
 .pop-p-bolt{ position:absolute; bottom:12px; right:-22px; width:30px; height:44px; color:var(--accent); }
@@ -660,8 +660,7 @@ const POP_CSS = `
 /* about */
 .pop-about{ display:grid; grid-template-columns:.85fr 1.15fr; gap:clamp(20px,3vw,44px); align-items:center; }
 .pop-about-card{ position:relative; border-radius:26px; overflow:hidden; background:var(--pc); aspect-ratio:1/1; }
-.pop-about-card .pop-zoom, .pop-about-card .pop-zoom img{ width:100%; height:100%; }
-.pop-about-card .pop-zoom img{ object-fit:cover; mix-blend-mode:luminosity; }
+.pop-about-card .pop-zoom{ width:100%; height:100%; }
 .pop-about-ph{ width:100%; height:100%; display:grid; place-items:center; font-family:var(--display); font-size:4rem; font-weight:800; color:#101208; }
 .pop-about-words{ position:absolute; top:14px; left:14px; z-index:2; font-size:1.05rem; color:#101208; transform:rotate(-6deg); max-width:60%; }
 .pop-about-star{ position:absolute; bottom:12px; right:12px; width:36px; height:36px; color:#101208; z-index:2; }
@@ -689,8 +688,7 @@ const POP_CSS = `
 .pop-proj{ background:var(--panel); border:1px solid var(--line); border-radius:22px; padding:10px; display:flex; flex-direction:column; transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
 .pop-proj:hover{ transform:translateY(-5px); border-color:var(--pc); box-shadow:0 24px 44px -26px var(--pc); }
 .pop-proj-media{ position:relative; border-radius:16px; overflow:hidden; aspect-ratio:4/3; background:linear-gradient(150deg,var(--pc),transparent 90%), var(--panel2); }
-.pop-proj-media .pop-zoom, .pop-proj-media .pop-zoom img{ width:100%; height:100%; }
-.pop-proj-media .pop-zoom img{ object-fit:cover; }
+.pop-proj-media .pop-zoom{ width:100%; height:100%; }
 .pop-proj-ph{ width:100%; height:100%; display:grid; place-items:center; font-family:var(--display); font-size:2rem; font-weight:800; color:#101208; background:var(--pc); }
 .pop-badge{ position:absolute; top:8px; left:8px; width:26px; height:26px; display:grid; place-items:center; border-radius:50%; font-size:.8rem; color:#101208; background:var(--pc); z-index:2; }
 .pop-proj-body{ padding:12px 8px 8px; }
@@ -723,8 +721,7 @@ const POP_CSS = `
 /* gallery */
 .pop-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:18px; }
 .pop-gitem{ border:2px solid var(--pc); border-radius:18px; overflow:hidden; background:var(--panel); }
-.pop-gitem .pop-zoom, .pop-gitem .pop-zoom img{ width:100%; }
-.pop-gitem .pop-zoom img{ aspect-ratio:1/1; object-fit:cover; }
+.pop-gitem .pop-zoom{ width:100%; aspect-ratio:1/1; }
 .pop-gitem figcaption{ padding:8px 12px; }
 
 /* videos */
@@ -733,10 +730,12 @@ const POP_CSS = `
 .pop-video-frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
 .pop-video figcaption{ padding:10px 14px; }
 
-/* zoom */
-.pop-zoom{ position:relative; display:block; padding:0; border:0; background:none; cursor:zoom-in; color:inherit; }
-.pop-zoom img{ transition:transform .4s ease; }
-.pop-zoom:hover img{ transform:scale(1.04); }
+/* zoom — any-size photo fits: blurred cover backdrop + full contained image */
+.pop-zoom{ position:relative; display:block; padding:0; border:0; cursor:zoom-in; color:inherit; overflow:hidden; background:var(--panel2); }
+.pop-zoom-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(26px) saturate(1.35); transform:scale(1.25); opacity:.55; }
+.pop-root[data-theme="light"] .pop-zoom-bg{ opacity:.42; }
+.pop-zoom-img{ position:relative; z-index:1; width:100%; height:100%; object-fit:contain; object-position:center; transition:transform .4s ease; }
+.pop-zoom:hover .pop-zoom-img{ transform:scale(1.03); }
 .pop-zoom:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
 /* testimonials */
