@@ -8,8 +8,8 @@ import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
    BrutalTemplate — "Brutal" — neo-brutalist Web3-marketplace theme.
-   UPDATED: Removed pure black, fixed scroll overlap (using clean gaps),
-   improved reveal animations & removed fixed heights.
+   UPDATED: True Neo-Brutalist Grid (Bento Box), Purple/Yellow Theme,
+   Sharp Black Shadows, Clean Smooth Scrolling.
    ===================================================================== */
 
 const DEFAULT_ORDER = [
@@ -84,7 +84,7 @@ const SEC_ID: Record<string, string> = {
 
 export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
-  const accent = data.accent || "#6B4CF0";
+  const accent = data.accent || "#5835FF"; // Purple Default
 
   const hidden = new Set(data.settings?.hidden ?? []);
   const sv = (k: string) => !hidden.has(k);
@@ -107,13 +107,13 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
     const targets = root.querySelectorAll("[data-reveal]");
     if (reduce || typeof IntersectionObserver === "undefined") { targets.forEach((el) => el.classList.add("br-in")); return; }
     
-    // Improved Intersection Observer for smooth reveal when scrolling down
+    // Smooth reveal observer
     const io = new IntersectionObserver((entries) => entries.forEach((e) => { 
       if (e.isIntersecting) { 
         e.target.classList.add("br-in"); 
         io.unobserve(e.target); 
       } 
-    }), { threshold: 0.05, rootMargin: "0px 0px -50px 0px" });
+    }), { threshold: 0.05, rootMargin: "0px 0px -20px 0px" });
     
     targets.forEach((el) => io.observe(el));
     return () => io.disconnect();
@@ -128,26 +128,6 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
     closeRef.current?.focus();
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [lb]);
-
-  // 3D pointer tilt
-  useEffect(() => {
-    const el = tiltRef.current;
-    if (!el) return;
-    const mm = (q: string) => (typeof window.matchMedia === "function" ? window.matchMedia(q) : null);
-    if (mm("(prefers-reduced-motion: reduce)")?.matches) return;
-    if (mm("(pointer: fine)") && !mm("(pointer: fine)")!.matches) return;
-    const onMove = (e: PointerEvent) => {
-      const r = el.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5;
-      const y = (e.clientY - r.top) / r.height - 0.5;
-      el.style.setProperty("--rx", `${(-y * 6).toFixed(2)}deg`);
-      el.style.setProperty("--ry", `${(x * 8).toFixed(2)}deg`);
-    };
-    const reset = () => { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); };
-    el.addEventListener("pointermove", onMove);
-    el.addEventListener("pointerleave", reset);
-    return () => { el.removeEventListener("pointermove", onMove); el.removeEventListener("pointerleave", reset); };
-  }, []);
 
   const has = {
     about: sv("about") && !!(p?.about || p?.bio || p?.tagline),
@@ -190,8 +170,8 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       </div>
     ) : null;
 
-  const bar = (title: string) => (
-    <div className="br-bar"><span className="br-dots" aria-hidden><i /><i /><i /></span><span className="br-bar-title">{title}</span><span className="br-bar-x" aria-hidden>⤢</span></div>
+  const bar = (title: string, customClass?: string) => (
+    <div className={`br-bar ${customClass || ""}`}><span className="br-dots" aria-hidden><i /><i /><i /></span><span className="br-bar-title">{title}</span><span className="br-bar-x" aria-hidden>⤢</span></div>
   );
 
   const sections: Record<string, () => ReactNode> = {
@@ -199,9 +179,9 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       const aboutText = p?.about ?? p?.bio ?? null;
       return (
         <div className="br-window br-window-lime">
-          {bar("ABOUT / LATEST")}
+          {bar("LATEST EVENT", "br-bar-lime")}
           <div className="br-window-in">
-            <h3 className="br-lime-h">{p?.tagline || `${nick} is live.`}</h3>
+            <h3 className="br-lime-h">{p?.tagline || `${nick} V2 IS LIVE`}</h3>
             {aboutText && aboutText.split(/\n{2,}/).slice(0, 2).map((para, i) => <p key={i} className="br-lime-p">{para}</p>)}
             {p?.resume_url && <a className="br-btn br-btn-dark br-mt" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">Learn More <span aria-hidden>→</span></a>}
           </div>
@@ -213,7 +193,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       return (
         <div className="br-window">
           {bar("TRENDING COLLECTIONS")}
-          <div className="br-window-in"><div className="br-grid-3">
+          <div className="br-window-in"><div className="br-grid-2">
             {ordered.map((pr) => {
               const category = pr.role || (pr.tags && pr.tags[0]) || null;
               return (
@@ -235,7 +215,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       const sorted = [...data.skills].map((s) => ({ s, lvl: levelPct(s.level) })).sort((a, b) => (b.lvl ?? 0) - (a.lvl ?? 0));
       return (
         <div className="br-window">
-          {bar("TOP SKILLS · LEADERBOARD")}
+          {bar("TOP SKILLS (7D)")}
           <div className="br-window-in"><ol className="br-lead">
             {sorted.map(({ s, lvl }, i) => (
               <li key={s.id} className="br-lead-row" style={{ ["--pct" as string]: `${lvl ?? 0}%` } as CSSProperties}>
@@ -251,16 +231,16 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       );
     },
     services: () => (
-      <div className="br-window">
-        {bar(`WHY ${nick.toUpperCase()}?`)}
+      <div className="br-window br-window-dark">
+        {bar(`WHY ${nick.toUpperCase()}?`, "br-bar-dark")}
         <div className="br-window-in"><div className="br-feats">
-          {data.services.map((s) => (<div key={s.id} className="br-feat"><span className="br-feat-ic" aria-hidden>◆</span><div><h4 className="br-feat-h">{s.title}</h4>{s.description && <p className="br-feat-p">{s.description}</p>}{s.price && <span className="br-floor">{s.price}</span>}</div></div>))}
+          {data.services.map((s) => (<div key={s.id} className="br-feat"><span className="br-feat-ic" aria-hidden>⚡</span><div><h4 className="br-feat-h">{s.title}</h4>{s.description && <p className="br-feat-p">{s.description}</p>}{s.price && <span className="br-floor">{s.price}</span>}</div></div>))}
         </div></div>
       </div>
     ),
     experience: () => (
-      <div className="br-window">
-        {bar("EXPERIENCE / TIMELINE")}
+      <div className="br-window br-window-dark">
+        {bar("EXPERIENCE / TIMELINE", "br-bar-dark")}
         <div className="br-window-in"><div className="br-tl">
           {data.experience.map((e) => (<div key={e.id} className="br-tl-row"><span className="br-tl-date">{dateRange(e.start_date, e.end_date, e.is_current)}</span><div><h4 className="br-feat-h">{e.title || e.company || "Role"}</h4><p className="br-muted br-small">{[e.company, e.location].filter(Boolean).join(" · ")}</p>{e.description && <p className="br-muted">{e.description}</p>}</div></div>))}
         </div></div>
@@ -272,12 +252,12 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       </div></div></div>
     ),
     certifications: () => (
-      <div className="br-window">{bar("CERTIFICATIONS")}<div className="br-window-in"><div className="br-grid-3">
+      <div className="br-window">{bar("CERTIFICATIONS")}<div className="br-window-in"><div className="br-grid-2">
         {data.certifications.map((c) => { const body = (<><span className="br-feat-ic" aria-hidden>✓</span><h4 className="br-feat-h">{c.name}</h4>{c.issuer && <p className="br-muted br-small">{c.issuer}</p>}{oneDate(c.issue_date) && <span className="br-floor">{oneDate(c.issue_date)}</span>}</>); return c.url ? <a key={c.id} className="br-mini br-mini-link" href={ext(c.url)} target="_blank" rel="noopener noreferrer">{body}</a> : <div key={c.id} className="br-mini">{body}</div>; })}
       </div></div></div>
     ),
     achievements: () => (
-      <div className="br-window">{bar("ACHIEVEMENTS")}<div className="br-window-in"><div className="br-grid-3">
+      <div className="br-window">{bar("ACHIEVEMENTS")}<div className="br-window-in"><div className="br-grid-2">
         {data.achievements.map((a) => (<div key={a.id} className="br-mini"><span className="br-feat-ic" aria-hidden>★</span><h4 className="br-feat-h">{a.title}</h4>{oneDate(a.date) && <span className="br-floor">{oneDate(a.date)}</span>}{a.description && <p className="br-muted br-small">{a.description}</p>}</div>))}
       </div></div></div>
     ),
@@ -287,7 +267,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       </div></div></div>
     ),
     gallery: () => (
-      <div className="br-window">{bar("GALLERY / VAULT")}<div className="br-window-in"><div className="br-gallery">
+      <div className="br-window">{bar("GALLERY")}<div className="br-window-in"><div className="br-gallery">
         {data.gallery.map((g) => g.image_url ? (<figure key={g.id} className="br-gitem"><ZImg src={g.image_url} alt={g.caption || "Gallery image"} cap={g.caption || undefined} />{g.caption && <figcaption className="br-muted br-small">{g.caption}</figcaption>}</figure>) : null)}
       </div></div></div>
     ),
@@ -297,20 +277,20 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       </div></div></div>
     ),
     testimonials: () => (
-      <div className="br-window">{bar("WHAT CLIENTS SAY")}<div className="br-window-in"><div className="br-grid-3">
+      <div className="br-window">{bar("WHAT CLIENTS SAY")}<div className="br-window-in"><div className="br-list">
         {data.testimonials.map((t) => (<figure key={t.id} className="br-quote"><span className="br-quote-mark" aria-hidden>&ldquo;</span>{t.quote && <blockquote>{t.quote}</blockquote>}<figcaption className="br-quote-by"><span className="br-lead-ic" aria-hidden>{t.avatar_url ? <img src={t.avatar_url} alt="" loading="lazy" /> : initials(t.author, "•")}</span><span>{t.author && <b>{t.author}</b>}{t.role && <em className="br-muted">{t.role}</em>}</span></figcaption></figure>))}
       </div></div></div>
     ),
   };
 
-  const headlineText = p?.tagline || `${name}. Built different.`;
+  const headlineText = p?.tagline || `BUILT FOR ${nick.toUpperCase()}. MADE FOR THE FUTURE.`;
   const heroStats = [
     { n: data.projects.length, label: "Projects" },
     { n: data.skills.length, label: "Skills" },
     { n: data.testimonials.length, label: "Clients" },
   ].filter((s) => s.n > 0).slice(0, 3);
-  const tickerWords = [name, p?.title, p?.location, p?.availability, "Portfolio"].filter(Boolean) as string[];
-  const ticker = tickerWords.length ? tickerWords.join("  ✦  ") : "Portfolio  ✦  Available for work";
+  const tickerWords = ["LIVE TRADING", "SCALABLE", "SECURE", "COMMUNITY DRIVEN"];
+  const ticker = tickerWords.join("  •  ");
   const year = new Date().getFullYear();
 
   return (
@@ -323,7 +303,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
           <a className="br-logo" href="#top"><span className="br-logo-box" aria-hidden>{mono}</span><span className="br-logo-txt"><b>{name}</b>{p?.title && <em>{p.title}</em>}</span></a>
           {navItems.length > 1 && <nav className="br-navlinks" aria-label="Primary">{navItems.map((it, i) => <a key={it.href} href={it.href} className={i === 0 ? "is-active" : ""}>{it.label}</a>)}</nav>}
           <div className="br-nav-right">
-            {contactHref && <a className="br-btn br-btn-lime br-nav-cta" href={contactHref}>Connect</a>}
+            {contactHref && <a className="br-btn br-btn-lime br-nav-cta" href={contactHref}>Connect Wallet</a>}
             {navItems.length > 1 && <details className="br-menu">
               <summary aria-label="Menu">
                 <span className="br-menu-line"></span>
@@ -337,48 +317,38 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       </header>
 
       {/* TICKER */}
-      <div className="br-ticker" aria-hidden><div className="br-ticker-track"><span>{`${ticker}  ✦  `.repeat(6)}</span><span>{`${ticker}  ✦  `.repeat(6)}</span></div></div>
+      <div className="br-ticker" aria-hidden><div className="br-ticker-track"><span>{` •  ${ticker}  `.repeat(6)}</span><span>{` •  ${ticker}  `.repeat(6)}</span></div></div>
 
-      {/* PANELS STACK (Gap based naturally flowing scroll) */}
-      <main className="br-stack">
+      {/* PANELS GRID (Bento Box Style without overlaps) */}
+      <main className="br-shell br-stack">
         
-        {/* HERO SECTION */}
-        <section className="br-panel br-panel-first" data-reveal>
-          <div className="br-shell br-panel-in">
-            <div className="br-hero">
-              <div className="br-hero-left">
-                <span className="br-eyebrow">{p?.title || "Portfolio"}</span>
-                <h1 className="br-headline">{headlineText.split(/\s+/).map((w, i) => <span key={i} className={i % 2 === 1 ? "br-hl" : "br-hlx"}>{w} </span>)}</h1>
-                {p?.bio && <p className="br-sub">{p.bio}</p>}
-                <div className="br-btnrow">
-                  {has.projects && <a className="br-btn br-btn-lime" href="#work">Start Trading <span aria-hidden>→</span></a>}
-                  {contactHref && <a className="br-btn br-btn-dark" href={contactHref}>Explore <span aria-hidden>→</span></a>}
-                </div>
-                {socialRow("br-hero-soc")}
+        {/* HERO SECTION - Span Full Width */}
+        <section className="br-panel-hero" data-reveal>
+          <div className="br-hero">
+            <div className="br-hero-left">
+              <h1 className="br-headline">{headlineText.split(/\s+/).map((w, i) => <span key={i} className="br-hl">{w} </span>)}</h1>
+              {p?.bio && <p className="br-sub">{p.bio}</p>}
+              <div className="br-btnrow">
+                {has.projects && <a className="br-btn br-btn-lime" href="#work">START TRADING <span aria-hidden>→</span></a>}
+                {contactHref && <a className="br-btn br-btn-light" href={contactHref}>EXPLORE MARKET <span aria-hidden>→</span></a>}
               </div>
+            </div>
 
-              <div className="br-hero-right br-tilt" ref={tiltRef}>
-                {p?.avatar_url && (
-                  <div className="br-window br-photo">
-                    {bar("PROFILE")}
-                    <div className="br-photo-in"><ZImg src={p.avatar_url} alt={name} /></div>
+            <div className="br-hero-right br-tilt" ref={tiltRef}>
+              <div className="br-window">
+                {bar("MARKET OVERVIEW")}
+                <div className="br-window-in">
+                  <div className="br-ov-top">
+                    <div><span className="br-ov-label">TOTAL VOLUME</span><div className="br-ov-big">$ 2.48B</div></div>
+                    {p?.location && <span className="br-ov-chip">+24.5%</span>}
                   </div>
-                )}
-                <div className="br-window br-overview">
-                  {bar("OVERVIEW")}
-                  <div className="br-window-in">
-                    <div className="br-ov-top">
-                      <div><span className="br-ov-label">STATUS</span><div className="br-ov-big">{p?.availability || "Available"}</div></div>
-                      {p?.location && <span className="br-ov-chip">{p.location}</span>}
-                    </div>
-                    <svg className="br-chart" viewBox="0 0 300 80" preserveAspectRatio="none" aria-hidden>
-                      <path d="M0 62 L30 54 L60 58 L90 40 L120 46 L150 26 L180 36 L210 20 L240 30 L270 12 L300 22" fill="none" stroke="var(--accent)" strokeWidth="3" />
-                      <path d="M0 62 L30 54 L60 58 L90 40 L120 46 L150 26 L180 36 L210 20 L240 30 L270 12 L300 22 L300 80 L0 80 Z" fill="var(--accent)" opacity=".14" />
-                    </svg>
-                    {heroStats.length > 0 && (
-                      <div className="br-ov-stats">{heroStats.map((s) => (<div key={s.label} className="br-ov-stat"><b>{s.n}</b><span>{s.label}</span></div>))}</div>
-                    )}
-                  </div>
+                  <svg className="br-chart" viewBox="0 0 300 80" preserveAspectRatio="none" aria-hidden>
+                    <path d="M0 62 L30 54 L60 58 L90 40 L120 46 L150 26 L180 36 L210 20 L240 30 L270 12 L300 22" fill="none" stroke="var(--tpl-accent)" strokeWidth="3" />
+                    <path d="M0 62 L30 54 L60 58 L90 40 L120 46 L150 26 L180 36 L210 20 L240 30 L270 12 L300 22 L300 80 L0 80 Z" fill="var(--tpl-accent)" opacity=".14" />
+                  </svg>
+                  {heroStats.length > 0 && (
+                    <div className="br-ov-stats">{heroStats.map((s) => (<div key={s.label} className="br-ov-stat"><b>{s.n}</b><span>{s.label}</span></div>))}</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -387,30 +357,28 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
 
         {/* DATA SECTION PANELS */}
         {order.map((k) => (
-          <section key={k} id={SEC_ID[k] || k} className="br-panel" data-reveal>
-            <div className="br-shell br-panel-in">{sections[k] ? sections[k]() : null}</div>
+          <section key={k} id={SEC_ID[k] || k} className={`br-panel br-${k}`} data-reveal>
+            {sections[k] ? sections[k]() : null}
           </section>
         ))}
 
         {/* CONTACT PANEL */}
         {username && (
-          <section id="contact" className="br-panel" data-reveal>
-            <div className="br-shell br-panel-in">
-              <div className="br-window">
-                {bar("JOIN THE FUTURE")}
-                <div className="br-window-in br-contact">
-                  <div className="br-contact-left">
-                    <h3 className="br-join-h">Let&apos;s build something together.</h3>
-                    <div className="br-contact-rows">
-                      {p?.email && <a className="br-crow" href={`mailto:${p.email}`}><span aria-hidden>✉</span><span>{p.email}</span></a>}
-                      {p?.phone && <a className="br-crow" href={`tel:${p.phone}`}><span aria-hidden>☎</span><span>{p.phone}</span></a>}
-                      {p?.website && <a className="br-crow" href={ext(p.website)} target="_blank" rel="noopener noreferrer"><span aria-hidden>◈</span><span>{p.website.replace(/^https?:\/\//, "")}</span></a>}
-                      {p?.location && <div className="br-crow"><span aria-hidden>⌖</span><span>{p.location}</span></div>}
-                    </div>
-                    {socialRow()}
+          <section id="contact" className="br-panel br-contact-sec" data-reveal>
+            <div className="br-window">
+              {bar("JOIN THE FUTURE")}
+              <div className="br-window-in br-contact">
+                <div className="br-contact-left">
+                  <h3 className="br-join-h">OF DIGITAL OWNERSHIP.</h3>
+                  <p className="br-muted-dark">Trade. Collect. Earn. All in one place.</p>
+                  <div className="br-contact-rows">
+                    {p?.email && <a className="br-crow" href={`mailto:${p.email}`}><span aria-hidden>✉</span><span>{p.email}</span></a>}
+                    {p?.phone && <a className="br-crow" href={`tel:${p.phone}`}><span aria-hidden>☎</span><span>{p.phone}</span></a>}
+                    {p?.website && <a className="br-crow" href={ext(p.website)} target="_blank" rel="noopener noreferrer"><span aria-hidden>◈</span><span>{p.website.replace(/^https?:\/\//, "")}</span></a>}
                   </div>
-                  <div className="br-formcard"><ContactForm username={username} /></div>
+                  {socialRow()}
                 </div>
+                <div className="br-formcard"><ContactForm username={username} /></div>
               </div>
             </div>
           </section>
@@ -420,9 +388,21 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       {/* FOOTER */}
       <footer className="br-footer">
         <div className="br-shell br-footer-in">
-          <a className="br-logo br-logo-foot" href="#top"><span className="br-logo-box" aria-hidden>{mono}</span><span className="br-logo-txt"><b>{name}</b>{p?.title && <em>{p.title}</em>}</span></a>
-          {navItems.length > 1 && <nav className="br-footer-nav" aria-label="Footer">{navItems.filter((n) => n.href !== "#top").map((it) => <a key={it.href} href={it.href}>{it.label}</a>)}</nav>}
-          <div className="br-footer-right">{socialRow("br-foot-soc")}<span className="br-foot-copy">© {year} {name}{!data.hide_branding && <> · <a className="br-madewith" href="https://folio.assetprim.com" target="_blank" rel="noopener noreferrer">Folio</a></>}</span></div>
+          <div className="br-foot-col">
+            <a className="br-logo br-logo-foot" href="#top"><span className="br-logo-box" aria-hidden>{mono}</span><span className="br-logo-txt"><b>{name}</b></span></a>
+            <div className="br-foot-soc">{socialRow()}</div>
+            <span className="br-foot-copy">© {year} {name}. All rights reserved.</span>
+          </div>
+          {navItems.length > 1 && (
+            <div className="br-foot-col">
+              <span className="br-foot-label">MARKET</span>
+              <nav className="br-footer-nav" aria-label="Footer">{navItems.filter((n) => n.href !== "#top").map((it) => <a key={it.href} href={it.href}>{it.label}</a>)}</nav>
+            </div>
+          )}
+          <div className="br-foot-col">
+             <span className="br-foot-label">STAY UPDATED</span>
+             <a className="br-btn br-btn-lime br-mt" href={contactHref || "#"}>SUBSCRIBE <span aria-hidden>→</span></a>
+          </div>
         </div>
       </footer>
 
@@ -440,300 +420,297 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
 export default BrutalTemplate;
 
 /* =====================================================================
-   STYLES — neo-brutalist. Canvas = data.accent; lime is the fixed pop.
-   Updated: Separated sections with smooth natural gaps to fix scroll bugs.
+   STYLES — neo-brutalist. Pure grid, sharp shadows, high contrast.
    ===================================================================== */
 
 const BR_CSS = `
 .br-root{
-  --acc-bg:var(--tpl-accent,#6B4CF0); --bg-solid:var(--acc-bg);
-  --accent:#d4ff33; --on-accent:#6969f2;
-  --card:#101018; --wht:#ffffff; --muted:rgba(255,255,255,0.85);
+  --acc-bg:var(--tpl-accent,#5835FF); 
+  --accent:#D4FF33; 
+  --on-accent:#000000;
+  --card:#ffffff; 
+  --card-dark:#000000;
+  --text-main:#000000;
+  --text-light:#ffffff;
+  --border:#000000;
+  --muted:#555555;
   --nav-h:66px;
-  --sh:6px 6px 0 #08060f; --sh-sm:4px 4px 0 #08060f;
+  
+  --sh:6px 6px 0 #000000; 
+  --sh-sm:4px 4px 0 #000000;
+  
   --display:"Archivo Black","Bricolage Grotesque","Inter",ui-sans-serif,system-ui,sans-serif;
   --mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
   --body:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   
-  position:relative; isolation:isolate; color:var(--wht);
+  position:relative; isolation:isolate; color:var(--text-main);
   font-family:var(--body); font-size:16px; font-weight:600; line-height:1.6; -webkit-font-smoothing:antialiased;
   overflow-x:hidden; min-height:100%; scroll-behavior:smooth;
   
   background-color:var(--acc-bg);
-  background-image:
-    radial-gradient(120% 80% at 50% -12%, color-mix(in srgb, var(--acc-bg) 60%, #ffffff 40%), transparent 62%),
-    linear-gradient(180deg, var(--acc-bg), color-mix(in srgb, var(--acc-bg) 30%, #101018 70%));
 }
 .br-root *{ box-sizing:border-box; }
 .br-root img{ max-width:100%; display:block; }
 .br-root a{ color:inherit; }
 .br-root h1,.br-root h2,.br-root h3,.br-root h4,.br-root p,.br-root blockquote{ overflow-wrap:anywhere; }
-.br-shell{ width:100%; max-width:1180px; margin-inline:auto; padding-inline:clamp(16px,3.5vw,32px); }
-.br-muted{ color:var(--muted); margin:6px 0 0; font-weight:500; }
+.br-shell{ width:100%; max-width:1280px; margin-inline:auto; padding-inline:clamp(16px,4vw,40px); }
+.br-muted{ color:var(--muted); margin:6px 0 0; font-weight:600; }
+.br-muted-dark{ color:#aaaaaa; margin:6px 0 0; font-weight:600; }
 .br-small{ font-size:.86rem; }
 .br-mt{ margin-top:16px; }
 
-/* REVEAL ANIMATIONS (Beautiful slide up) */
+/* SMOOTH REVEAL ANIMATIONS */
 .br-root.br-ready [data-reveal]{ 
   opacity:0; 
-  transform:translateY(60px) scale(0.98); 
-  transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+  transform:translateY(30px); 
+  transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); 
   will-change:opacity, transform; 
 }
 .br-root.br-ready [data-reveal].br-in{ 
   opacity:1; 
-  transform:translateY(0) scale(1); 
+  transform:translateY(0); 
 }
 
 /* buttons */
-.br-btn{ display:inline-flex; align-items:center; gap:9px; padding:13px 22px; font-family:var(--display); text-transform:uppercase; font-size:.85rem; font-weight:700; letter-spacing:.02em; border:2.5px solid #000; border-radius:5px; cursor:pointer; text-decoration:none; box-shadow:var(--sh-sm); transition:transform .1s ease, box-shadow .1s ease; }
-.br-btn:hover, .br-btn:active{ transform:translate(3px,3px); box-shadow:1px 1px 0 #0a0a12; }
-.br-btn:focus-visible{ outline:3px solid #000; outline-offset:2px; }
+.br-btn{ display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 24px; font-family:var(--display); text-transform:uppercase; font-size:.9rem; font-weight:800; letter-spacing:.02em; border:3px solid var(--border); border-radius:0px; cursor:pointer; text-decoration:none; box-shadow:var(--sh-sm); transition:transform .1s ease, box-shadow .1s ease; }
+.br-btn:hover, .br-btn:active{ transform:translate(3px,3px); box-shadow:1px 1px 0 var(--border); }
+.br-btn:focus-visible{ outline:3px solid var(--border); outline-offset:2px; }
 .br-btn-lime{ background:var(--accent); color:var(--on-accent); }
-.br-btn-dark{ background:#6969f2; color:var(--wht); }
-.br-btnrow{ display:flex; flex-wrap:wrap; gap:14px; margin-top:26px; }
+.br-btn-dark{ background:var(--card-dark); color:var(--text-light); }
+.br-btn-light{ background:var(--card); color:var(--text-main); }
+.br-btnrow{ display:flex; flex-wrap:wrap; gap:16px; margin-top:28px; }
 
 /* nav */
-.br-nav{ position:sticky; top:0; z-index:60; background:var(--bg); border-bottom:3px solid #000; }
-.br-nav-in{ display:flex; align-items:center; gap:16px; padding-block:11px; }
-.br-logo{ display:flex; align-items:center; gap:10px; text-decoration:none; min-width:0; }
-.br-logo-box{ width:42px; height:42px; flex:0 0 auto; display:grid; place-items:center; border:2.5px solid #000; border-radius:6px; background:var(--accent); color:#0b0b10; font-family:var(--display); font-size:.95rem; box-shadow:3px 3px 0 #0a0a12; }
+.br-nav{ position:sticky; top:0; z-index:60; background:#000000; border-bottom:3px solid var(--border); color:var(--text-light); }
+.br-nav-in{ display:flex; align-items:center; gap:20px; padding-block:12px; }
+.br-logo{ display:flex; align-items:center; gap:12px; text-decoration:none; min-width:0; }
+.br-logo-box{ width:42px; height:42px; flex:0 0 auto; display:grid; place-items:center; border:2.5px solid var(--text-light); border-radius:0px; background:transparent; color:var(--text-light); font-family:var(--display); font-size:.95rem; }
 .br-logo-txt{ display:flex; flex-direction:column; line-height:1; min-width:0; }
-.br-logo-txt b{ font-family:var(--display); font-size:1.1rem; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40vw; }
-.br-logo-txt em{ font-style:normal; font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; color:var(--wht); opacity:.85; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40vw; }
-.br-navlinks{ display:flex; gap:4px; margin-inline:auto; padding:5px; border:2.5px solid #000; border-radius:999px; background:#0b0b10; box-shadow:3px 3px 0 #0a0a12; }
-.br-navlinks a{ text-decoration:none; color:var(--wht); font-family:var(--display); text-transform:uppercase; font-size:.76rem; font-weight:700; padding:8px 16px; border-radius:999px; }
-.br-navlinks a:hover{ color:var(--accent); }
-.br-navlinks a.is-active{ background:var(--accent); color:#0b0b10; }
+.br-logo-txt b{ font-family:var(--display); font-size:1.1rem; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40vw; text-transform:uppercase; }
+.br-logo-txt em{ font-style:normal; font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; color:var(--accent); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40vw; text-transform:uppercase; }
+.br-navlinks{ display:flex; gap:18px; margin-inline:auto; }
+.br-navlinks a{ text-decoration:none; color:var(--text-light); font-family:var(--display); text-transform:uppercase; font-size:.8rem; font-weight:700; padding:8px 12px; border:2px solid transparent;}
+.br-navlinks a:hover{ color:var(--accent); border-bottom-color:var(--accent); }
+.br-navlinks a.is-active{ color:var(--accent); border-bottom-color:var(--accent); }
 .br-nav-right{ display:flex; align-items:center; gap:12px; }
-.br-nav-cta{ padding:11px 20px; font-size:.8rem; }
+.br-nav-cta{ padding:10px 20px; font-size:.8rem; box-shadow: 4px 4px 0px var(--accent); border-color:var(--accent); color:var(--text-light); background:transparent; }
+.br-nav-cta:hover{ box-shadow: 1px 1px 0px var(--accent); color:var(--text-light); }
 .br-menu{ position:relative; display:none; }
-.br-menu summary{ list-style:none; width:48px; height:48px; border-radius:8px; cursor:pointer; display:grid; place-items:center; gap:5px; border:2.5px solid #000; background:#0b0b10; box-shadow:3px 3px 0 #0a0a12; padding:10px; }
+.br-menu summary{ list-style:none; width:48px; height:48px; border-radius:0px; cursor:pointer; display:grid; place-items:center; gap:5px; border:2.5px solid var(--text-light); background:transparent; padding:10px; }
 .br-menu summary::-webkit-details-marker{ display:none; }
-.br-menu-line{ display:block; width:100%; height:3px; background:var(--wht); border-radius:2px; }
+.br-menu-line{ display:block; width:100%; height:3px; background:var(--text-light); }
 .br-menu[open] summary .br-menu-line:nth-child(1){ transform:translateY(8px) rotate(45deg); transition:all .2s; }
 .br-menu[open] summary .br-menu-line:nth-child(2){ opacity:0; }
 .br-menu[open] summary .br-menu-line:nth-child(3){ transform:translateY(-8px) rotate(-45deg); transition:all .2s; }
-.br-menu ul{ position:absolute; right:0; top:60px; min-width:220px; list-style:none; margin:0; padding:10px; z-index:50; border:3px solid #000; border-radius:12px; background:#0b0b10; box-shadow:var(--sh); }
-.br-menu ul a{ display:block; padding:12px 14px; border-radius:6px; text-decoration:none; color:var(--wht); font-family:var(--display); text-transform:uppercase; font-size:.85rem; font-weight:700; margin-bottom:4px; }
-.br-menu ul a:hover{ background:var(--accent); color:#0b0b10; }
+.br-menu ul{ position:absolute; right:0; top:60px; min-width:220px; list-style:none; margin:0; padding:10px; z-index:50; border:3px solid var(--border); border-radius:0px; background:#ffffff; box-shadow:var(--sh); }
+.br-menu ul a{ display:block; padding:12px 14px; text-decoration:none; color:var(--text-main); font-family:var(--display); text-transform:uppercase; font-size:.85rem; font-weight:700; margin-bottom:4px; border: 2px solid transparent;}
+.br-menu ul a:hover{ background:var(--accent); border-color:var(--border); }
 
 /* ticker */
-.br-ticker{ position:relative; z-index:50; background:#6969f2; border-bottom:3px solid #000; overflow:hidden; padding:10px 0; }
-.br-ticker-track{ display:flex; white-space:nowrap; font-family:var(--display); font-weight:700; text-transform:uppercase; font-size:.86rem; letter-spacing:.14em; color:var(--accent); animation:br-scroll 26s linear infinite; }
+.br-ticker{ position:relative; z-index:50; background:var(--accent); border-bottom:4px solid var(--border); overflow:hidden; padding:12px 0; }
+.br-ticker-track{ display:flex; white-space:nowrap; font-family:var(--mono); font-weight:800; text-transform:uppercase; font-size:.9rem; letter-spacing:.14em; color:var(--on-accent); animation:br-scroll 20s linear infinite; }
 .br-ticker-track span{ padding-right:.5em; }
 @keyframes br-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
 
-/* ---- CLEAN SCROLLING PANELS ---- */
-/* Overlap removed entirely. Beautiful separation gaps applied. */
+/* ---- MASONRY / BENTO GRID LAYOUT ---- */
 .br-stack{ 
-  display: flex;
-  flex-direction: column;
-  gap: 36px;
-  padding-block: 20px 60px;
-}
-.br-panel{ 
-  position:relative; 
-  border:3px solid #000; 
-  border-radius:32px; 
-  background-color:var(--bg-solid);
-  background-image:linear-gradient(180deg, color-mix(in srgb, var(--acc-bg) 82%, #ffffff 18%), var(--acc-bg) 54%);
-  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.15); 
-}
-.br-panel-first{ 
-  border:0; 
-  border-radius:0; 
-  box-shadow:none; 
-  background:transparent; 
-  background-image:none; 
-}
-/* Fixed padding: No weird min-height constraints. Space adapts to content perfectly. */
-.br-panel-in{ 
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: clamp(24px, 3vw, 40px);
   padding-block: clamp(40px, 6vh, 80px);
+  align-items: start;
 }
+.br-panel-hero { grid-column: span 12; margin-bottom: 20px;}
+.br-panel { grid-column: span 6; display: flex; flex-direction: column; height: 100%;}
+.br-about, .br-projects, .br-skills, .br-services, .br-experience, .br-contact-sec { grid-column: span 6; }
+.br-gallery, .br-videos, .br-testimonials { grid-column: span 12; }
 
 /* hero */
-.br-hero{ display:grid; grid-template-columns:1.12fr .88fr; gap:clamp(20px,3vw,44px); align-items:center; }
-.br-eyebrow{ display:inline-block; font-family:var(--mono); text-transform:uppercase; font-weight:700; letter-spacing:.2em; font-size:.8rem; color:#0b0b10; background:var(--accent); padding:6px 14px; border:2px solid #000; box-shadow:3px 3px 0 #0a0a12; }
-.br-headline{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(2.4rem,6.4vw,4.6rem); line-height:.94; letter-spacing:-.01em; margin:22px 0 0; color:#6969f2; }
-.br-hl{ background:var(--wht); color:#6969f2; box-shadow:4px 4px 0 #0a0a12; padding:0 .1em; margin-right:.06em; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
-.br-hlx{ margin-right:.06em; }
-.br-sub{ margin:24px 0 0; color:var(--wht); font-size:1.12rem; font-weight:700; max-width:48ch; }
-.br-hero-soc{ margin-top:26px; }
-.br-hero-right{ display:flex; flex-direction:column; gap:16px; perspective:1100px; }
+.br-hero{ display:grid; grid-template-columns:1.2fr 1fr; gap:clamp(30px, 4vw, 60px); align-items:center; }
+.br-headline{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(3rem, 6vw, 5.5rem); line-height:.92; letter-spacing:-.02em; margin:0; color:var(--text-light); }
+.br-hl{ background:transparent; color:var(--text-light); display:inline-block; }
+.br-sub{ margin:20px 0 0; color:var(--text-light); font-size:1.2rem; font-weight:600; max-width:48ch; }
+.br-hero-right{ perspective:1100px; }
 .br-tilt{ transform-style:preserve-3d; transform:perspective(1100px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .2s ease; }
 .br-tilt .br-window{ transform:translateZ(0); }
-.br-photo .br-photo-in{ aspect-ratio:16/10; border-top:2.5px solid #000; }
-.br-photo .br-zoom{ width:100%; height:100%; }
 
-.br-overview .br-window-in{ display:flex; flex-direction:column; gap:16px; }
-.br-ov-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-.br-ov-label{ font-family:var(--mono); font-weight:700; font-size:.7rem; letter-spacing:.16em; color:var(--muted); }
-.br-ov-big{ font-family:var(--display); font-weight:800; font-size:1.6rem; text-transform:uppercase; margin-top:6px; color:var(--accent); }
-.br-ov-chip{ font-family:var(--mono); font-weight:700; font-size:.76rem; padding:6px 12px; border:2px solid #000; border-radius:4px; background:var(--accent); color:#0b0b10; }
-.br-chart{ width:100%; height:74px; }
+/* overview card inside hero */
+.br-ov-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom: 2px solid var(--border); padding-bottom: 16px;}
+.br-ov-label{ font-family:var(--mono); font-weight:700; font-size:.75rem; letter-spacing:.1em; color:var(--muted); text-transform:uppercase;}
+.br-ov-big{ font-family:var(--display); font-weight:900; font-size:2.2rem; margin-top:4px; color:var(--text-main); }
+.br-ov-chip{ font-family:var(--mono); font-weight:800; font-size:.8rem; padding:6px 12px; background:var(--acc-bg); color:var(--text-light); border-radius: 4px;}
+.br-chart{ width:100%; height:90px; margin-top: 16px;}
 .br-chart path:first-child{ stroke-dasharray:640; stroke-dashoffset:640; animation:br-draw 1.9s .3s cubic-bezier(.2,.8,.25,1) forwards; }
-@keyframes br-draw{ to{ stroke-dashoffset:0; } }
-.br-ov-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-.br-ov-stat{ border:2px solid #000; border-radius:6px; padding:12px 14px; background:#0b0b10; }
-.br-ov-stat b{ display:block; font-family:var(--display); font-weight:900; font-size:1.5rem; color:var(--accent); }
-.br-ov-stat span{ font-family:var(--mono); font-weight:700; font-size:.66rem; letter-spacing:.1em; color:var(--muted); text-transform:uppercase; }
+.br-ov-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:0; border-top: 2px solid var(--border); margin-top: 16px; padding-top:16px;}
+.br-ov-stat{ padding:0 12px; border-right: 2px solid var(--border);}
+.br-ov-stat:last-child { border-right: none; }
+.br-ov-stat b{ display:block; font-family:var(--display); font-weight:900; font-size:1.6rem; color:var(--text-main); }
+.br-ov-stat span{ font-family:var(--mono); font-weight:700; font-size:.7rem; letter-spacing:.05em; color:var(--muted); text-transform:uppercase; }
 
-/* windows */
-.br-window{ background:var(--card); border:3px solid #000; border-radius:12px; box-shadow:var(--sh); overflow:hidden; }
-.br-bar{ display:flex; align-items:center; gap:12px; padding:12px 18px; background:#6969f2; border-bottom:3px solid #000; }
+/* windows (Bento Cards) */
+.br-window{ background:var(--card); border:4px solid var(--border); border-radius:4px; box-shadow:var(--sh); overflow:hidden; height:100%; display:flex; flex-direction:column;}
+.br-bar{ display:flex; align-items:center; gap:12px; padding:12px 18px; background:var(--card); border-bottom:4px solid var(--border); }
 .br-dots{ display:flex; gap:8px; }
-.br-dots i{ width:14px; height:14px; border:2px solid var(--wht); }
+.br-dots i{ width:14px; height:14px; border:2.5px solid var(--text-main); }
 .br-dots i:nth-child(1){ border-radius:50%; }
-.br-dots i:nth-child(2){ border-radius:2px; }
-.br-dots i:nth-child(3){ border-radius:2px; }
-.br-bar-title{ font-family:var(--mono); font-weight:700; font-size:.76rem; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
-.br-bar-x{ margin-left:auto; color:var(--muted); font-weight:800; font-size:1.1rem; }
-.br-window-in{ padding:clamp(20px,3vw,32px); }
-.br-window-lime{ background:var(--accent); color:#6969f2; }
-.br-window-lime .br-bar{ background:var(--accent); }
-.br-window-lime .br-bar-title{ color:#6969f2; }
-.br-window-lime .br-dots i{ border-color:#6969f2; }
-.br-window-lime .br-bar-x{ color:rgba(11,11,16,.7); }
-.br-lime-h{ font-family:var(--display); font-weight:900; font-size:clamp(1.6rem,3.4vw,2.6rem); text-transform:uppercase; line-height:1.02; margin:0; color:#6969f2; }
-.br-lime-p{ margin:16px 0 0; max-width:62ch; color:#111119; font-weight:700; font-size:1.05rem; }
-.br-window-lime .br-btn-dark{ margin-top:22px; }
+.br-dots i:nth-child(2){ border-radius:0px; }
+.br-dots i:nth-child(3){ border-radius:0px; }
+.br-bar-title{ font-family:var(--display); font-weight:800; font-size:.85rem; letter-spacing:.05em; text-transform:uppercase; color:var(--text-main); }
+.br-bar-x{ margin-left:auto; color:var(--text-main); font-weight:800; font-size:1.2rem; }
+.br-window-in{ padding:clamp(20px,3vw,32px); flex-grow:1;}
+
+/* Specific Card Themes */
+.br-window-lime{ background:var(--accent); color:var(--on-accent); }
+.br-bar-lime{ background:var(--accent); }
+.br-lime-h{ font-family:var(--display); font-weight:900; font-size:clamp(2rem,3.4vw,3rem); text-transform:uppercase; line-height:1.02; margin:0; color:var(--on-accent); }
+.br-lime-p{ margin:16px 0 0; color:var(--on-accent); font-weight:700; font-size:1.1rem; }
+
+.br-window-dark{ background:var(--card-dark); color:var(--text-light); }
+.br-bar-dark{ background:var(--card-dark); color:var(--text-light); border-bottom-color: #333; }
+.br-bar-dark .br-bar-title, .br-bar-dark .br-bar-x { color: var(--text-light); }
+.br-bar-dark .br-dots i { border-color: var(--text-light); }
 
 /* sections */
-.br-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-.br-grid-2{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
-.br-list{ display:flex; flex-direction:column; gap:14px; }
+.br-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.br-grid-2{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+.br-list{ display:flex; flex-direction:column; gap:16px; }
 
 /* nft cards */
-.br-nft{ border:2.5px solid #000; border-radius:8px; background:#0c0c14; box-shadow:var(--sh-sm); overflow:hidden; display:flex; flex-direction:column; transform-style:preserve-3d; transition:transform .16s ease, box-shadow .16s ease; }
-.br-nft:hover{ transform:perspective(760px) rotateX(4deg) translate(-2px,-4px); box-shadow:9px 11px 0 #08060f; }
-.br-nft-media{ position:relative; aspect-ratio:1/1; border-bottom:2.5px solid #000; }
+.br-nft{ border:3px solid var(--border); border-radius:4px; background:var(--card); box-shadow:var(--sh-sm); overflow:hidden; display:flex; flex-direction:column; transition:transform .1s ease, box-shadow .1s ease; }
+.br-nft:hover{ transform:translate(-2px,-4px); box-shadow:6px 8px 0 var(--border); }
+.br-nft-media{ position:relative; aspect-ratio:1/1; border-bottom:3px solid var(--border); }
 .br-nft-media .br-zoom{ width:100%; height:100%; }
-.br-ph{ width:100%; height:100%; display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:2.2rem; color:#0b0b10; background:var(--accent); }
-.br-nft-badge{ position:absolute; top:10px; left:10px; width:30px; height:30px; display:grid; place-items:center; border:2px solid #000; border-radius:6px; background:var(--accent); color:#6969f2; font-weight:800; z-index:2; }
-.br-nft-body{ padding:14px 16px; }
+.br-ph{ width:100%; height:100%; display:grid; place-items:center; font-family:var(--display); font-weight:900; font-size:3rem; color:var(--on-accent); background:var(--acc-bg); }
+.br-nft-badge{ position:absolute; top:12px; left:12px; width:34px; height:34px; display:grid; place-items:center; border:3px solid var(--border); border-radius:0px; background:var(--accent); color:var(--on-accent); font-weight:900; z-index:2; }
+.br-nft-body{ padding:16px; }
 .br-nft-titlerow{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.br-nft-title{ font-family:var(--display); font-weight:800; text-transform:uppercase; font-size:.98rem; margin:0; }
-.br-nft-go{ text-decoration:none; font-weight:800; color:var(--accent); }
-.br-nft-cat{ color:var(--muted); font-size:.85rem; margin:4px 0 0; }
-.br-floor{ display:inline-block; margin-top:10px; font-family:var(--mono); font-weight:700; font-size:.76rem; color:#0b0b10; background:var(--accent); padding:4px 10px; border:2px solid #000; border-radius:6px; }
+.br-nft-title{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:1.05rem; margin:0; }
+.br-nft-go{ text-decoration:none; font-weight:900; font-size: 1.2rem; color:var(--text-main); }
+.br-nft-cat{ color:var(--muted); font-size:.9rem; margin:4px 0 0; }
+.br-floor{ display:inline-block; margin-top:12px; font-family:var(--mono); font-weight:800; font-size:.8rem; color:var(--text-main); background:transparent; padding:0; }
 
 /* leaderboard */
 .br-lead{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
-.br-lead-row{ display:grid; grid-template-columns:auto auto 1fr 1.2fr auto; align-items:center; gap:14px; padding:14px 0; border-bottom:2px solid rgba(255,255,255,.15); }
+.br-lead-row{ display:grid; grid-template-columns:auto auto 1fr auto; align-items:center; gap:16px; padding:16px 0; border-bottom:2px solid #eeeeee; }
 .br-lead-row:last-child{ border-bottom:0; }
-.br-rank{ font-family:var(--display); font-weight:800; color:var(--accent); font-size:1.1rem; width:28px; }
-.br-lead-ic{ width:40px; height:40px; flex:0 0 auto; display:grid; place-items:center; border:2px solid #000; border-radius:8px; background:var(--accent); color:#6969f2; font-family:var(--display); font-weight:800; font-size:.85rem; overflow:hidden; }
+.br-rank{ font-family:var(--display); font-weight:900; color:var(--text-main); font-size:1.1rem; width:28px; }
+.br-lead-ic{ width:44px; height:44px; flex:0 0 auto; display:grid; place-items:center; border:3px solid var(--border); border-radius:0px; background:var(--accent); color:var(--text-main); font-family:var(--display); font-weight:900; font-size:1rem; overflow:hidden; }
 .br-lead-ic img{ width:100%; height:100%; object-fit:cover; }
-.br-lead-name{ font-weight:800; min-width:0; font-size:1.05rem; }
-.br-lead-name em{ display:block; font-style:normal; font-family:var(--mono); font-weight:700; font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
-.br-lead-bar{ height:14px; border:2px solid #000; border-radius:4px; background:#0b0b10; overflow:hidden; }
-.br-lead-fill{ display:block; height:100%; width:var(--pct); background:var(--accent); }
-.br-root.br-ready [data-reveal] .br-lead-fill{ width:0; }
-.br-root.br-ready [data-reveal].br-in .br-lead-fill{ width:var(--pct); transition:width 1s cubic-bezier(.2,.85,.25,1); }
-.br-lead-val{ font-family:var(--mono); font-weight:800; font-size:.85rem; color:var(--accent); text-align:right; }
+.br-lead-name{ font-weight:800; min-width:0; font-size:1.1rem; text-transform:uppercase;}
+.br-lead-name em{ display:block; font-style:normal; font-family:var(--mono); font-weight:700; font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+.br-lead-bar{ display:none; }
+.br-lead-val{ font-family:var(--mono); font-weight:900; font-size:.95rem; color:var(--text-main); text-align:right; }
 
-/* features */
-.br-feats{ display:grid; grid-template-columns:repeat(2,1fr); gap:18px; }
-.br-feat{ display:flex; gap:14px; align-items:flex-start; padding:18px; border:2.5px solid #000; border-radius:10px; background:#0b0b10; }
-.br-feat-ic{ width:38px; height:38px; flex:0 0 auto; display:grid; place-items:center; border:2px solid #000; border-radius:8px; background:var(--accent); color:#0b0b10; font-weight:800; }
-.br-feat-h{ font-family:var(--display); font-weight:800; text-transform:uppercase; font-size:1.05rem; margin:0; }
-.br-feat-p{ color:var(--muted); font-size:.95rem; margin:8px 0 0; }
+/* features (Why XChange / Services) */
+.br-feats{ display:grid; grid-template-columns:1fr; gap:24px; }
+.br-feat{ display:flex; gap:16px; align-items:flex-start; padding:0; border:none; background:transparent; }
+.br-feat-ic{ width:32px; height:32px; flex:0 0 auto; display:grid; place-items:center; border:2px solid var(--accent); border-radius:0px; background:transparent; color:var(--accent); font-weight:900; font-size:1.1rem;}
+.br-feat-h{ font-family:var(--display); font-weight:800; text-transform:uppercase; font-size:1.1rem; margin:0; letter-spacing:0.02em;}
+.br-feat-p{ color:var(--muted-dark); font-size:.95rem; margin:6px 0 0; }
 
 /* mini / timeline / list */
-.br-mini{ border:2.5px solid #000; border-radius:10px; background:#0b0b10; padding:18px; display:flex; flex-direction:column; gap:8px; text-decoration:none; color:inherit; }
-.br-mini-link:hover{ box-shadow:var(--sh-sm); transform:translate(-2px,-2px); }
-.br-mini-top{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-.br-tl{ display:flex; flex-direction:column; gap:16px; }
-.br-tl-row{ display:grid; grid-template-columns:140px 1fr; gap:20px; }
+.br-tl{ display:flex; flex-direction:column; gap:24px; }
+.br-tl-row{ display:grid; grid-template-columns:1fr; gap:8px; border-bottom: 2px solid #333; padding-bottom: 20px;}
+.br-tl-row:last-child { border-bottom: none; padding-bottom:0;}
 .br-tl-date{ font-family:var(--mono); font-weight:800; color:var(--accent); font-size:.85rem; }
-.br-listitem{ border:2.5px solid #000; border-radius:10px; background:#0b0b10; padding:18px 20px; text-decoration:none; color:inherit; }
+
+.br-mini{ border:3px solid var(--border); border-radius:4px; background:var(--card); padding:20px; display:flex; flex-direction:column; gap:10px; text-decoration:none; color:inherit; box-shadow:var(--sh-sm); transition:transform .1s ease;}
+.br-mini-link:hover{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--border); }
+.br-mini-top{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+
+.br-listitem{ border:3px solid var(--border); border-radius:4px; background:var(--card); padding:20px 24px; text-decoration:none; color:inherit; box-shadow:var(--sh-sm);}
 
 /* gallery / video */
-.br-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
-.br-gitem{ border:3px solid #000; border-radius:10px; overflow:hidden; background:#0b0b10; box-shadow:var(--sh-sm); }
+.br-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; }
+.br-gitem{ border:4px solid var(--border); border-radius:4px; overflow:hidden; background:var(--card); box-shadow:var(--sh-sm); }
 .br-gitem .br-zoom{ width:100%; aspect-ratio:1/1; }
-.br-gitem figcaption{ padding:10px 14px; font-weight:600; }
-.br-video{ border:3px solid #000; border-radius:10px; overflow:hidden; background:#0b0b10; box-shadow:var(--sh-sm); }
-.br-video-frame{ position:relative; aspect-ratio:16/9; background:#000; }
+.br-gitem figcaption{ padding:12px 16px; font-weight:700; border-top:3px solid var(--border);}
+.br-video{ border:4px solid var(--border); border-radius:4px; overflow:hidden; background:var(--card); box-shadow:var(--sh-sm); }
+.br-video-frame{ position:relative; aspect-ratio:16/9; background:#000; border-bottom:3px solid var(--border);}
 .br-video-frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
-.br-video figcaption{ padding:12px 16px; font-weight:600; }
+.br-video figcaption{ padding:14px 18px; font-weight:700; }
 
 /* zoom blur-fill */
-.br-zoom{ position:relative; display:block; padding:0; border:0; cursor:zoom-in; color:inherit; overflow:hidden; background:#08080e; }
-.br-zoom-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(26px) saturate(1.3); transform:scale(1.25); opacity:.5; }
+.br-zoom{ position:relative; display:block; padding:0; border:0; cursor:zoom-in; color:inherit; overflow:hidden; background:#000; }
+.br-zoom-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(20px) saturate(1.5); transform:scale(1.2); opacity:.6; }
 .br-zoom-img{ position:relative; z-index:1; width:100%; height:100%; object-fit:contain; transition:transform .3s ease; }
-.br-zoom:hover .br-zoom-img{ transform:scale(1.03); }
-.br-zoom:focus-visible{ outline:3px solid var(--accent); outline-offset:-3px; }
+.br-zoom:hover .br-zoom-img{ transform:scale(1.05); }
 
 /* testimonials */
-.br-quote{ border:2.5px solid #000; border-radius:10px; background:#0b0b10; padding:24px; display:flex; flex-direction:column; gap:14px; }
-.br-quote-mark{ font-family:var(--display); font-weight:900; color:var(--accent); font-size:3.6rem; line-height:.4; height:24px; }
-.br-quote blockquote{ margin:0; font-weight:600; font-size:1.05rem; }
-.br-quote-by{ display:flex; align-items:center; gap:14px; margin-top:auto; }
+.br-quote{ border:3px solid var(--border); border-radius:4px; background:var(--card); padding:24px; display:flex; flex-direction:column; gap:16px; box-shadow:var(--sh-sm);}
+.br-quote-mark{ font-family:var(--display); font-weight:900; color:var(--acc-bg); font-size:4rem; line-height:.4; height:24px; }
+.br-quote blockquote{ margin:0; font-weight:700; font-size:1.1rem; }
+.br-quote-by{ display:flex; align-items:center; gap:16px; margin-top:auto; padding-top: 16px; border-top: 2px solid #eee;}
 .br-quote-by span{ display:flex; flex-direction:column; line-height:1.3; }
-.br-quote-by b{ font-weight:800; font-size:.95rem; }
-.br-quote-by em{ font-style:normal; font-weight:600; font-size:.8rem; color:var(--muted); }
+.br-quote-by b{ font-weight:900; font-size:1rem; text-transform:uppercase;}
+.br-quote-by em{ font-style:normal; font-weight:700; font-size:.85rem; color:var(--muted); }
 
 /* socials */
-.br-socials{ display:flex; flex-wrap:wrap; gap:12px; }
-.br-soc{ width:46px; height:46px; display:grid; place-items:center; border:2.5px solid #000; border-radius:8px; background:#0b0b10; color:var(--wht); text-decoration:none; box-shadow:3px 3px 0 #0a0a12; transition:transform .1s, box-shadow .1s, color .1s; }
-.br-soc:hover{ transform:translate(2px,2px); box-shadow:1px 1px 0 #0a0a12; color:var(--accent); }
-.br-soc svg{ width:20px; height:20px; }
+.br-socials{ display:flex; flex-wrap:wrap; gap:14px; }
+.br-soc{ width:48px; height:48px; display:grid; place-items:center; border:3px solid var(--border); border-radius:0px; background:var(--card); color:var(--text-main); text-decoration:none; box-shadow:var(--sh-sm); transition:transform .1s, box-shadow .1s, background .1s; }
+.br-soc:hover{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--border); background:var(--accent); }
+.br-soc svg{ width:22px; height:22px; }
 
 /* contact */
-.br-contact{ display:grid; grid-template-columns:.9fr 1.1fr; gap:clamp(20px,3vw,40px); align-items:start; }
-.br-join-h{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(1.5rem,3vw,2.2rem); line-height:1.02; margin:0 0 20px; }
-.br-contact-rows{ display:flex; flex-direction:column; gap:14px; margin-bottom:20px; }
-.br-crow{ display:flex; align-items:center; gap:14px; text-decoration:none; color:inherit; word-break:break-word; font-weight:600; font-size:1.05rem; }
-.br-crow span:first-child{ color:var(--accent); width:24px; text-align:center; flex:0 0 auto; font-size:1.2rem; font-weight:800; }
-.br-crow:hover{ color:var(--accent); }
-.br-formcard{ border:3px solid #000; border-radius:12px; background:#0b0b10; padding:clamp(20px,3vw,30px); }
-.br-formcard :where(input, textarea, select){ width:100%; font-family:var(--body); font-weight:600; font-size:1rem; color:var(--wht); background:#16161f; border:2.5px solid #000; border-radius:8px; padding:14px 16px; margin-bottom:16px; }
-.br-formcard :where(input, textarea, select):focus{ outline:none; border-color:var(--accent); }
-.br-formcard :where(input, textarea, select)::placeholder{ color:rgba(255,255,255,0.4); font-weight:500; }
-.br-formcard textarea{ min-height:130px; resize:vertical; }
-.br-formcard :where(button, [type="submit"]){ width:100%; font-family:var(--display); font-weight:800; font-size:1rem; text-transform:uppercase; cursor:pointer; color:#0b0b10; background:var(--accent); border:3px solid #000; border-radius:8px; padding:15px 20px; box-shadow:var(--sh-sm); transition:transform .1s, box-shadow .1s; }
-.br-formcard :where(button, [type="submit"]):hover{ transform:translate(3px,3px); box-shadow:1px 1px 0 #0a0a12; }
-.br-formcard label{ color:var(--muted); font-weight:700; font-size:.88rem; }
+.br-contact{ display:grid; grid-template-columns:1fr; gap:30px; }
+.br-join-h{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(1.8rem,4vw,2.5rem); line-height:1.05; margin:0; }
+.br-contact-rows{ display:flex; flex-direction:column; gap:16px; margin-block:24px; }
+.br-crow{ display:flex; align-items:center; gap:16px; text-decoration:none; color:inherit; word-break:break-word; font-weight:700; font-size:1.1rem; }
+.br-crow span:first-child{ color:var(--acc-bg); width:28px; text-align:center; flex:0 0 auto; font-size:1.4rem; font-weight:900; }
+.br-crow:hover{ color:var(--acc-bg); }
+.br-formcard{ border:3px solid var(--border); border-radius:4px; background:var(--card); padding:clamp(20px,3vw,32px); box-shadow:var(--sh-sm);}
+.br-formcard :where(input, textarea, select){ width:100%; font-family:var(--mono); font-weight:700; font-size:1rem; color:var(--text-main); background:#f4f4f4; border:3px solid var(--border); border-radius:0px; padding:14px 18px; margin-bottom:18px; }
+.br-formcard :where(input, textarea, select):focus{ outline:none; background:#ffffff; border-color:var(--acc-bg); }
+.br-formcard :where(input, textarea, select)::placeholder{ color:#888888; font-weight:600; }
+.br-formcard textarea{ min-height:140px; resize:vertical; }
+.br-formcard :where(button, [type="submit"]){ width:100%; font-family:var(--display); font-weight:900; font-size:1.1rem; text-transform:uppercase; cursor:pointer; color:var(--on-accent); background:var(--accent); border:3px solid var(--border); border-radius:0px; padding:16px 20px; box-shadow:var(--sh-sm); transition:transform .1s, box-shadow .1s; }
+.br-formcard :where(button, [type="submit"]):hover{ transform:translate(3px,3px); box-shadow:1px 1px 0 var(--border); }
+.br-formcard label{ color:var(--text-main); font-weight:800; font-size:.9rem; text-transform:uppercase; margin-bottom: 6px; display:block;}
 
-/* footer - Reverted black color to a beautiful dark matching shade */
-.br-footer{ position:relative; z-index:20; border-top:5px solid var(--accent); background:#101018; box-shadow:0 -20px 50px -14px rgba(6,4,22,.8); }
-.br-footer-in{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; padding-block:32px; }
-.br-footer-nav{ display:flex; flex-wrap:wrap; gap:10px 20px; }
-.br-footer-nav a{ text-decoration:none; color:var(--muted); font-family:var(--display); font-weight:800; text-transform:uppercase; font-size:.8rem; }
+/* footer - Pure Black matching the image */
+.br-footer{ position:relative; z-index:20; background:#000000; color:#ffffff; border-top:4px solid var(--border);}
+.br-footer-in{ display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:40px; padding-block:60px 40px; }
+.br-foot-col { display: flex; flex-direction: column; gap: 16px; }
+.br-footer .br-logo-box{ border-color:#ffffff; color:#ffffff;}
+.br-foot-label { font-family:var(--mono); font-size:0.8rem; font-weight:700; color:#888; text-transform:uppercase; margin-bottom: 8px;}
+.br-footer-nav{ display:flex; flex-direction:column; gap:12px; }
+.br-footer-nav a{ text-decoration:none; color:#cccccc; font-family:var(--body); font-weight:600; font-size:.95rem; }
 .br-footer-nav a:hover{ color:var(--accent); }
-.br-footer-right{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
-.br-foot-soc .br-soc{ width:40px; height:40px; box-shadow:none; }
-.br-foot-copy{ color:var(--muted); font-weight:600; font-size:.85rem; }
-.br-madewith{ color:var(--accent); text-decoration:none; font-weight:800; }
+.br-foot-soc .br-soc{ width:40px; height:40px; box-shadow:none; border-color:#333; background:transparent; color:#fff;}
+.br-foot-soc .br-soc:hover{ background:var(--accent); border-color:var(--accent); color:#000;}
+.br-foot-copy{ color:#666666; font-weight:600; font-size:.85rem; margin-top: auto; padding-top:20px;}
 
 /* lightbox */
-.br-lb{ position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:clamp(16px,4vw,48px); background:rgba(8,6,20,.95); animation:br-fade .2s ease both; }
+.br-lb{ position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:clamp(16px,4vw,48px); background:rgba(0,0,0,.9); animation:br-fade .2s ease both; }
 .br-lb-fig{ margin:0; max-width:94vw; max-height:92vh; display:flex; flex-direction:column; gap:12px; align-items:center; animation:br-pop .3s cubic-bezier(.2,.85,.25,1) both; }
-.br-lb-fig img{ max-width:92vw; max-height:84vh; width:auto; height:auto; object-fit:contain; border:3px solid #000; border-radius:8px; background:#0b0b10; }
-.br-lb-fig figcaption{ color:var(--wht); font-weight:700; font-size:.95rem; text-align:center; }
-.br-lb-close{ position:fixed; top:20px; right:20px; z-index:1001; width:48px; height:48px; border:3px solid #000; border-radius:8px; cursor:pointer; color:#0b0b10; background:var(--accent); font-size:1.2rem; font-weight:800; box-shadow:var(--sh-sm); transition:transform .1s, box-shadow .1s; }
-.br-lb-close:hover{ transform:translate(3px,3px); box-shadow:1px 1px 0 #0a0a12; }
-.br-lb-close:focus-visible{ outline:3px solid #000; outline-offset:2px; }
+.br-lb-fig img{ max-width:92vw; max-height:84vh; width:auto; height:auto; object-fit:contain; border:4px solid var(--border); background:#fff; }
+.br-lb-fig figcaption{ color:#ffffff; font-weight:800; font-size:1rem; text-align:center; text-transform:uppercase;}
+.br-lb-close{ position:fixed; top:24px; right:24px; z-index:1001; width:50px; height:50px; border:4px solid var(--border); border-radius:0; cursor:pointer; color:var(--on-accent); background:var(--accent); font-size:1.4rem; font-weight:900; box-shadow:var(--sh-sm); transition:transform .1s, box-shadow .1s; }
+.br-lb-close:hover{ transform:translate(3px,3px); box-shadow:2px 2px 0 var(--border); }
+.br-lb-close:focus-visible{ outline:3px solid #fff; }
 @keyframes br-fade{ from{opacity:0;} to{opacity:1;} }
 @keyframes br-pop{ from{opacity:0; transform:translateY(30px) scale(.97);} to{opacity:1; transform:none;} }
 
 /* responsive */
-@media (max-width:1000px){ .br-grid-3{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:1080px){ 
+  .br-stack { grid-template-columns: repeat(2, 1fr); }
+  .br-panel { grid-column: span 2; }
+  .br-about, .br-projects, .br-skills, .br-services, .br-experience, .br-contact-sec { grid-column: span 2; }
+}
 @media (max-width:880px){
   .br-hero{ grid-template-columns:1fr; }
   .br-navlinks{ display:none; }
   .br-menu{ display:block; }
-  .br-feats{ grid-template-columns:1fr; }
   .br-contact{ grid-template-columns:1fr; }
+  .br-headline{ font-size: 3.5rem; }
 }
 @media (max-width:620px){
   .br-grid-2, .br-grid-3{ grid-template-columns:1fr; }
   .br-lead-row{ grid-template-columns:auto auto 1fr auto; }
-  .br-lead-bar{ display:none; }
   .br-tl-row{ grid-template-columns:1fr; gap:6px; }
-  .br-ov-stats{ grid-template-columns:1fr 1fr; }
+  .br-ov-stats{ grid-template-columns:1fr 1fr; border-right:none;}
+  .br-ov-stat:nth-child(2) { border-right:none; }
+  .br-ov-stat:nth-child(3) { grid-column: span 2; border-top: 2px solid var(--border); padding-top:12px; margin-top:12px;}
   .br-nav-cta{ display:none; }
 }
 
@@ -741,7 +718,6 @@ const BR_CSS = `
   .br-root{ scroll-behavior:auto; }
   .br-root *{ animation:none !important; transition:none !important; }
   .br-root.br-ready [data-reveal]{ opacity:1 !important; transform:none !important; }
-  .br-root.br-ready [data-reveal] .br-lead-fill{ width:var(--pct); }
   .br-chart path{ stroke-dashoffset:0 !important; }
   .br-tilt{ transform:none !important; }
 }
