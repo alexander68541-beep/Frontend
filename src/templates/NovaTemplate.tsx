@@ -522,7 +522,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
         </div>
       );
     }
-    if (k === "contact") {
+    if (k === "contact" && username) {
       return (
         <section id="contact" className="nova-section">
           {head("ACCOUNT", "Let's Connect")}
