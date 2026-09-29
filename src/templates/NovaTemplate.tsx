@@ -8,7 +8,7 @@ import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
    NovaTemplate — "Nova OS" — futuristic dark glassmorphism widget UI.
-   REMASTERED: Omni-Directional Reveal & Full-Viewport Hero Layout.
+   REMASTERED: Full Background Text, Smart Mobile Touch Engine, Omni-Reveal.
    ===================================================================== */
 
 const DEFAULT_ORDER = [
@@ -102,7 +102,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
 
   const openLb = useCallback((src: string, alt: string, cap?: string) => setLb({ src, alt, cap }), []);
 
-  // Map vertical wheel scrolling to horizontal snap scrolling
+  // Map vertical wheel (desktop) to horizontal snap scrolling
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -131,6 +131,81 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     return () => { track.removeEventListener('wheel', onWheel); if (scrollTimeout.current) clearTimeout(scrollTimeout.current); };
   }, []);
 
+  // Map vertical touch swipe (mobile) to horizontal scroll
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    let startY = 0;
+    let startX = 0;
+
+    const onTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      const currentY = e.touches[0].clientY;
+      const currentX = e.touches[0].clientX;
+      const deltaY = startY - currentY;
+      const deltaX = startX - currentX;
+
+      // If user is clearly swiping horizontally, let native CSS scroll-snap handle it
+      if (Math.abs(deltaX) > Math.abs(deltaY) + 10) return;
+
+      // Check inner scroll to see if we should block the preventDefault
+      const target = e.target as HTMLElement;
+      const slide = target.closest('.nova-slide');
+      if (slide) {
+         const isScrollable = slide.scrollHeight > slide.clientHeight;
+         const atTop = slide.scrollTop === 0;
+         const atBottom = Math.ceil(slide.scrollTop + slide.clientHeight) >= slide.scrollHeight - 1;
+         if (isScrollable) {
+            if (deltaY > 0 && !atBottom) return; // Swiping up to read down
+            if (deltaY < 0 && !atTop) return;    // Swiping down to read up
+         }
+      }
+
+      // If it's a deliberate vertical swipe, prevent default vertical rubber-banding
+      if (Math.abs(deltaY) > 10) {
+          e.preventDefault();
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      const endY = e.changedTouches[0].clientY;
+      const deltaY = startY - endY;
+      
+      // Threshold to trigger a slide change
+      if (Math.abs(deltaY) < 40) return; 
+
+      const target = e.target as HTMLElement;
+      const slide = target.closest('.nova-slide');
+      if (slide) {
+         const isScrollable = slide.scrollHeight > slide.clientHeight;
+         const atTop = slide.scrollTop === 0;
+         const atBottom = Math.ceil(slide.scrollTop + slide.clientHeight) >= slide.scrollHeight - 1;
+         if (isScrollable) {
+            if (deltaY > 0 && !atBottom) return;
+            if (deltaY < 0 && !atTop) return;
+         }
+      }
+
+      // Execute horizontal scroll based on vertical swipe direction
+      const direction = deltaY > 0 ? 1 : -1;
+      track.scrollBy({ left: direction * window.innerWidth, behavior: 'smooth' });
+    };
+
+    track.addEventListener('touchstart', onTouchStart, { passive: true });
+    track.addEventListener('touchmove', onTouchMove, { passive: false });
+    track.addEventListener('touchend', onTouchEnd, { passive: true });
+    
+    return () => {
+      track.removeEventListener('touchstart', onTouchStart);
+      track.removeEventListener('touchmove', onTouchMove);
+      track.removeEventListener('touchend', onTouchEnd);
+    };
+  }, []);
+
   // Intersection Observer for Omni-Reveal Effect
   useEffect(() => {
     const root = rootRef.current;
@@ -148,10 +223,13 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     
     const io = new IntersectionObserver((entries) => {
         entries.forEach((e) => { 
-            if (e.isIntersecting) e.target.classList.add("nova-in"); 
-            else e.target.classList.remove("nova-in"); // Removes class so it flies in again next time!
+            if (e.isIntersecting) {
+                e.target.classList.add("nova-in");
+            } else {
+                e.target.classList.remove("nova-in"); // Resets it so it flies in perfectly every time
+            }
         });
-    }, { root: track, threshold: 0.1 });
+    }, { root: track, threshold: 0.15 }); // Wait until 15% is visible to trigger
     
     targets.forEach((el) => io.observe(el));
     return () => io.disconnect();
@@ -237,7 +315,7 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
     </div>
   );
 
-  // Direction array for dynamic lists
+  // Direction array for dynamic grid items
   const DIRS = ["left", "bottom", "right"];
 
   const sections: Record<string, () => ReactNode> = {
@@ -496,6 +574,9 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
   const marqueeText = p?.tagline || p?.availability || `${name} · Portfolio`;
   const year = new Date().getFullYear();
   const bgWord = (name || "PORTFOLIO").toUpperCase();
+  
+  // Generating rows for full background text
+  const bgRows = Array.from({ length: 7 }); 
 
   return (
     <div ref={rootRef} className="nova-root" id="root" data-theme="dark" style={{ ["--tpl-accent" as string]: accent } as CSSProperties}>
@@ -503,9 +584,15 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
       
       {/* Background Ambience */}
       <div className="nova-bg" aria-hidden><span className="nova-glow nova-glow-1" /><span className="nova-glow nova-glow-2" /></div>
+      
+      {/* FULL HEIGHT BACKGROUND TEXT */}
       <div className="nova-bgtext" aria-hidden>
-        <div className="nova-bgtext-row nova-bgtext-a"><span>{`${bgWord} · `.repeat(12)}</span><span>{`${bgWord} · `.repeat(12)}</span></div>
-        <div className="nova-bgtext-row nova-bgtext-b"><span>{`${bgWord} · `.repeat(12)}</span><span>{`${bgWord} · `.repeat(12)}</span></div>
+        {bgRows.map((_, i) => (
+           <div key={i} className={`nova-bgtext-row nova-bgtext-${i % 2 === 0 ? 'a' : 'b'}`} style={{ opacity: 0.05 - (i * 0.003) }}>
+             <span>{`${bgWord} · `.repeat(12)}</span>
+             <span>{`${bgWord} · `.repeat(12)}</span>
+           </div>
+        ))}
       </div>
 
       {/* FIXED NAV LAYER */}
@@ -580,7 +667,6 @@ export function NovaTemplate({ data }: { data: PublicPortfolio }) {
                   {contactHref && <a className="nova-toggle nova-toggle-on2" href={contactHref} aria-label="Contact" title="Contact">➤</a>}
                 </div>
               </div>
-
             </header>
           </div>
         </section>
@@ -715,19 +801,20 @@ const NOVA_CSS = `
 .nova-glow-1{ width:520px; height:520px; top:-140px; left:-120px; background:radial-gradient(circle, color-mix(in srgb,var(--accent) 70%, #6a5cff), transparent 70%); }
 .nova-glow-2{ width:440px; height:440px; bottom:0; right:-120px; background:radial-gradient(circle,#1f6feb,transparent 70%); opacity:.3; }
 
-/* scrolling background text */
-.nova-bgtext{ position:absolute; inset:0; top:60px; z-index:0; pointer-events:none; overflow:hidden; opacity:.04; }
-.nova-bgtext-row{ display:flex; white-space:nowrap; font-family:var(--display); font-weight:800; font-size:clamp(4rem,14vw,11rem); line-height:1.1; }
+/* FULL HEIGHT SCROLLING BACKGROUND TEXT */
+.nova-bgtext{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; display: flex; flex-direction: column; justify-content: space-around; padding-block: 40px; }
+.nova-bgtext-row{ display:flex; white-space:nowrap; font-family:var(--display); font-weight:800; font-size:clamp(4rem,10vw,8rem); line-height:1; }
 .nova-bgtext-row span{ padding-right:.4em; }
 .nova-bgtext-a{ animation:nova-scroll-l 40s linear infinite; }
 .nova-bgtext-b{ animation:nova-scroll-r 55s linear infinite; }
 @keyframes nova-scroll-l{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
 @keyframes nova-scroll-r{ from{ transform:translateX(-50%); } to{ transform:translateX(0); } }
 
-/* glass base */
+/* glass base with enhanced glowing border hover effect */
 .nova-glass{ background:var(--glass); border:1px solid var(--line); border-radius:var(--r);
   backdrop-filter:blur(26px) saturate(1.4); -webkit-backdrop-filter:blur(26px) saturate(1.4);
-  box-shadow:0 24px 60px -30px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.02); }
+  box-shadow:0 24px 60px -30px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.02); transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease; }
+.nova-glass:hover { border-color: rgba(255,255,255,.28); box-shadow:0 30px 60px -25px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.2); }
 
 /* type */
 .nova-h2{ font-family:var(--display); font-weight:800; font-size:clamp(1.6rem,3.6vw,2.4rem); letter-spacing:-.01em; margin:0; }
@@ -747,7 +834,7 @@ const NOVA_CSS = `
 .nova-btn-ghost:hover{ transform:translateY(-2px); border-color:var(--accent); }
 .nova-hero-cta{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
 
-/* OMNI-DIRECTIONAL FLY-IN ANIMATIONS */
+/* SMOOTH OMNI-DIRECTIONAL FLY-IN ANIMATIONS */
 .nova-root.nova-anim-ready [data-reveal]{ opacity:0; transition:opacity .7s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
 /* Default if attribute is empty */
 .nova-root.nova-anim-ready [data-reveal=""] { transform: translateY(70px) scale(0.95); }
@@ -797,12 +884,12 @@ const NOVA_CSS = `
   align-items:stretch; 
   perspective:1400px; 
 }
-.nova-w{ transform-style:preserve-3d; transform:perspective(1400px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .25s ease; }
+.nova-w{ transform-style:preserve-3d; transform:perspective(1400px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .25s ease, border-color .3s, box-shadow .3s; }
 .nova-profile{ grid-area:profile; display:flex; flex-direction:column; align-items:center; justify-content: center; text-align:center; gap:12px; padding:22px 18px; }
 .nova-avatar-ring{ width:92px; height:92px; border-radius:50%; overflow:hidden; border:2px solid var(--line2); display:grid; place-items:center; background:var(--glass-2); box-shadow:0 0 0 6px rgba(255,255,255,.03); }
 .nova-avatar-ring img{ width:100%; height:100%; object-fit:cover; }
 .nova-avatar-mono{ font-family:var(--display); font-weight:800; font-size:1.6rem; }
-.nova-profile-name{ font-weight:700; font-size:1rem; }
+.nova-profile-name{ font-weight:700; font-size:1.1rem; }
 .nova-profile-soc{ justify-content:center; }
 .nova-bell{ font-size:.78rem; color:var(--ink2); padding:6px 14px; border-radius:999px; background:var(--glass-2); border:1px solid var(--line); margin-top: auto; }
 
@@ -845,8 +932,7 @@ const NOVA_CSS = `
 .nova-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
 .nova-grid-2{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
 .nova-list{ display:flex; flex-direction:column; gap:14px; }
-.nova-card{ padding:22px; display:flex; flex-direction:column; gap:8px; text-decoration:none; color:inherit; transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
-.nova-card:hover, .nova-card-link:hover{ transform:translateY(-4px); border-color:var(--line2); box-shadow:0 30px 50px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.16); }
+.nova-card{ padding:22px; display:flex; flex-direction:column; gap:8px; text-decoration:none; color:inherit; }
 .nova-card-ic{ width:46px; height:46px; display:grid; place-items:center; border-radius:14px; font-family:var(--display); font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); }
 .nova-card-title{ font-family:var(--display); font-weight:700; font-size:1.08rem; margin:6px 0 0; }
 .nova-card-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:8px; flex-wrap:wrap; }
@@ -857,8 +943,7 @@ const NOVA_CSS = `
 .nova-listitem:hover{ border-color:var(--line2); }
 
 /* projects */
-.nova-proj{ padding:10px; display:flex; flex-direction:column; transition:transform .2s ease, box-shadow .2s ease; }
-.nova-proj:hover{ transform:translateY(-5px); box-shadow:0 34px 56px -32px rgba(0,0,0,.9); }
+.nova-proj{ padding:10px; display:flex; flex-direction:column; }
 .nova-proj-media{ position:relative; border-radius:18px; overflow:hidden; aspect-ratio:4/3; }
 .nova-proj-media .nova-zoom{ width:100%; height:100%; }
 .nova-ph{ width:100%; height:100%; display:grid; place-items:center; font-family:var(--display); font-size:2rem; font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); border-radius:18px; }
@@ -872,8 +957,7 @@ const NOVA_CSS = `
 
 /* skills */
 .nova-skills{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; }
-.nova-skill{ padding:16px 14px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; transition:transform .2s ease; }
-.nova-skill:hover{ transform:translateY(-4px); }
+.nova-skill{ padding:16px 14px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; }
 .nova-skill-ic{ width:50px; height:50px; border-radius:15px; display:grid; place-items:center; font-family:var(--display); font-weight:800; color:var(--on-accent); background:linear-gradient(150deg,var(--accent),#7a6cff); }
 .nova-skill-name{ font-weight:600; font-size:.9rem; }
 .nova-skill-bar{ width:82%; height:6px; border-radius:99px; background:var(--glass-2); overflow:hidden; }
