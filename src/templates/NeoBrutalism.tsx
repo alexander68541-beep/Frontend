@@ -63,7 +63,7 @@ const SOCIAL_ICONS: Record<string, string> = {
   medium: "M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zm7.42 0c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z",
   twitch: "M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z",
   tiktok: "M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z",
-  discord: "M20.317 4.369a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.211.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.369a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.225-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.893.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.955 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z",
+  discord: "M20.317 4.369a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.211.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.369a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.893.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.955 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z",
   telegram: "M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z",
   whatsapp: "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.71.306 1.263.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z",
   reddit: "M24 11.779c0-1.459-1.192-2.645-2.657-2.645-.715 0-1.363.286-1.84.746-1.81-1.191-4.259-1.949-6.971-2.046l1.483-4.669 4.016.941-.006.058c0 1.193.975 2.163 2.174 2.163 1.198 0 2.172-.97 2.172-2.163s-.975-2.164-2.172-2.164c-.92 0-1.704.574-2.021 1.379l-4.329-1.015a.379.379 0 00-.44.288l-1.783 5.618c-2.767.036-5.256.786-7.99 2.033-.469-.4-1.129-.628-1.784-.628C1.193 9.134 0 10.32 0 11.779c0 .996.564 1.905 1.475 2.373-.025.147-.037.297-.037.446 0 2.9 3.508 5.261 7.821 5.261 4.312 0 7.82-2.361 7.82-5.261 0-.149-.012-.298-.036-.445.91-.468 1.474-1.378 1.474-2.374zM6.11 13.42a1.49 1.49 0 011.49-1.489c.821 0 1.49.668 1.49 1.489 0 .82-.669 1.49-1.49 1.49-.821 0-1.49-.67-1.49-1.49zm8.978 3.788c-.673.673-2.147 1.02-3.5 1.02-1.353 0-2.827-.347-3.5-1.02a.375.375 0 010-.53c.146-.146.383-.146.53 0 .424.425 1.529.69 2.97.69 1.44 0 2.545-.265 2.97-.69.146-.146.384-.146.53 0 .146.147.146.384 0 .53zm-.376-2.298c-.821 0-1.49-.67-1.49-1.49 0-.821.669-1.489 1.49-1.489.821 0 1.49.668 1.49 1.489 0 .82-.669 1.49-1.49 1.49z",
@@ -109,7 +109,7 @@ function ArrowUpRight() {
 
 export function NeoBrutalism({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
-  const accent = data.accent || "#7c3aed"; // Default to vivid purple
+  const accent = data.accent || "#7c3aed";
 
   const hidden = new Set(data.settings?.hidden ?? []);
   const sv = (k: string) => !hidden.has(k);
@@ -400,20 +400,35 @@ export function NeoBrutalism({ data }: { data: PublicPortfolio }) {
         
         {/* HERO */}
         <header className="neo-hero" id="top">
-          <div className="neo-hero-inner">
-            <h1 className="neo-title" aria-label={name}>{name.toUpperCase()}</h1>
-            {p?.title && <h2 className="neo-subtitle">{p.title}</h2>}
-            {(p?.tagline || p?.bio) && <p className="neo-intro">{p?.tagline || p?.bio}</p>}
-            
-            <div className="neo-hero-actions">
-              {socialRow()}
-              {(p?.location || p?.availability) && <span className="neo-avail">{[p?.location, p?.availability].filter(Boolean).join(" · ")}</span>}
+          <div className="neo-hero-container">
+            <div className="neo-hero-inner">
+              <h1 className="neo-title" aria-label={name}>{name.toUpperCase()}</h1>
+              {p?.title && <h2 className="neo-subtitle">{p.title}</h2>}
+              {(p?.tagline || p?.bio) && <p className="neo-intro">{p?.tagline || p?.bio}</p>}
+              
+              <div className="neo-hero-actions">
+                {socialRow()}
+                {(p?.location || p?.availability) && <span className="neo-avail">{[p?.location, p?.availability].filter(Boolean).join(" · ")}</span>}
+              </div>
             </div>
+            
+            {/* Added Profile Image to the right side */}
+            {p?.avatar_url && (
+              <div className="neo-hero-image-wrap">
+                <div className="neo-hero-image" style={{ ["--nc" as string]: neoColor(4) } as CSSProperties}>
+                  <img src={p.avatar_url} alt={name} />
+                </div>
+              </div>
+            )}
           </div>
           
-          {/* Abstract Hero Shapes */}
-          <div className="neo-shape neo-shape-1" style={{ ["--nc" as string]: neoColor(0) } as CSSProperties} aria-hidden />
-          <div className="neo-shape neo-shape-2" style={{ ["--nc" as string]: neoColor(1) } as CSSProperties} aria-hidden />
+          {/* Abstract Hero Shapes (Shown if no avatar) */}
+          {!p?.avatar_url && (
+            <>
+              <div className="neo-shape neo-shape-1" style={{ ["--nc" as string]: neoColor(0) } as CSSProperties} aria-hidden />
+              <div className="neo-shape neo-shape-2" style={{ ["--nc" as string]: neoColor(1) } as CSSProperties} aria-hidden />
+            </>
+          )}
         </header>
 
         {/* SECTIONS */}
@@ -451,6 +466,12 @@ export function NeoBrutalism({ data }: { data: PublicPortfolio }) {
                <b>{name.toUpperCase()}</b>
                <span>© {new Date().getFullYear()} All rights reserved.</span>
              </div>
+             
+             {/* Added Social Row in the Footer */}
+             <div className="neo-footer-socials">
+                {socialRow()}
+             </div>
+
              {!data.hide_branding && (
                 <a className="neo-madewith" href="https://folio.assetprim.com" target="_blank" rel="noopener noreferrer">MADE WITH FOLIO <ArrowUpRight/></a>
              )}
@@ -547,11 +568,39 @@ p { font-weight: 500; font-size: 1rem; }
   background-image: radial-gradient(#000 1px, transparent 1px);
   background-size: 24px 24px;
 }
-.neo-hero-inner {
+.neo-hero-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
   position: relative;
   z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.neo-hero-inner {
+  flex: 1;
   max-width: 800px;
 }
+.neo-hero-image-wrap {
+  flex: 0 0 350px;
+  display: flex;
+  justify-content: center;
+}
+.neo-hero-image {
+  width: 100%;
+  aspect-ratio: 1;
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: 8px 8px 0px var(--border-color);
+  background: var(--nc, var(--acc));
+  overflow: hidden;
+  border-radius: 12px;
+  transform: rotate(3deg);
+  transition: transform 0.3s ease;
+}
+.neo-hero-image:hover { transform: rotate(0deg); }
+.neo-hero-image img { width: 100%; height: 100%; object-fit: cover; }
+
 .neo-title {
   font-size: clamp(3rem, 8vw, 6rem);
   line-height: 0.95;
@@ -697,18 +746,27 @@ p { font-weight: 500; font-size: 1rem; }
 .neo-flex-align { display: flex; align-items: center; gap: 8px; }
 
 /* Sections Specific */
-/* About */
-.neo-about { display: flex; gap: 40px; align-items: stretch; flex-wrap: wrap; }
+
+/* About Section Full Responsive */
+.neo-about { 
+  display: flex; 
+  gap: 40px; 
+  align-items: flex-start; 
+  flex-wrap: wrap; 
+}
 .neo-about-img {
-  flex: 0 0 300px;
+  flex: 1 1 300px;
+  max-width: 350px;
+  width: 100%;
   background: var(--nc, var(--acc));
   border: var(--border-width) solid var(--border-color);
   box-shadow: var(--shadow);
   padding: 12px;
+  margin: 0 auto;
 }
 .neo-about-img .neo-zoom { aspect-ratio: 1; border: var(--border-width) solid var(--border-color); width: 100%; display: block; overflow: hidden; }
 .neo-about-img img { width: 100%; height: 100%; object-fit: cover; }
-.neo-about-txt { flex: 1; min-width: 300px; font-size: 1.1rem; }
+.neo-about-txt { flex: 2 1 300px; font-size: 1.1rem; }
 .neo-about-txt p { margin-bottom: 20px; }
 
 /* Projects */
@@ -813,17 +871,28 @@ p { font-weight: 500; font-size: 1rem; }
   .neo-contact { grid-template-columns: 1fr; }
   .neo-list-card { flex-direction: column; gap: 0; }
   .neo-list-date { flex: none; border-right: none; border-bottom: var(--border-width) solid var(--border-color); padding: 16px; justify-content: flex-start; }
+  
+  /* Hero Specific for smaller screens */
+  .neo-hero-container { flex-direction: column-reverse; text-align: center; }
+  .neo-hero-actions { justify-content: center; }
+  .neo-hero-image-wrap { flex: 0 0 auto; width: 100%; max-width: 300px; }
 }
 
 @media (max-width: 600px) {
   .neo-grid { grid-template-columns: 1fr; }
   .neo-masonry { columns: 1 auto; }
-  .neo-about { flex-direction: column; }
-  .neo-about-img { flex: none; width: 100%; max-width: 400px; margin: 0 auto; }
+  
+  /* About Section adjustment for mobile */
+  .neo-about-img { flex: none; width: 100%; max-width: 400px; }
+  .neo-about-txt { flex: none; width: 100%; text-align: center; }
+  
   .neo-shape-1 { width: 150px; height: 150px; right: -20px; top: -20px; }
   .neo-shape-2 { display: none; }
   .neo-title { font-size: 3rem; }
-  .neo-footer-inner { flex-direction: column; align-items: flex-start; }
+  
+  /* Footer Mobile alignment */
+  .neo-footer-inner { flex-direction: column; align-items: center; text-align: center; }
+  .neo-footer-socials { margin-top: 10px; margin-bottom: 10px; justify-content: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
