@@ -9,7 +9,7 @@ import { ZoomImage } from "@/components/ZoomImage";
 
 /* =====================================================================
    BrutalTemplate — "Brutal" — neo-brutalist Web3-marketplace theme.
-   UPDATED: Fully Responsive, Auto-flowing layout, Strict Data Binding.
+   UPDATED: Bento Grid Layout, Horizontal Snapping Gallery, Export Fixed.
    ===================================================================== */
 
 const DEFAULT_ORDER = [
@@ -229,8 +229,10 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
                 <li key={s.id} className="br-lead-row" style={{ ["--pct" as string]: `${lvl ?? 0}%` } as CSSProperties}>
                   <span className="br-rank">{String(i + 1).padStart(2, "0")}</span>
                   <span className="br-lead-ic" aria-hidden>{initials(s.name, "•")}</span>
-                  <span className="br-lead-name">{s.name}{s.category && <em>{s.category}</em>}</span>
-                  <span className="br-lead-bar" role={lvl != null ? "progressbar" : undefined} aria-valuenow={lvl != null ? Math.round(lvl) : undefined} aria-valuemin={0} aria-valuemax={100} aria-label={lvl != null ? `${s.name} level` : undefined}><span className="br-lead-fill" /></span>
+                  <div className="br-lead-mid">
+                     <span className="br-lead-name">{s.name}</span>
+                     {s.category && <em>{s.category}</em>}
+                  </div>
                   <span className="br-lead-val">{lvl != null ? `${Math.round(lvl)}%` : (typeof s.level === "string" ? s.level : "")}</span>
                 </li>
               ))}
@@ -359,7 +361,8 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
     gallery: () => (
       <div className="br-window">
         {bar("GALLERY")}
-        <div className="br-window-in">
+        <div className="br-window-in" style={{ paddingRight: 0, paddingBottom: "24px" }}>
+          {/* HORIZONTAL SNAP SCROLLING GALLERY */}
           <div className="br-gallery">
             {data.gallery.map((g) => g.image_url ? (
               <figure key={g.id} className="br-gitem">
@@ -367,6 +370,8 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
                 {g.caption && <figcaption className="br-muted br-small">{g.caption}</figcaption>}
               </figure>
             ) : null)}
+            {/* Empty spacer to allow snapping past the last item on mobile */}
+            <div className="br-gallery-spacer" aria-hidden></div>
           </div>
         </div>
       </div>
@@ -459,11 +464,11 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
         </div>
       </div>
 
-      {/* MAIN CONTENT STACK */}
+      {/* MAIN CONTENT STACK - BENTO GRID */}
       <main className="br-shell br-stack">
         
         {/* HERO SECTION */}
-        <section className="br-panel-hero" data-reveal>
+        <section className="br-panel br-hero-sec" data-reveal>
           <div className="br-hero">
             <div className="br-hero-left">
               <h1 className="br-headline">{headlineText.split(/\s+/).map((w, i) => <span key={i} className="br-hl">{w} </span>)}</h1>
@@ -493,7 +498,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
 
         {/* DATA SECTION PANELS */}
         {order.map((k) => (
-          <section key={k} id={SEC_ID[k] || k} data-sec={k} className="br-panel" data-reveal>
+          <section key={k} id={SEC_ID[k] || k} data-sec={k} className={`br-panel br-${k}-sec`} data-reveal>
             {sections[k] ? sections[k]() : null}
           </section>
         ))}
@@ -558,7 +563,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
 }
 
 /* =====================================================================
-   STYLES — Neo-Brutalist. Fluid and flexible layout.
+   STYLES — Neo-Brutalist. Bento Grid & Horizontal Scroll
    ===================================================================== */
 const BR_CSS = `
 .br-root {
@@ -668,12 +673,34 @@ const BR_CSS = `
 .br-ticker-track span { padding-right: 0.5em; }
 @keyframes br-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-/* STACK LAYOUT - Auto flowing vertical blocks */
+/* ================== BENTO GRID LAYOUT ================== */
 .br-stack { 
-  display: flex; 
-  flex-direction: column; 
-  gap: clamp(30px, 5vw, 60px); 
+  display: grid; 
+  grid-template-columns: repeat(12, 1fr);
+  gap: clamp(20px, 3vw, 40px); 
   padding-block: clamp(40px, 8vh, 100px); 
+  align-items: stretch;
+}
+
+/* Base panel setting */
+.br-panel { grid-column: span 12; display: flex; flex-direction: column; }
+
+/* Desktop Bento Adjustments */
+@media (min-width: 992px) {
+  .br-hero-sec { grid-column: span 12; }
+  .br-about-sec { grid-column: span 7; }
+  .br-skills-sec { grid-column: span 5; }
+  .br-projects-sec { grid-column: span 12; }
+  .br-experience-sec { grid-column: span 6; }
+  .br-education-sec { grid-column: span 6; }
+  .br-services-sec { grid-column: span 12; }
+  .br-gallery-sec { grid-column: span 12; }
+  .br-videos-sec { grid-column: span 12; }
+  .br-testimonials-sec { grid-column: span 12; }
+  .br-certifications-sec { grid-column: span 6; }
+  .br-achievements-sec { grid-column: span 6; }
+  .br-publications-sec { grid-column: span 12; }
+  .br-contact-sec { grid-column: span 12; }
 }
 
 /* hero */
@@ -693,8 +720,8 @@ const BR_CSS = `
 .br-ph { width: 100%; height: 100%; display: grid; place-items: center; font-family: var(--display); font-weight: 900; font-size: 4rem; color: var(--on-accent); background: var(--acc-bg); }
 
 /* windows (Bento Cards) */
-.br-window { background: var(--card); border: 4px solid var(--border); border-radius: 4px; box-shadow: var(--sh); overflow: hidden; width: 100%; }
-.br-bar { display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: var(--card); border-bottom: 4px solid var(--border); }
+.br-window { background: var(--card); border: 4px solid var(--border); border-radius: 4px; box-shadow: var(--sh); overflow: hidden; width: 100%; height: 100%; display: flex; flex-direction: column;}
+.br-bar { display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: var(--card); border-bottom: 4px solid var(--border); flex: 0 0 auto;}
 .br-dots { display: flex; gap: 8px; }
 .br-dots i { width: 14px; height: 14px; border: 2.5px solid var(--text-main); }
 .br-dots i:nth-child(1) { border-radius: 50%; }
@@ -702,7 +729,7 @@ const BR_CSS = `
 .br-dots i:nth-child(3) { border-radius: 0px; }
 .br-bar-title { font-family: var(--display); font-weight: 800; font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-main); }
 .br-bar-x { margin-left: auto; color: var(--text-main); font-weight: 800; font-size: 1.2rem; }
-.br-window-in { padding: clamp(20px, 3vw, 40px); }
+.br-window-in { padding: clamp(20px, 3vw, 40px); flex: 1 1 auto; }
 
 /* Specific Card Themes */
 .br-window-lime { background: var(--accent); color: var(--on-accent); }
@@ -715,7 +742,7 @@ const BR_CSS = `
 .br-bar-dark .br-bar-title, .br-bar-dark .br-bar-x { color: var(--text-light); }
 .br-bar-dark .br-dots i { border-color: var(--text-light); }
 
-/* Fluid Grid System */
+/* Fluid Grid System inside panels */
 .br-grid-fluid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: clamp(20px, 3vw, 32px); }
 
 /* Card components (Projects etc) */
@@ -733,14 +760,15 @@ const BR_CSS = `
 .br-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top:16px;}
 .br-tag { display: inline-block; padding: 4px 10px; font-family: var(--mono); font-weight: 800; font-size: 0.75rem; color: var(--text-main); background: #eee; border: 2px solid var(--border); text-transform: uppercase; }
 
-/* leaderboard */
-.br-lead { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-.br-lead-row { display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 16px; padding: 16px; border: 3px solid var(--border); background: var(--card); box-shadow: var(--sh-sm); }
+/* leaderboard / skills */
+.br-lead { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; height: 100%;}
+.br-lead-row { display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 16px; padding: 12px 16px; border: 3px solid var(--border); background: var(--card); box-shadow: var(--sh-sm); transition: transform .1s; }
+.br-lead-row:hover { transform: translateX(4px); }
 .br-rank { font-family: var(--display); font-weight: 900; color: var(--text-main); font-size: 1.2rem; width: 28px; }
 .br-lead-ic { width: 44px; height: 44px; flex: 0 0 auto; display: grid; place-items: center; border: 3px solid var(--border); background: var(--accent); color: var(--on-accent); font-family: var(--display); font-weight: 900; font-size: 1rem; overflow: hidden; }
-.br-lead-name { font-weight: 800; min-width: 0; font-size: 1.1rem; text-transform: uppercase;}
-.br-lead-name em { display: block; font-style: normal; font-family: var(--mono); font-weight: 700; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.br-lead-bar { display: none; }
+.br-lead-mid { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.br-lead-name { font-weight: 800; min-width: 0; font-size: 1rem; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.br-lead-mid em { font-style: normal; font-family: var(--mono); font-weight: 700; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
 .br-lead-val { font-family: var(--mono); font-weight: 900; font-size: 1rem; color: var(--text-main); text-align: right; }
 
 /* features (Services) */
@@ -762,11 +790,37 @@ const BR_CSS = `
 .br-list { display: flex; flex-direction: column; gap: 16px; }
 .br-listitem { border: 3px solid var(--border); border-radius: 4px; background: var(--card); padding: 20px 24px; text-decoration: none; color: inherit; box-shadow: var(--sh-sm);}
 
-/* GALLERY & VIDEOS */
-.br-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: clamp(16px, 3vw, 24px); }
-.br-gitem { border: 4px solid var(--border); border-radius: 4px; overflow: hidden; background: var(--card); box-shadow: var(--sh-sm); }
-.br-gitem .br-zoom-wrap { width: 100%; aspect-ratio: 1/1; background:#000; } 
-.br-gitem figcaption { padding: 14px 16px; font-weight: 800; border-top: 3px solid var(--border); font-size: 0.95rem;}
+/* ================== HORIZONTAL GALLERY ================== */
+.br-gallery { 
+  display: flex; 
+  overflow-x: auto; 
+  scroll-snap-type: x mandatory; 
+  gap: 24px; 
+  padding: 4px 24px 24px 24px; 
+  margin: -4px -24px 0 -24px; /* offset inner padding to make scroll full width */
+}
+/* Custom Brutalist Scrollbar */
+.br-gallery::-webkit-scrollbar { height: 16px; }
+.br-gallery::-webkit-scrollbar-track { background: #f0f0f0; border-top: 3px solid var(--border); }
+.br-gallery::-webkit-scrollbar-thumb { background: var(--accent); border: 3px solid var(--border); border-radius: 0px; cursor: pointer;}
+.br-gallery::-webkit-scrollbar-thumb:hover { background: var(--acc-bg); }
+
+.br-gitem { 
+  flex: 0 0 clamp(280px, 60vw, 500px); 
+  scroll-snap-align: start; 
+  border: 4px solid var(--border); 
+  border-radius: 4px; 
+  overflow: hidden; 
+  background: var(--card); 
+  box-shadow: var(--sh-sm); 
+  display: flex;
+  flex-direction: column;
+}
+.br-gitem .br-zoom-wrap { width: 100%; flex: 1; min-height: 250px; background:#000; } 
+.br-gitem figcaption { padding: 14px 16px; font-weight: 800; border-top: 3px solid var(--border); font-size: 0.95rem; background: var(--card);}
+.br-gallery-spacer { flex: 0 0 1px; width: 1px; }
+
+/* VIDEOS */
 .br-video { border: 4px solid var(--border); border-radius: 4px; overflow: hidden; background: var(--card); box-shadow: var(--sh-sm); }
 .br-video-frame { position: relative; aspect-ratio: 16/9; background: #000; border-bottom: 3px solid var(--border);}
 .br-video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
@@ -788,7 +842,7 @@ const BR_CSS = `
 .br-soc svg { width: 22px; height: 22px; }
 
 /* contact */
-.br-contact { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 6vw, 80px); align-items: start; }
+.br-contact { display: grid; grid-template-columns: 1fr 1.2fr; gap: clamp(40px, 6vw, 80px); align-items: start; }
 .br-join-h { font-family: var(--display); font-weight: 900; text-transform: uppercase; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05; margin: 0; }
 .br-contact-rows { display: flex; flex-direction: column; gap: 16px; margin-block: 24px; }
 .br-crow { display: flex; align-items: center; gap: 16px; text-decoration: none; color: inherit; word-break: break-word; font-weight: 800; font-size: 1.05rem; }
@@ -826,7 +880,7 @@ const BR_CSS = `
   .br-menu { display: block; }
   
   .br-hero { grid-template-columns: 1fr; gap: 40px; }
-  .br-hero-right { order: -1; align-items: center; } /* Move photo to top on mobile */
+  .br-hero-right { order: -1; align-items: center; } 
   .br-photo { max-width: 400px; }
   
   .br-contact { grid-template-columns: 1fr; } 
@@ -835,14 +889,18 @@ const BR_CSS = `
 @media (max-width: 640px) {
   /* Tighten spacing for small screens */
   .br-grid-fluid { grid-template-columns: 1fr; }
-  .br-lead { grid-template-columns: 1fr; }
-  .br-gallery { grid-template-columns: 1fr; }
   .br-lead-row { grid-template-columns: auto auto 1fr auto; padding: 12px; }
   
   /* Inner padding for tight screens */
   .br-window-in { padding: 20px; }
   .br-feat { padding: 16px; }
   .br-formcard { padding: 20px; }
+  
+  /* Update gallery offsets for smaller padding */
+  .br-gallery { 
+     padding: 4px 20px 20px 20px; 
+     margin: -4px -20px 0 -20px; 
+  }
   
   /* Hide the primary connect button in the header if there's no space */
   .br-nav-cta { display: none; }
