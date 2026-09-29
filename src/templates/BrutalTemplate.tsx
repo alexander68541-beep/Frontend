@@ -8,8 +8,8 @@ import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
    BrutalTemplate — "Brutal" — neo-brutalist Web3-marketplace theme.
-   UPDATED: True Neo-Brutalist Grid (Bento Box), Purple/Yellow Theme,
-   Sharp Black Shadows, Clean Smooth Scrolling.
+   UPDATED: Fixed Gallery full-width & aspect ratio, Contact form layout,
+   and Market Overview stats text alignment.
    ===================================================================== */
 
 const DEFAULT_ORDER = [
@@ -84,7 +84,7 @@ const SEC_ID: Record<string, string> = {
 
 export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
-  const accent = data.accent || "#5835FF"; // Purple Default
+  const accent = data.accent || "#5835FF";
 
   const hidden = new Set(data.settings?.hidden ?? []);
   const sv = (k: string) => !hidden.has(k);
@@ -107,7 +107,6 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
     const targets = root.querySelectorAll("[data-reveal]");
     if (reduce || typeof IntersectionObserver === "undefined") { targets.forEach((el) => el.classList.add("br-in")); return; }
     
-    // Smooth reveal observer
     const io = new IntersectionObserver((entries) => entries.forEach((e) => { 
       if (e.isIntersecting) { 
         e.target.classList.add("br-in"); 
@@ -319,10 +318,10 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       {/* TICKER */}
       <div className="br-ticker" aria-hidden><div className="br-ticker-track"><span>{` •  ${ticker}  `.repeat(6)}</span><span>{` •  ${ticker}  `.repeat(6)}</span></div></div>
 
-      {/* PANELS GRID (Bento Box Style without overlaps) */}
+      {/* PANELS GRID */}
       <main className="br-shell br-stack">
         
-        {/* HERO SECTION - Span Full Width */}
+        {/* HERO SECTION */}
         <section className="br-panel-hero" data-reveal>
           <div className="br-hero">
             <div className="br-hero-left">
@@ -346,6 +345,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
                     <path d="M0 62 L30 54 L60 58 L90 40 L120 46 L150 26 L180 36 L210 20 L240 30 L270 12 L300 22" fill="none" stroke="var(--tpl-accent)" strokeWidth="3" />
                     <path d="M0 62 L30 54 L60 58 L90 40 L120 46 L150 26 L180 36 L210 20 L240 30 L270 12 L300 22 L300 80 L0 80 Z" fill="var(--tpl-accent)" opacity=".14" />
                   </svg>
+                  {/* Fixed Stats Display */}
                   {heroStats.length > 0 && (
                     <div className="br-ov-stats">{heroStats.map((s) => (<div key={s.label} className="br-ov-stat"><b>{s.n}</b><span>{s.label}</span></div>))}</div>
                   )}
@@ -362,7 +362,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
           </section>
         ))}
 
-        {/* CONTACT PANEL */}
+        {/* CONTACT PANEL - FULL WIDTH 2-COLUMN FIX */}
         {username && (
           <section id="contact" className="br-panel br-contact-sec" data-reveal>
             <div className="br-window">
@@ -370,7 +370,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
               <div className="br-window-in br-contact">
                 <div className="br-contact-left">
                   <h3 className="br-join-h">OF DIGITAL OWNERSHIP.</h3>
-                  <p className="br-muted-dark">Trade. Collect. Earn. All in one place.</p>
+                  <p className="br-muted-dark" style={{marginBottom: "24px"}}>Trade. Collect. Earn. All in one place.</p>
                   <div className="br-contact-rows">
                     {p?.email && <a className="br-crow" href={`mailto:${p.email}`}><span aria-hidden>✉</span><span>{p.email}</span></a>}
                     {p?.phone && <a className="br-crow" href={`tel:${p.phone}`}><span aria-hidden>☎</span><span>{p.phone}</span></a>}
@@ -522,8 +522,10 @@ const BR_CSS = `
 }
 .br-panel-hero { grid-column: span 12; margin-bottom: 20px;}
 .br-panel { grid-column: span 6; display: flex; flex-direction: column; height: 100%;}
-.br-about, .br-projects, .br-skills, .br-services, .br-experience, .br-contact-sec { grid-column: span 6; }
-.br-gallery, .br-videos, .br-testimonials { grid-column: span 12; }
+.br-about, .br-projects, .br-skills, .br-services, .br-experience { grid-column: span 6; }
+
+/* FIX 2: GALLERY FULL WIDTH (SPAN 12) */
+.br-gallery, .br-videos, .br-testimonials, .br-contact-sec { grid-column: span 12; } 
 
 /* hero */
 .br-hero{ display:grid; grid-template-columns:1.2fr 1fr; gap:clamp(30px, 4vw, 60px); align-items:center; }
@@ -534,18 +536,43 @@ const BR_CSS = `
 .br-tilt{ transform-style:preserve-3d; transform:perspective(1100px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .2s ease; }
 .br-tilt .br-window{ transform:translateZ(0); }
 
-/* overview card inside hero */
+/* FIX 1: MARKET OVERVIEW STATS (Image 1 bottom fix) */
 .br-ov-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom: 2px solid var(--border); padding-bottom: 16px;}
 .br-ov-label{ font-family:var(--mono); font-weight:700; font-size:.75rem; letter-spacing:.1em; color:var(--muted); text-transform:uppercase;}
 .br-ov-big{ font-family:var(--display); font-weight:900; font-size:2.2rem; margin-top:4px; color:var(--text-main); }
 .br-ov-chip{ font-family:var(--mono); font-weight:800; font-size:.8rem; padding:6px 12px; background:var(--acc-bg); color:var(--text-light); border-radius: 4px;}
 .br-chart{ width:100%; height:90px; margin-top: 16px;}
 .br-chart path:first-child{ stroke-dasharray:640; stroke-dashoffset:640; animation:br-draw 1.9s .3s cubic-bezier(.2,.8,.25,1) forwards; }
-.br-ov-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:0; border-top: 2px solid var(--border); margin-top: 16px; padding-top:16px;}
-.br-ov-stat{ padding:0 12px; border-right: 2px solid var(--border);}
+.br-ov-stats{ 
+  display:grid; 
+  grid-template-columns:repeat(3,1fr); 
+  gap:0; 
+  border-top: 3px solid var(--border); 
+  margin-top: 20px; 
+}
+.br-ov-stat{ 
+  padding: 16px 10px; 
+  border-right: 3px solid var(--border);
+  text-align: center;
+}
 .br-ov-stat:last-child { border-right: none; }
-.br-ov-stat b{ display:block; font-family:var(--display); font-weight:900; font-size:1.6rem; color:var(--text-main); }
-.br-ov-stat span{ font-family:var(--mono); font-weight:700; font-size:.7rem; letter-spacing:.05em; color:var(--muted); text-transform:uppercase; }
+.br-ov-stat b{ 
+  display:block; 
+  font-family:var(--display); 
+  font-weight:900; 
+  font-size:1.8rem; 
+  line-height: 1;
+  color:var(--text-main); 
+  margin-bottom: 6px;
+}
+.br-ov-stat span{ 
+  font-family:var(--mono); 
+  font-weight:800; 
+  font-size:.75rem; 
+  letter-spacing:.08em; 
+  color:var(--muted); 
+  text-transform:uppercase; 
+}
 
 /* windows (Bento Cards) */
 .br-window{ background:var(--card); border:4px solid var(--border); border-radius:4px; box-shadow:var(--sh); overflow:hidden; height:100%; display:flex; flex-direction:column;}
@@ -620,11 +647,11 @@ const BR_CSS = `
 
 .br-listitem{ border:3px solid var(--border); border-radius:4px; background:var(--card); padding:20px 24px; text-decoration:none; color:inherit; box-shadow:var(--sh-sm);}
 
-/* gallery / video */
-.br-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; }
+/* FIX 2: GALLERY SECTION ASPECT RATIO FIX */
+.br-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:24px; }
 .br-gitem{ border:4px solid var(--border); border-radius:4px; overflow:hidden; background:var(--card); box-shadow:var(--sh-sm); }
-.br-gitem .br-zoom{ width:100%; aspect-ratio:1/1; }
-.br-gitem figcaption{ padding:12px 16px; font-weight:700; border-top:3px solid var(--border);}
+.br-gitem .br-zoom{ width:100%; aspect-ratio:16/9; } /* Changed from 1/1 to 16/9 for natural wide screenshots */
+.br-gitem figcaption{ padding:16px 18px; font-weight:800; border-top:3px solid var(--border); font-size:1.05rem;}
 .br-video{ border:4px solid var(--border); border-radius:4px; overflow:hidden; background:var(--card); box-shadow:var(--sh-sm); }
 .br-video-frame{ position:relative; aspect-ratio:16/9; background:#000; border-bottom:3px solid var(--border);}
 .br-video-frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
@@ -633,7 +660,7 @@ const BR_CSS = `
 /* zoom blur-fill */
 .br-zoom{ position:relative; display:block; padding:0; border:0; cursor:zoom-in; color:inherit; overflow:hidden; background:#000; }
 .br-zoom-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:blur(20px) saturate(1.5); transform:scale(1.2); opacity:.6; }
-.br-zoom-img{ position:relative; z-index:1; width:100%; height:100%; object-fit:contain; transition:transform .3s ease; }
+.br-zoom-img{ position:relative; z-index:1; width:100%; height:100%; object-fit:cover; transition:transform .3s ease; }
 .br-zoom:hover .br-zoom-img{ transform:scale(1.05); }
 
 /* testimonials */
@@ -651,14 +678,14 @@ const BR_CSS = `
 .br-soc:hover{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--border); background:var(--accent); }
 .br-soc svg{ width:22px; height:22px; }
 
-/* contact */
-.br-contact{ display:grid; grid-template-columns:1fr; gap:30px; }
-.br-join-h{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(1.8rem,4vw,2.5rem); line-height:1.05; margin:0; }
-.br-contact-rows{ display:flex; flex-direction:column; gap:16px; margin-block:24px; }
-.br-crow{ display:flex; align-items:center; gap:16px; text-decoration:none; color:inherit; word-break:break-word; font-weight:700; font-size:1.1rem; }
+/* FIX 3: CONTACT SECTION 2-COLUMN LAYOUT */
+.br-contact{ display:grid; grid-template-columns:1fr 1.1fr; gap:clamp(30px, 4vw, 60px); align-items:start; }
+.br-join-h{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(2rem,4vw,3rem); line-height:1.05; margin:0; }
+.br-contact-rows{ display:flex; flex-direction:column; gap:18px; margin-block:30px; }
+.br-crow{ display:flex; align-items:center; gap:16px; text-decoration:none; color:inherit; word-break:break-word; font-weight:800; font-size:1.1rem; }
 .br-crow span:first-child{ color:var(--acc-bg); width:28px; text-align:center; flex:0 0 auto; font-size:1.4rem; font-weight:900; }
 .br-crow:hover{ color:var(--acc-bg); }
-.br-formcard{ border:3px solid var(--border); border-radius:4px; background:var(--card); padding:clamp(20px,3vw,32px); box-shadow:var(--sh-sm);}
+.br-formcard{ border:3px solid var(--border); border-radius:4px; background:var(--card); padding:clamp(24px,3vw,36px); box-shadow:var(--sh-sm);}
 .br-formcard :where(input, textarea, select){ width:100%; font-family:var(--mono); font-weight:700; font-size:1rem; color:var(--text-main); background:#f4f4f4; border:3px solid var(--border); border-radius:0px; padding:14px 18px; margin-bottom:18px; }
 .br-formcard :where(input, textarea, select):focus{ outline:none; background:#ffffff; border-color:var(--acc-bg); }
 .br-formcard :where(input, textarea, select)::placeholder{ color:#888888; font-weight:600; }
@@ -701,7 +728,7 @@ const BR_CSS = `
   .br-hero{ grid-template-columns:1fr; }
   .br-navlinks{ display:none; }
   .br-menu{ display:block; }
-  .br-contact{ grid-template-columns:1fr; }
+  .br-contact{ grid-template-columns:1fr; } /* Changes Contact back to 1 column on smaller screens */
   .br-headline{ font-size: 3.5rem; }
 }
 @media (max-width:620px){
@@ -710,7 +737,7 @@ const BR_CSS = `
   .br-tl-row{ grid-template-columns:1fr; gap:6px; }
   .br-ov-stats{ grid-template-columns:1fr 1fr; border-right:none;}
   .br-ov-stat:nth-child(2) { border-right:none; }
-  .br-ov-stat:nth-child(3) { grid-column: span 2; border-top: 2px solid var(--border); padding-top:12px; margin-top:12px;}
+  .br-ov-stat:nth-child(3) { grid-column: span 2; border-top: 3px solid var(--border); padding-top:16px; margin-top:0;}
   .br-nav-cta{ display:none; }
 }
 
