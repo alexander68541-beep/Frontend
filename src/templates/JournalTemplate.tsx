@@ -613,6 +613,7 @@ const NB_CSS = `
   .nb-masonry{ columns:2 140px; }
   .nb-time-row{ grid-template-columns:14px 1fr; }
   .nb-time-date{ grid-column:2; margin-top:2px; }
+  .nb-time-row > div { grid-column:2; }
   .nb-about{ justify-content:center; }
   .nb-sticker{ padding:22px 18px; margin:22px 0; }
   .nb-num{ top:-15px; left:-6px; width:36px; height:36px; font-size:1rem; }
