@@ -8,8 +8,7 @@ import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
    BrutalTemplate — "Brutal" — neo-brutalist Web3-marketplace theme.
-   UPDATED: Fixed Gallery full-width & aspect ratio, Contact form layout,
-   and Market Overview stats text alignment.
+   UPDATED: Added Profile Photo box, Fixed Gallery full width grid.
    ===================================================================== */
 
 const DEFAULT_ORDER = [
@@ -334,6 +333,18 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
             </div>
 
             <div className="br-hero-right br-tilt" ref={tiltRef}>
+              
+              {/* PROFILE PHOTO BOX ADDED HERE */}
+              {p?.avatar_url && (
+                <div className="br-window br-photo">
+                  {bar("PROFILE")}
+                  <div className="br-photo-in">
+                    <ZImg src={p.avatar_url} alt={name} />
+                  </div>
+                </div>
+              )}
+
+              {/* MARKET OVERVIEW BOX */}
               <div className="br-window">
                 {bar("MARKET OVERVIEW")}
                 <div className="br-window-in">
@@ -345,24 +356,24 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
                     <path d="M0 62 L30 54 L60 58 L90 40 L120 46 L150 26 L180 36 L210 20 L240 30 L270 12 L300 22" fill="none" stroke="var(--tpl-accent)" strokeWidth="3" />
                     <path d="M0 62 L30 54 L60 58 L90 40 L120 46 L150 26 L180 36 L210 20 L240 30 L270 12 L300 22 L300 80 L0 80 Z" fill="var(--tpl-accent)" opacity=".14" />
                   </svg>
-                  {/* Fixed Stats Display */}
                   {heroStats.length > 0 && (
                     <div className="br-ov-stats">{heroStats.map((s) => (<div key={s.label} className="br-ov-stat"><b>{s.n}</b><span>{s.label}</span></div>))}</div>
                   )}
                 </div>
               </div>
+
             </div>
           </div>
         </section>
 
         {/* DATA SECTION PANELS */}
         {order.map((k) => (
-          <section key={k} id={SEC_ID[k] || k} className={`br-panel br-${k}`} data-reveal>
+          <section key={k} id={SEC_ID[k] || k} className={`br-panel br-${k}-sec`} data-reveal>
             {sections[k] ? sections[k]() : null}
           </section>
         ))}
 
-        {/* CONTACT PANEL - FULL WIDTH 2-COLUMN FIX */}
+        {/* CONTACT PANEL */}
         {username && (
           <section id="contact" className="br-panel br-contact-sec" data-reveal>
             <div className="br-window">
@@ -522,21 +533,31 @@ const BR_CSS = `
 }
 .br-panel-hero { grid-column: span 12; margin-bottom: 20px;}
 .br-panel { grid-column: span 6; display: flex; flex-direction: column; height: 100%;}
-.br-about, .br-projects, .br-skills, .br-services, .br-experience { grid-column: span 6; }
 
-/* FIX 2: GALLERY FULL WIDTH (SPAN 12) */
-.br-gallery, .br-videos, .br-testimonials, .br-contact-sec { grid-column: span 12; } 
+/* FULL WIDTH OVERRIDES */
+.br-gallery-sec, .br-videos-sec, .br-testimonials-sec, .br-contact-sec { 
+  grid-column: 1 / -1 !important; 
+} 
 
 /* hero */
 .br-hero{ display:grid; grid-template-columns:1.2fr 1fr; gap:clamp(30px, 4vw, 60px); align-items:center; }
 .br-headline{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(3rem, 6vw, 5.5rem); line-height:.92; letter-spacing:-.02em; margin:0; color:var(--text-light); }
 .br-hl{ background:transparent; color:var(--text-light); display:inline-block; }
 .br-sub{ margin:20px 0 0; color:var(--text-light); font-size:1.2rem; font-weight:600; max-width:48ch; }
-.br-hero-right{ perspective:1100px; }
+.br-hero-right{ display:flex; flex-direction:column; gap:24px; perspective:1100px; }
 .br-tilt{ transform-style:preserve-3d; transform:perspective(1100px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); transition:transform .2s ease; }
 .br-tilt .br-window{ transform:translateZ(0); }
 
-/* FIX 1: MARKET OVERVIEW STATS (Image 1 bottom fix) */
+/* Profile Photo */
+.br-photo { background:var(--card-dark); color:var(--text-light); }
+.br-photo .br-bar { background:var(--card-dark); border-bottom-color: #333; }
+.br-photo .br-bar-title, .br-photo .br-bar-x { color: var(--text-light); }
+.br-photo .br-dots i { border-color: var(--text-light); }
+.br-photo .br-photo-in { padding: 0; aspect-ratio: 21/9; overflow: hidden; background: #000; border-top:none;}
+.br-photo .br-zoom { width: 100%; height: 100%; display:block; }
+.br-photo .br-zoom-img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Market Overview */
 .br-ov-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom: 2px solid var(--border); padding-bottom: 16px;}
 .br-ov-label{ font-family:var(--mono); font-weight:700; font-size:.75rem; letter-spacing:.1em; color:var(--muted); text-transform:uppercase;}
 .br-ov-big{ font-family:var(--display); font-weight:900; font-size:2.2rem; margin-top:4px; color:var(--text-main); }
@@ -628,7 +649,7 @@ const BR_CSS = `
 .br-lead-bar{ display:none; }
 .br-lead-val{ font-family:var(--mono); font-weight:900; font-size:.95rem; color:var(--text-main); text-align:right; }
 
-/* features (Why XChange / Services) */
+/* features */
 .br-feats{ display:grid; grid-template-columns:1fr; gap:24px; }
 .br-feat{ display:flex; gap:16px; align-items:flex-start; padding:0; border:none; background:transparent; }
 .br-feat-ic{ width:32px; height:32px; flex:0 0 auto; display:grid; place-items:center; border:2px solid var(--accent); border-radius:0px; background:transparent; color:var(--accent); font-weight:900; font-size:1.1rem;}
@@ -647,10 +668,10 @@ const BR_CSS = `
 
 .br-listitem{ border:3px solid var(--border); border-radius:4px; background:var(--card); padding:20px 24px; text-decoration:none; color:inherit; box-shadow:var(--sh-sm);}
 
-/* FIX 2: GALLERY SECTION ASPECT RATIO FIX */
-.br-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:24px; }
+/* GALLERY SECTION - FULL WIDTH GRID */
+.br-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:24px; }
 .br-gitem{ border:4px solid var(--border); border-radius:4px; overflow:hidden; background:var(--card); box-shadow:var(--sh-sm); }
-.br-gitem .br-zoom{ width:100%; aspect-ratio:16/9; } /* Changed from 1/1 to 16/9 for natural wide screenshots */
+.br-gitem .br-zoom{ width:100%; aspect-ratio:16/9; } 
 .br-gitem figcaption{ padding:16px 18px; font-weight:800; border-top:3px solid var(--border); font-size:1.05rem;}
 .br-video{ border:4px solid var(--border); border-radius:4px; overflow:hidden; background:var(--card); box-shadow:var(--sh-sm); }
 .br-video-frame{ position:relative; aspect-ratio:16/9; background:#000; border-bottom:3px solid var(--border);}
@@ -678,7 +699,7 @@ const BR_CSS = `
 .br-soc:hover{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--border); background:var(--accent); }
 .br-soc svg{ width:22px; height:22px; }
 
-/* FIX 3: CONTACT SECTION 2-COLUMN LAYOUT */
+/* contact */
 .br-contact{ display:grid; grid-template-columns:1fr 1.1fr; gap:clamp(30px, 4vw, 60px); align-items:start; }
 .br-join-h{ font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(2rem,4vw,3rem); line-height:1.05; margin:0; }
 .br-contact-rows{ display:flex; flex-direction:column; gap:18px; margin-block:30px; }
@@ -694,7 +715,7 @@ const BR_CSS = `
 .br-formcard :where(button, [type="submit"]):hover{ transform:translate(3px,3px); box-shadow:1px 1px 0 var(--border); }
 .br-formcard label{ color:var(--text-main); font-weight:800; font-size:.9rem; text-transform:uppercase; margin-bottom: 6px; display:block;}
 
-/* footer - Pure Black matching the image */
+/* footer - Pure Black */
 .br-footer{ position:relative; z-index:20; background:#000000; color:#ffffff; border-top:4px solid var(--border);}
 .br-footer-in{ display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:40px; padding-block:60px 40px; }
 .br-foot-col { display: flex; flex-direction: column; gap: 16px; }
@@ -722,13 +743,13 @@ const BR_CSS = `
 @media (max-width:1080px){ 
   .br-stack { grid-template-columns: repeat(2, 1fr); }
   .br-panel { grid-column: span 2; }
-  .br-about, .br-projects, .br-skills, .br-services, .br-experience, .br-contact-sec { grid-column: span 2; }
+  .br-about-sec, .br-projects-sec, .br-skills-sec, .br-services-sec, .br-experience-sec { grid-column: span 2; }
 }
 @media (max-width:880px){
   .br-hero{ grid-template-columns:1fr; }
   .br-navlinks{ display:none; }
   .br-menu{ display:block; }
-  .br-contact{ grid-template-columns:1fr; } /* Changes Contact back to 1 column on smaller screens */
+  .br-contact{ grid-template-columns:1fr; }
   .br-headline{ font-size: 3.5rem; }
 }
 @media (max-width:620px){
