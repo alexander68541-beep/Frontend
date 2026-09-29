@@ -7,10 +7,10 @@ import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
-   BrutalTemplate — "Brutal" — a neo-brutalist Web3-marketplace theme.
-   Bright purple canvas, black window-cards with hard offset shadows,
-   lime accents, bold condensed type, marquee ticker.
-   Normal scroll; sections rise up from below as they enter view.
+   BrutalTemplate — "Brutal" — neo-brutalist Web3-marketplace theme.
+   STACKING-CARD SCROLL: each section is pinned and the next one rises
+   from below and covers it, like a stack of cards.
+   Canvas colour comes from data.accent; lime is the fixed pop accent.
    PURE PRESENTATION from `data`. Prefixed `.br-`.
    ===================================================================== */
 
@@ -31,6 +31,7 @@ function initials(name: string | null | undefined, fallback: string | null | und
   const parts = src.split(/\s+/).filter(Boolean);
   return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : src.slice(0, 2)).toUpperCase();
 }
+function firstWord(n: string) { return n.split(/\s+/)[0] || n; }
 function oneDate(s: string | null): string | null {
   if (!s) return null;
   const d = new Date(s);
@@ -101,17 +102,24 @@ function SocialIcon({ name }: { name: string }) {
   return (<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden focusable="false"><path d={SOCIAL_ICONS[name] || SOCIAL_ICONS.globe} /></svg>);
 }
 
+const SEC_ID: Record<string, string> = {
+  about: "about", projects: "work", skills: "skills", services: "services", experience: "experience",
+  education: "education", certifications: "certifications", achievements: "achievements",
+  publications: "publications", gallery: "gallery", videos: "videos", testimonials: "testimonials",
+};
+
 /* ------------------------------ component ------------------------------ */
 
 export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
-  const accent = data.accent || "#c6f542";
+  const accent = data.accent || "#6B4CF0";
 
   const hidden = new Set(data.settings?.hidden ?? []);
   const sv = (k: string) => !hidden.has(k);
   const username = data.username;
   const name = p?.display_name || username || "Your Name";
   const mono = initials(p?.display_name, username);
+  const nick = firstWord(name);
 
   const [lb, setLb] = useState<{ src: string; alt: string; cap?: string } | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -125,7 +133,7 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
     const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const targets = root.querySelectorAll("[data-reveal]");
     if (reduce || typeof IntersectionObserver === "undefined") { targets.forEach((el) => el.classList.add("br-in")); return; }
-    const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("br-in"); io.unobserve(e.target); } }), { threshold: 0.1, rootMargin: "0px 0px -10% 0px" });
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("br-in"); io.unobserve(e.target); } }), { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
     targets.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
@@ -189,144 +197,108 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
     about: () => {
       const aboutText = p?.about ?? p?.bio ?? null;
       return (
-        <section id="about" data-reveal className="br-section">
-          <div className="br-window br-window-lime">
-            {bar("ABOUT / LATEST")}
-            <div className="br-window-in">
-              <h3 className="br-lime-h">{p?.tagline || `${first(name)} is live.`}</h3>
-              {aboutText && <p className="br-lime-p">{aboutText.split(/\n{2,}/)[0]}</p>}
-              {p?.resume_url && <a className="br-btn br-btn-dark br-mt" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">Learn More <span aria-hidden>→</span></a>}
-            </div>
+        <div className="br-window br-window-lime">
+          {bar("ABOUT / LATEST")}
+          <div className="br-window-in">
+            <h3 className="br-lime-h">{p?.tagline || `${nick} is live.`}</h3>
+            {aboutText && aboutText.split(/\n{2,}/).slice(0, 2).map((para, i) => <p key={i} className="br-lime-p">{para}</p>)}
+            {p?.resume_url && <a className="br-btn br-btn-dark br-mt" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">Learn More <span aria-hidden>→</span></a>}
           </div>
-        </section>
+        </div>
       );
     },
     projects: () => {
       const ordered = [...data.projects].sort((a, b) => Number(!!b.is_featured) - Number(!!a.is_featured));
       return (
-        <section id="work" data-reveal className="br-section">
-          <div className="br-window">
-            {bar("TRENDING COLLECTIONS")}
-            <div className="br-window-in">
-              <div className="br-grid-3">
-                {ordered.map((pr) => {
-                  const category = pr.role || (pr.tags && pr.tags[0]) || null;
-                  return (
-                    <article key={pr.id} className="br-nft">
-                      <div className="br-nft-media">{pr.image_url ? <ZImg src={pr.image_url} alt={pr.title || "Project"} cap={pr.title || undefined} /> : <div className="br-ph" aria-hidden>{initials(pr.title, "P")}</div>}{pr.is_featured && <span className="br-nft-badge">★</span>}</div>
-                      <div className="br-nft-body">
-                        <div className="br-nft-titlerow"><h4 className="br-nft-title">{pr.title || "Untitled"}</h4>{pr.url && <a className="br-nft-go" href={ext(pr.url)} target="_blank" rel="noopener noreferrer" aria-label="Open">↗</a>}</div>
-                        {category && <p className="br-nft-cat">{category}</p>}
-                        {pr.tags && pr.tags.length > 0 && <span className="br-floor">{pr.tags[0]}</span>}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
+        <div className="br-window">
+          {bar("TRENDING COLLECTIONS")}
+          <div className="br-window-in"><div className="br-grid-3">
+            {ordered.map((pr) => {
+              const category = pr.role || (pr.tags && pr.tags[0]) || null;
+              return (
+                <article key={pr.id} className="br-nft">
+                  <div className="br-nft-media">{pr.image_url ? <ZImg src={pr.image_url} alt={pr.title || "Project"} cap={pr.title || undefined} /> : <div className="br-ph" aria-hidden>{initials(pr.title, "P")}</div>}{pr.is_featured && <span className="br-nft-badge">★</span>}</div>
+                  <div className="br-nft-body">
+                    <div className="br-nft-titlerow"><h4 className="br-nft-title">{pr.title || "Untitled"}</h4>{pr.url && <a className="br-nft-go" href={ext(pr.url)} target="_blank" rel="noopener noreferrer" aria-label="Open">↗</a>}</div>
+                    {category && <p className="br-nft-cat">{category}</p>}
+                    {pr.tags && pr.tags.length > 0 && <span className="br-floor">{pr.tags[0]}</span>}
+                  </div>
+                </article>
+              );
+            })}
+          </div></div>
+        </div>
       );
     },
     skills: () => {
       const sorted = [...data.skills].map((s) => ({ s, lvl: levelPct(s.level) })).sort((a, b) => (b.lvl ?? 0) - (a.lvl ?? 0));
       return (
-        <section id="skills" data-reveal className="br-section">
-          <div className="br-window">
-            {bar("TOP SKILLS · LEADERBOARD")}
-            <div className="br-window-in">
-              <ol className="br-lead">
-                {sorted.map(({ s, lvl }, i) => (
-                  <li key={s.id} className="br-lead-row" style={{ ["--pct" as string]: `${lvl ?? 0}%` } as CSSProperties}>
-                    <span className="br-rank">{String(i + 1).padStart(2, "0")}</span>
-                    <span className="br-lead-ic" aria-hidden>{initials(s.name, "•")}</span>
-                    <span className="br-lead-name">{s.name}{s.category && <em>{s.category}</em>}</span>
-                    <span className="br-lead-bar" role={lvl != null ? "progressbar" : undefined} aria-valuenow={lvl != null ? Math.round(lvl) : undefined} aria-valuemin={0} aria-valuemax={100} aria-label={lvl != null ? `${s.name} level` : undefined}><span className="br-lead-fill" /></span>
-                    <span className="br-lead-val">{lvl != null ? `${Math.round(lvl)}%` : (typeof s.level === "string" ? s.level : "")}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-        </section>
+        <div className="br-window">
+          {bar("TOP SKILLS · LEADERBOARD")}
+          <div className="br-window-in"><ol className="br-lead">
+            {sorted.map(({ s, lvl }, i) => (
+              <li key={s.id} className="br-lead-row" style={{ ["--pct" as string]: `${lvl ?? 0}%` } as CSSProperties}>
+                <span className="br-rank">{String(i + 1).padStart(2, "0")}</span>
+                <span className="br-lead-ic" aria-hidden>{initials(s.name, "•")}</span>
+                <span className="br-lead-name">{s.name}{s.category && <em>{s.category}</em>}</span>
+                <span className="br-lead-bar" role={lvl != null ? "progressbar" : undefined} aria-valuenow={lvl != null ? Math.round(lvl) : undefined} aria-valuemin={0} aria-valuemax={100} aria-label={lvl != null ? `${s.name} level` : undefined}><span className="br-lead-fill" /></span>
+                <span className="br-lead-val">{lvl != null ? `${Math.round(lvl)}%` : (typeof s.level === "string" ? s.level : "")}</span>
+              </li>
+            ))}
+          </ol></div>
+        </div>
       );
     },
     services: () => (
-      <section id="services" data-reveal className="br-section">
-        <div className="br-window">
-          {bar(`WHY ${first(name).toUpperCase()}?`)}
-          <div className="br-window-in">
-            <div className="br-feats">
-              {data.services.map((s) => (
-                <div key={s.id} className="br-feat"><span className="br-feat-ic" aria-hidden>◆</span><div><h4 className="br-feat-h">{s.title}</h4>{s.description && <p className="br-feat-p">{s.description}</p>}{s.price && <span className="br-floor">{s.price}</span>}</div></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <div className="br-window">
+        {bar(`WHY ${nick.toUpperCase()}?`)}
+        <div className="br-window-in"><div className="br-feats">
+          {data.services.map((s) => (<div key={s.id} className="br-feat"><span className="br-feat-ic" aria-hidden>◆</span><div><h4 className="br-feat-h">{s.title}</h4>{s.description && <p className="br-feat-p">{s.description}</p>}{s.price && <span className="br-floor">{s.price}</span>}</div></div>))}
+        </div></div>
+      </div>
     ),
     experience: () => (
-      <section id="experience" data-reveal className="br-section">
-        <div className="br-window">
-          {bar("EXPERIENCE / TIMELINE")}
-          <div className="br-window-in">
-            <div className="br-tl">
-              {data.experience.map((e) => (
-                <div key={e.id} className="br-tl-row"><span className="br-tl-date">{dateRange(e.start_date, e.end_date, e.is_current)}</span><div><h4 className="br-feat-h">{e.title || e.company || "Role"}</h4><p className="br-muted br-small">{[e.company, e.location].filter(Boolean).join(" · ")}</p>{e.description && <p className="br-muted">{e.description}</p>}</div></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <div className="br-window">
+        {bar("EXPERIENCE / TIMELINE")}
+        <div className="br-window-in"><div className="br-tl">
+          {data.experience.map((e) => (<div key={e.id} className="br-tl-row"><span className="br-tl-date">{dateRange(e.start_date, e.end_date, e.is_current)}</span><div><h4 className="br-feat-h">{e.title || e.company || "Role"}</h4><p className="br-muted br-small">{[e.company, e.location].filter(Boolean).join(" · ")}</p>{e.description && <p className="br-muted">{e.description}</p>}</div></div>))}
+        </div></div>
+      </div>
     ),
     education: () => (
-      <section id="education" data-reveal className="br-section">
-        <div className="br-window">{bar("EDUCATION")}<div className="br-window-in"><div className="br-grid-2">
-          {data.education.map((ed) => (<div key={ed.id} className="br-mini"><div className="br-mini-top"><h4 className="br-feat-h">{ed.school || "School"}</h4><span className="br-floor">{dateRange(ed.start_date, ed.end_date)}</span></div>{(ed.degree || ed.field) && <p className="br-muted">{[ed.degree, ed.field].filter(Boolean).join(", ")}</p>}{ed.description && <p className="br-muted br-small">{ed.description}</p>}</div>))}
-        </div></div></div>
-      </section>
+      <div className="br-window">{bar("EDUCATION")}<div className="br-window-in"><div className="br-grid-2">
+        {data.education.map((ed) => (<div key={ed.id} className="br-mini"><div className="br-mini-top"><h4 className="br-feat-h">{ed.school || "School"}</h4><span className="br-floor">{dateRange(ed.start_date, ed.end_date)}</span></div>{(ed.degree || ed.field) && <p className="br-muted">{[ed.degree, ed.field].filter(Boolean).join(", ")}</p>}{ed.description && <p className="br-muted br-small">{ed.description}</p>}</div>))}
+      </div></div></div>
     ),
     certifications: () => (
-      <section id="certifications" data-reveal className="br-section">
-        <div className="br-window">{bar("CERTIFICATIONS")}<div className="br-window-in"><div className="br-grid-3">
-          {data.certifications.map((c) => { const body = (<><span className="br-feat-ic" aria-hidden>✓</span><h4 className="br-feat-h">{c.name}</h4>{c.issuer && <p className="br-muted br-small">{c.issuer}</p>}{oneDate(c.issue_date) && <span className="br-floor">{oneDate(c.issue_date)}</span>}</>); return c.url ? <a key={c.id} className="br-mini br-mini-link" href={ext(c.url)} target="_blank" rel="noopener noreferrer">{body}</a> : <div key={c.id} className="br-mini">{body}</div>; })}
-        </div></div></div>
-      </section>
+      <div className="br-window">{bar("CERTIFICATIONS")}<div className="br-window-in"><div className="br-grid-3">
+        {data.certifications.map((c) => { const body = (<><span className="br-feat-ic" aria-hidden>✓</span><h4 className="br-feat-h">{c.name}</h4>{c.issuer && <p className="br-muted br-small">{c.issuer}</p>}{oneDate(c.issue_date) && <span className="br-floor">{oneDate(c.issue_date)}</span>}</>); return c.url ? <a key={c.id} className="br-mini br-mini-link" href={ext(c.url)} target="_blank" rel="noopener noreferrer">{body}</a> : <div key={c.id} className="br-mini">{body}</div>; })}
+      </div></div></div>
     ),
     achievements: () => (
-      <section id="achievements" data-reveal className="br-section">
-        <div className="br-window">{bar("ACHIEVEMENTS")}<div className="br-window-in"><div className="br-grid-3">
-          {data.achievements.map((a) => (<div key={a.id} className="br-mini"><span className="br-feat-ic" aria-hidden>★</span><h4 className="br-feat-h">{a.title}</h4>{oneDate(a.date) && <span className="br-floor">{oneDate(a.date)}</span>}{a.description && <p className="br-muted br-small">{a.description}</p>}</div>))}
-        </div></div></div>
-      </section>
+      <div className="br-window">{bar("ACHIEVEMENTS")}<div className="br-window-in"><div className="br-grid-3">
+        {data.achievements.map((a) => (<div key={a.id} className="br-mini"><span className="br-feat-ic" aria-hidden>★</span><h4 className="br-feat-h">{a.title}</h4>{oneDate(a.date) && <span className="br-floor">{oneDate(a.date)}</span>}{a.description && <p className="br-muted br-small">{a.description}</p>}</div>))}
+      </div></div></div>
     ),
     publications: () => (
-      <section id="publications" data-reveal className="br-section">
-        <div className="br-window">{bar("PUBLICATIONS")}<div className="br-window-in"><div className="br-list">
-          {data.publications.map((pub) => { const meta = [pub.publisher, oneDate(pub.date)].filter(Boolean).join(" · "); const body = (<><div className="br-mini-top"><h4 className="br-feat-h">{pub.title}</h4>{pub.url && <span aria-hidden>↗</span>}</div>{meta && <p className="br-muted br-small">{meta}</p>}{pub.description && <p className="br-muted">{pub.description}</p>}</>); return pub.url ? <a key={pub.id} className="br-listitem br-mini-link" href={ext(pub.url)} target="_blank" rel="noopener noreferrer">{body}</a> : <div key={pub.id} className="br-listitem">{body}</div>; })}
-        </div></div></div>
-      </section>
+      <div className="br-window">{bar("PUBLICATIONS")}<div className="br-window-in"><div className="br-list">
+        {data.publications.map((pub) => { const meta = [pub.publisher, oneDate(pub.date)].filter(Boolean).join(" · "); const body = (<><div className="br-mini-top"><h4 className="br-feat-h">{pub.title}</h4>{pub.url && <span aria-hidden>↗</span>}</div>{meta && <p className="br-muted br-small">{meta}</p>}{pub.description && <p className="br-muted">{pub.description}</p>}</>); return pub.url ? <a key={pub.id} className="br-listitem br-mini-link" href={ext(pub.url)} target="_blank" rel="noopener noreferrer">{body}</a> : <div key={pub.id} className="br-listitem">{body}</div>; })}
+      </div></div></div>
     ),
     gallery: () => (
-      <section id="gallery" data-reveal className="br-section">
-        <div className="br-window">{bar("GALLERY / VAULT")}<div className="br-window-in"><div className="br-gallery">
-          {data.gallery.map((g) => g.image_url ? (<figure key={g.id} className="br-gitem"><ZImg src={g.image_url} alt={g.caption || "Gallery image"} cap={g.caption || undefined} />{g.caption && <figcaption className="br-muted br-small">{g.caption}</figcaption>}</figure>) : null)}
-        </div></div></div>
-      </section>
+      <div className="br-window">{bar("GALLERY / VAULT")}<div className="br-window-in"><div className="br-gallery">
+        {data.gallery.map((g) => g.image_url ? (<figure key={g.id} className="br-gitem"><ZImg src={g.image_url} alt={g.caption || "Gallery image"} cap={g.caption || undefined} />{g.caption && <figcaption className="br-muted br-small">{g.caption}</figcaption>}</figure>) : null)}
+      </div></div></div>
     ),
     videos: () => (
-      <section id="videos" data-reveal className="br-section">
-        <div className="br-window">{bar("VIDEOS")}<div className="br-window-in"><div className="br-grid-2">
-          {data.videos.map((v) => { const src = v.url ? videoEmbed(v.url) : null; if (!src) return null; return (<figure key={v.id} className="br-video"><div className="br-video-frame"><iframe src={src} title={v.title || "Video"} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div>{v.title && <figcaption className="br-muted br-small">{v.title}</figcaption>}</figure>); })}
-        </div></div></div>
-      </section>
+      <div className="br-window">{bar("VIDEOS")}<div className="br-window-in"><div className="br-grid-2">
+        {data.videos.map((v) => { const src = v.url ? videoEmbed(v.url) : null; if (!src) return null; return (<figure key={v.id} className="br-video"><div className="br-video-frame"><iframe src={src} title={v.title || "Video"} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div>{v.title && <figcaption className="br-muted br-small">{v.title}</figcaption>}</figure>); })}
+      </div></div></div>
     ),
     testimonials: () => (
-      <section id="testimonials" data-reveal className="br-section">
-        <div className="br-window">{bar("WHAT CLIENTS SAY")}<div className="br-window-in"><div className="br-grid-3">
-          {data.testimonials.map((t) => (<figure key={t.id} className="br-quote"><span className="br-quote-mark" aria-hidden>&ldquo;</span>{t.quote && <blockquote>{t.quote}</blockquote>}<figcaption className="br-quote-by"><span className="br-lead-ic" aria-hidden>{t.avatar_url ? <img src={t.avatar_url} alt="" loading="lazy" /> : initials(t.author, "•")}</span><span>{t.author && <b>{t.author}</b>}{t.role && <em className="br-muted">{t.role}</em>}</span></figcaption></figure>))}
-        </div></div></div>
-      </section>
+      <div className="br-window">{bar("WHAT CLIENTS SAY")}<div className="br-window-in"><div className="br-grid-3">
+        {data.testimonials.map((t) => (<figure key={t.id} className="br-quote"><span className="br-quote-mark" aria-hidden>&ldquo;</span>{t.quote && <blockquote>{t.quote}</blockquote>}<figcaption className="br-quote-by"><span className="br-lead-ic" aria-hidden>{t.avatar_url ? <img src={t.avatar_url} alt="" loading="lazy" /> : initials(t.author, "•")}</span><span>{t.author && <b>{t.author}</b>}{t.role && <em className="br-muted">{t.role}</em>}</span></figcaption></figure>))}
+      </div></div></div>
     ),
   };
 
@@ -359,67 +331,82 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       {/* TICKER */}
       <div className="br-ticker" aria-hidden><div className="br-ticker-track"><span>{`${ticker}  ✦  `.repeat(6)}</span><span>{`${ticker}  ✦  `.repeat(6)}</span></div></div>
 
-      <div className="br-shell">
+      {/* STACKING PANELS */}
+      <main className="br-stack">
         {/* HERO */}
-        <header className="br-hero">
-          <div className="br-hero-left" data-reveal>
-            <span className="br-eyebrow">{p?.title || "Portfolio"}</span>
-            <h1 className="br-headline">{headlineText.split(/\s+/).map((w, i) => <span key={i} className={i % 2 === 1 ? "br-hl" : "br-hlx"}>{w} </span>)}</h1>
-            {(p?.bio) && <p className="br-sub">{p.bio}</p>}
-            <div className="br-btnrow">
-              {has.projects && <a className="br-btn br-btn-lime" href="#work">Start Trading <span aria-hidden>→</span></a>}
-              {contactHref && <a className="br-btn br-btn-dark" href={contactHref}>Explore <span aria-hidden>→</span></a>}
-            </div>
-            {socialRow("br-hero-soc")}
-          </div>
-
-          <div className="br-hero-right" data-reveal>
-            <div className="br-window br-overview">
-              {bar("OVERVIEW")}
-              <div className="br-window-in">
-                <div className="br-ov-top">
-                  <div><span className="br-ov-label">STATUS</span><div className="br-ov-big">{p?.availability || "Available"}</div></div>
-                  {p?.location && <span className="br-ov-chip">{p.location}</span>}
+        <section className="br-panel br-panel-first">
+          <div className="br-shell br-panel-in" data-reveal>
+            <div className="br-hero">
+              <div className="br-hero-left">
+                <span className="br-eyebrow">{p?.title || "Portfolio"}</span>
+                <h1 className="br-headline">{headlineText.split(/\s+/).map((w, i) => <span key={i} className={i % 2 === 1 ? "br-hl" : "br-hlx"}>{w} </span>)}</h1>
+                {p?.bio && <p className="br-sub">{p.bio}</p>}
+                <div className="br-btnrow">
+                  {has.projects && <a className="br-btn br-btn-lime" href="#work">Start Trading <span aria-hidden>→</span></a>}
+                  {contactHref && <a className="br-btn br-btn-dark" href={contactHref}>Explore <span aria-hidden>→</span></a>}
                 </div>
-                <svg className="br-chart" viewBox="0 0 300 90" preserveAspectRatio="none" aria-hidden>
-                  <path d="M0 70 L30 60 L60 66 L90 44 L120 52 L150 30 L180 40 L210 22 L240 34 L270 14 L300 26" fill="none" stroke="var(--accent)" strokeWidth="3" />
-                  <path d="M0 70 L30 60 L60 66 L90 44 L120 52 L150 30 L180 40 L210 22 L240 34 L270 14 L300 26 L300 90 L0 90 Z" fill="var(--accent)" opacity=".12" />
-                </svg>
-                {heroStats.length > 0 && (
-                  <div className="br-ov-stats">
-                    {heroStats.map((s) => (<div key={s.label} className="br-ov-stat"><b>{s.n}</b><span>{s.label}</span></div>))}
+                {socialRow("br-hero-soc")}
+              </div>
+
+              <div className="br-hero-right">
+                {p?.avatar_url && (
+                  <div className="br-window br-photo">
+                    {bar("PROFILE")}
+                    <div className="br-photo-in"><ZImg src={p.avatar_url} alt={name} /></div>
                   </div>
                 )}
+                <div className="br-window br-overview">
+                  {bar("OVERVIEW")}
+                  <div className="br-window-in">
+                    <div className="br-ov-top">
+                      <div><span className="br-ov-label">STATUS</span><div className="br-ov-big">{p?.availability || "Available"}</div></div>
+                      {p?.location && <span className="br-ov-chip">{p.location}</span>}
+                    </div>
+                    <svg className="br-chart" viewBox="0 0 300 80" preserveAspectRatio="none" aria-hidden>
+                      <path d="M0 62 L30 54 L60 58 L90 40 L120 46 L150 26 L180 36 L210 20 L240 30 L270 12 L300 22" fill="none" stroke="var(--accent)" strokeWidth="3" />
+                      <path d="M0 62 L30 54 L60 58 L90 40 L120 46 L150 26 L180 36 L210 20 L240 30 L270 12 L300 22 L300 80 L0 80 Z" fill="var(--accent)" opacity=".14" />
+                    </svg>
+                    {heroStats.length > 0 && (
+                      <div className="br-ov-stats">{heroStats.map((s) => (<div key={s.label} className="br-ov-stat"><b>{s.n}</b><span>{s.label}</span></div>))}</div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </header>
+        </section>
 
-        {/* SECTIONS — rise up on scroll */}
-        {order.map((k) => <Fragment key={k}>{sections[k] ? sections[k]() : null}</Fragment>)}
+        {/* DATA SECTION PANELS */}
+        {order.map((k) => (
+          <section key={k} id={SEC_ID[k] || k} className="br-panel">
+            <div className="br-shell br-panel-in" data-reveal>{sections[k] ? sections[k]() : null}</div>
+          </section>
+        ))}
 
-        {/* CONTACT */}
+        {/* CONTACT PANEL */}
         {username && (
-          <section id="contact" data-reveal className="br-section">
-            <div className="br-window">
-              {bar("JOIN THE FUTURE")}
-              <div className="br-window-in br-contact">
-                <div className="br-contact-left">
-                  <h3 className="br-join-h">Let&apos;s build something together.</h3>
-                  <div className="br-contact-rows">
-                    {p?.email && <a className="br-crow" href={`mailto:${p.email}`}><span aria-hidden>✉</span><span>{p.email}</span></a>}
-                    {p?.phone && <a className="br-crow" href={`tel:${p.phone}`}><span aria-hidden>☎</span><span>{p.phone}</span></a>}
-                    {p?.website && <a className="br-crow" href={ext(p.website)} target="_blank" rel="noopener noreferrer"><span aria-hidden>◈</span><span>{p.website.replace(/^https?:\/\//, "")}</span></a>}
-                    {p?.location && <div className="br-crow"><span aria-hidden>⌖</span><span>{p.location}</span></div>}
+          <section id="contact" className="br-panel">
+            <div className="br-shell br-panel-in" data-reveal>
+              <div className="br-window">
+                {bar("JOIN THE FUTURE")}
+                <div className="br-window-in br-contact">
+                  <div className="br-contact-left">
+                    <h3 className="br-join-h">Let&apos;s build something together.</h3>
+                    <div className="br-contact-rows">
+                      {p?.email && <a className="br-crow" href={`mailto:${p.email}`}><span aria-hidden>✉</span><span>{p.email}</span></a>}
+                      {p?.phone && <a className="br-crow" href={`tel:${p.phone}`}><span aria-hidden>☎</span><span>{p.phone}</span></a>}
+                      {p?.website && <a className="br-crow" href={ext(p.website)} target="_blank" rel="noopener noreferrer"><span aria-hidden>◈</span><span>{p.website.replace(/^https?:\/\//, "")}</span></a>}
+                      {p?.location && <div className="br-crow"><span aria-hidden>⌖</span><span>{p.location}</span></div>}
+                    </div>
+                    {socialRow()}
                   </div>
-                  {socialRow()}
+                  <div className="br-formcard"><ContactForm username={username} /></div>
                 </div>
-                <div className="br-formcard"><ContactForm username={username} /></div>
               </div>
             </div>
           </section>
         )}
-      </div>
+      </main>
 
       {/* FOOTER */}
       <footer className="br-footer">
@@ -439,31 +426,28 @@ export function BrutalTemplate({ data }: { data: PublicPortfolio }) {
       )}
     </div>
   );
-
-  function first(n: string) { return (n.split(/\s+/)[0] || n); }
 }
 
 export default BrutalTemplate;
 
 /* =====================================================================
-   STYLES — neo-brutalist. Purple canvas, black window-cards, hard
-   offset shadows, lime accents. Sections rise up on scroll.
+   STYLES — neo-brutalist. Canvas = data.accent; lime is the fixed pop.
+   Sections are sticky-stacking cards: each rises and covers the prev.
    ===================================================================== */
 
 const BR_CSS = `
 .br-root{
-  --bg:#6B4CF0; --ink:#0b0b10; --card:#0e0e14; --card2:#16161f; --paper:#ffffff;
-  --accent:var(--tpl-accent,#c6f542); --on-accent:#0b0b10;
-  --wht:#f5f5f7; --muted:rgba(245,245,247,.62); --line:#000;
-  --sh:6px 6px 0 #0a0a12; --sh-sm:4px 4px 0 #0a0a12; --sh-lime:5px 5px 0 #0b0b10;
+  --bg:var(--tpl-accent,#6B4CF0);
+  --accent:#c9f31d; --on-accent:#0b0b10;
+  --card:#0e0e14; --card2:#16161f; --wht:#f5f5f7; --muted:rgba(245,245,247,.62);
+  --nav-h:66px;
+  --sh:6px 6px 0 #0a0a12; --sh-sm:4px 4px 0 #0a0a12;
   --display:"Archivo Black","Bricolage Grotesque","Inter",ui-sans-serif,system-ui,sans-serif;
   --mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
   --body:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   position:relative; isolation:isolate; background:var(--bg); color:var(--wht);
   font-family:var(--body); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
   overflow-x:clip; min-height:100%; scroll-behavior:smooth;
-  background-image:linear-gradient(rgba(0,0,0,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.05) 1px, transparent 1px);
-  background-size:36px 36px;
 }
 .br-root *{ box-sizing:border-box; }
 .br-root img{ max-width:100%; display:block; }
@@ -474,8 +458,8 @@ const BR_CSS = `
 .br-small{ font-size:.84rem; }
 .br-mt{ margin-top:16px; }
 
-/* reveal — rise up from below */
-.br-root.br-ready [data-reveal]{ opacity:0; transform:translateY(56px); transition:opacity .55s ease, transform .75s cubic-bezier(.2,.85,.25,1); will-change:opacity, transform; }
+/* content fade-up inside a panel */
+.br-root.br-ready [data-reveal]{ opacity:0; transform:translateY(30px); transition:opacity .5s ease, transform .7s cubic-bezier(.2,.85,.25,1); }
 .br-root.br-ready [data-reveal].br-in{ opacity:1; transform:none; }
 
 /* buttons */
@@ -486,16 +470,16 @@ const BR_CSS = `
 .br-btn-dark{ background:#0b0b10; color:var(--wht); }
 .br-btnrow{ display:flex; flex-wrap:wrap; gap:14px; margin-top:26px; }
 
-/* nav */
-.br-nav{ position:sticky; top:0; z-index:40; background:var(--bg); border-bottom:3px solid #000; }
-.br-nav-in{ display:flex; align-items:center; gap:16px; padding-block:12px; }
+/* nav (sticky, always on top) */
+.br-nav{ position:sticky; top:0; z-index:60; background:var(--bg); border-bottom:3px solid #000; }
+.br-nav-in{ display:flex; align-items:center; gap:16px; padding-block:11px; }
 .br-logo{ display:flex; align-items:center; gap:10px; text-decoration:none; min-width:0; }
 .br-logo-box{ width:40px; height:40px; flex:0 0 auto; display:grid; place-items:center; border:2.5px solid #000; border-radius:6px; background:var(--accent); color:#0b0b10; font-family:var(--display); font-size:.9rem; box-shadow:3px 3px 0 #0a0a12; }
 .br-logo-txt{ display:flex; flex-direction:column; line-height:1; min-width:0; }
-.br-logo-txt b{ font-family:var(--display); font-size:1.05rem; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40vw; }
-.br-logo-txt em{ font-style:normal; font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; color:var(--muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40vw; }
+.br-logo-txt b{ font-family:var(--display); font-size:1.05rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40vw; }
+.br-logo-txt em{ font-style:normal; font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; color:var(--wht); opacity:.75; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40vw; }
 .br-navlinks{ display:flex; gap:4px; margin-inline:auto; padding:5px; border:2.5px solid #000; border-radius:999px; background:#0b0b10; box-shadow:3px 3px 0 #0a0a12; }
-.br-navlinks a{ text-decoration:none; color:var(--wht); font-family:var(--display); text-transform:uppercase; font-size:.72rem; letter-spacing:.03em; padding:8px 14px; border-radius:999px; }
+.br-navlinks a{ text-decoration:none; color:var(--wht); font-family:var(--display); text-transform:uppercase; font-size:.72rem; padding:8px 14px; border-radius:999px; }
 .br-navlinks a:hover{ color:var(--accent); }
 .br-navlinks a.is-active{ background:var(--accent); color:#0b0b10; }
 .br-nav-right{ display:flex; align-items:center; gap:10px; }
@@ -509,10 +493,43 @@ const BR_CSS = `
 .br-menu ul a:hover{ background:var(--accent); color:#0b0b10; }
 
 /* ticker */
-.br-ticker{ background:#0b0b10; border-bottom:3px solid #000; overflow:hidden; padding:9px 0; }
+.br-ticker{ position:relative; z-index:50; background:#0b0b10; border-bottom:3px solid #000; overflow:hidden; padding:9px 0; }
 .br-ticker-track{ display:flex; white-space:nowrap; font-family:var(--display); text-transform:uppercase; font-size:.82rem; letter-spacing:.14em; color:var(--accent); animation:br-scroll 26s linear infinite; }
 .br-ticker-track span{ padding-right:.5em; }
 @keyframes br-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+
+/* ---- STACKING PANELS ---- */
+.br-stack{ position:relative; }
+.br-panel{ position:sticky; top:var(--nav-h); min-height:calc(100svh - var(--nav-h)); display:flex; flex-direction:column; justify-content:center;
+  background:var(--bg); border-top:3px solid #000; border-radius:26px 26px 0 0;
+  box-shadow:0 -14px 40px -8px rgba(10,8,30,.5);
+  background-image:linear-gradient(rgba(0,0,0,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.05) 1px, transparent 1px);
+  background-size:36px 36px; }
+.br-panel-first{ border-radius:0; border-top:0; box-shadow:none; }
+.br-panel-in{ padding-block:clamp(28px,5vh,64px); }
+
+/* hero */
+.br-hero{ display:grid; grid-template-columns:1.12fr .88fr; gap:clamp(20px,3vw,44px); align-items:center; }
+.br-eyebrow{ display:inline-block; font-family:var(--mono); text-transform:uppercase; letter-spacing:.2em; font-size:.76rem; color:#0b0b10; background:var(--accent); padding:5px 12px; border:2px solid #000; box-shadow:3px 3px 0 #0a0a12; }
+.br-headline{ font-family:var(--display); text-transform:uppercase; font-size:clamp(2.4rem,6.4vw,4.6rem); line-height:.94; letter-spacing:-.01em; margin:20px 0 0; color:#0b0b10; }
+.br-hl{ background:var(--wht); color:#0b0b10; box-shadow:4px 4px 0 #0a0a12; padding:0 .1em; margin-right:.06em; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+.br-hlx{ margin-right:.06em; }
+.br-sub{ margin:22px 0 0; color:var(--wht); font-size:1.05rem; max-width:48ch; }
+.br-hero-soc{ margin-top:24px; }
+.br-hero-right{ display:flex; flex-direction:column; gap:16px; }
+.br-photo .br-photo-in{ aspect-ratio:16/10; border-top:2.5px solid #000; }
+.br-photo .br-zoom{ width:100%; height:100%; }
+
+.br-overview .br-window-in{ display:flex; flex-direction:column; gap:14px; }
+.br-ov-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.br-ov-label{ font-family:var(--mono); font-size:.66rem; letter-spacing:.16em; color:var(--muted); }
+.br-ov-big{ font-family:var(--display); font-size:1.5rem; text-transform:uppercase; margin-top:4px; color:var(--accent); }
+.br-ov-chip{ font-family:var(--mono); font-size:.72rem; padding:5px 10px; border:2px solid #000; border-radius:4px; background:var(--accent); color:#0b0b10; }
+.br-chart{ width:100%; height:74px; }
+.br-ov-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.br-ov-stat{ border:2px solid #000; border-radius:6px; padding:10px 12px; background:#0b0b10; }
+.br-ov-stat b{ display:block; font-family:var(--display); font-size:1.4rem; color:var(--accent); }
+.br-ov-stat span{ font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; color:var(--muted); text-transform:uppercase; }
 
 /* windows */
 .br-window{ background:var(--card); border:2.5px solid #000; border-radius:10px; box-shadow:var(--sh); overflow:hidden; }
@@ -521,40 +538,20 @@ const BR_CSS = `
 .br-dots i{ width:12px; height:12px; border:2px solid var(--wht); }
 .br-dots i:nth-child(1){ border-radius:50%; }
 .br-dots i:nth-child(2){ border-radius:2px; }
-.br-dots i:nth-child(3){ border-radius:2px; position:relative; }
+.br-dots i:nth-child(3){ border-radius:2px; }
 .br-bar-title{ font-family:var(--mono); font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
 .br-bar-x{ margin-left:auto; color:var(--muted); }
 .br-window-in{ padding:clamp(16px,2.4vw,26px); }
-.br-window-lime{ background:var(--accent); color:#0b0b10; box-shadow:var(--sh); }
+.br-window-lime{ background:var(--accent); color:#0b0b10; }
 .br-window-lime .br-bar{ background:var(--accent); }
 .br-window-lime .br-bar-title{ color:#0b0b10; }
 .br-window-lime .br-dots i{ border-color:#0b0b10; }
-.br-window-lime .br-bar-x{ color:rgba(11,11,16,.6); }
-.br-lime-h{ font-family:var(--display); font-size:clamp(1.5rem,3.4vw,2.4rem); text-transform:uppercase; line-height:1.02; margin:0; }
-.br-lime-p{ margin:12px 0 0; max-width:60ch; color:#171720; }
-
-/* hero */
-.br-hero{ display:grid; grid-template-columns:1.15fr .85fr; gap:clamp(20px,3vw,44px); align-items:center; padding-block:clamp(28px,5vw,60px); }
-.br-eyebrow{ display:inline-block; font-family:var(--mono); text-transform:uppercase; letter-spacing:.2em; font-size:.76rem; color:#0b0b10; background:var(--accent); padding:5px 12px; border:2px solid #000; box-shadow:3px 3px 0 #0a0a12; }
-.br-headline{ font-family:var(--display); text-transform:uppercase; font-size:clamp(2.6rem,7vw,5rem); line-height:.92; letter-spacing:-.01em; margin:20px 0 0; color:#0b0b10; }
-.br-hl{ background:var(--wht); color:#0b0b10; box-shadow:4px 4px 0 #0a0a12; padding:0 .1em; margin-right:.06em; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
-.br-hlx{ margin-right:.06em; }
-.br-sub{ margin:22px 0 0; color:var(--wht); font-size:1.05rem; max-width:48ch; }
-.br-hero-soc{ margin-top:24px; }
-
-.br-overview .br-window-in{ display:flex; flex-direction:column; gap:14px; }
-.br-ov-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-.br-ov-label{ font-family:var(--mono); font-size:.66rem; letter-spacing:.16em; color:var(--muted); }
-.br-ov-big{ font-family:var(--display); font-size:1.6rem; text-transform:uppercase; margin-top:4px; color:var(--accent); }
-.br-ov-chip{ font-family:var(--mono); font-size:.72rem; padding:5px 10px; border:2px solid #000; border-radius:4px; background:var(--accent); color:#0b0b10; }
-.br-chart{ width:100%; height:80px; }
-.br-ov-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-.br-ov-stat{ border:2px solid #000; border-radius:6px; padding:10px 12px; background:#0b0b10; }
-.br-ov-stat b{ display:block; font-family:var(--display); font-size:1.4rem; color:var(--accent); }
-.br-ov-stat span{ font-family:var(--mono); font-size:.64rem; letter-spacing:.1em; color:var(--muted); text-transform:uppercase; }
+.br-window-lime .br-bar-x{ color:rgba(11,11,16,.55); }
+.br-lime-h{ font-family:var(--display); font-size:clamp(1.5rem,3.4vw,2.4rem); text-transform:uppercase; line-height:1.02; margin:0; color:#0b0b10; }
+.br-lime-p{ margin:14px 0 0; max-width:62ch; color:#1a1a24; }
+.br-window-lime .br-btn-dark{ margin-top:20px; }
 
 /* sections */
-.br-section{ padding-block:clamp(14px,2.4vw,26px); }
 .br-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
 .br-grid-2{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
 .br-list{ display:flex; flex-direction:column; gap:12px; }
@@ -584,9 +581,9 @@ const BR_CSS = `
 .br-lead-name em{ display:block; font-style:normal; font-family:var(--mono); font-size:.66rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
 .br-lead-bar{ height:12px; border:2px solid #000; border-radius:3px; background:#0b0b10; overflow:hidden; }
 .br-lead-fill{ display:block; height:100%; width:var(--pct); background:var(--accent); }
-.br-lead-val{ font-family:var(--mono); font-size:.8rem; color:var(--accent); text-align:right; }
 .br-root.br-ready [data-reveal] .br-lead-fill{ width:0; }
 .br-root.br-ready [data-reveal].br-in .br-lead-fill{ width:var(--pct); transition:width 1s cubic-bezier(.2,.85,.25,1); }
+.br-lead-val{ font-family:var(--mono); font-size:.8rem; color:var(--accent); text-align:right; }
 
 /* features */
 .br-feats{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
@@ -595,7 +592,7 @@ const BR_CSS = `
 .br-feat-h{ font-family:var(--display); text-transform:uppercase; font-size:.98rem; margin:0; }
 .br-feat-p{ color:var(--muted); font-size:.9rem; margin:6px 0 0; }
 
-/* mini cards / timeline / list */
+/* mini / timeline / list */
 .br-mini{ border:2px solid #000; border-radius:8px; background:#0b0b10; padding:16px; display:flex; flex-direction:column; gap:6px; text-decoration:none; color:inherit; }
 .br-mini-link:hover{ box-shadow:var(--sh-sm); transform:translate(-2px,-2px); }
 .br-mini-top{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
@@ -648,12 +645,12 @@ const BR_CSS = `
 .br-formcard :where(input, textarea, select):focus{ outline:none; border-color:var(--accent); }
 .br-formcard :where(input, textarea, select)::placeholder{ color:var(--muted); }
 .br-formcard textarea{ min-height:110px; resize:vertical; }
-.br-formcard :where(button, [type="submit"]){ width:100%; font-family:var(--display); text-transform:uppercase; letter-spacing:.03em; cursor:pointer; color:#0b0b10; background:var(--accent); border:2.5px solid #000; border-radius:6px; padding:13px 18px; box-shadow:var(--sh-sm); transition:transform .1s, box-shadow .1s; }
+.br-formcard :where(button, [type="submit"]){ width:100%; font-family:var(--display); text-transform:uppercase; cursor:pointer; color:#0b0b10; background:var(--accent); border:2.5px solid #000; border-radius:6px; padding:13px 18px; box-shadow:var(--sh-sm); transition:transform .1s, box-shadow .1s; }
 .br-formcard :where(button, [type="submit"]):hover{ transform:translate(3px,3px); box-shadow:1px 1px 0 #0a0a12; }
 .br-formcard label{ color:var(--muted); font-size:.84rem; }
 
 /* footer */
-.br-footer{ border-top:3px solid #000; background:#0b0b10; margin-top:clamp(24px,4vw,44px); }
+.br-footer{ position:relative; z-index:2; border-top:3px solid #000; background:#0b0b10; }
 .br-footer-in{ display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; padding-block:26px; }
 .br-footer-nav{ display:flex; flex-wrap:wrap; gap:8px 18px; }
 .br-footer-nav a{ text-decoration:none; color:var(--muted); font-family:var(--display); text-transform:uppercase; font-size:.74rem; }
