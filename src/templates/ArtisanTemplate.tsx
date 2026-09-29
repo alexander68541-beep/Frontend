@@ -7,10 +7,11 @@ import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
-   ArtisanTemplate — "Scrapbook"
-   An artsy paper / collage / hand-drawn themed portfolio for Folio.
+   ArtisanTemplate — "Sketchbook" (editorial layout)
+   An artsy paper / collage / hand-drawn portfolio for Folio.
+   Distinct editorial structure: each section has a handwritten margin
+   (big number + label) beside its content, alternating left/right.
    PURE PRESENTATION — everything from `data`. No fetch/DB/auth.
-   Client component only for UI behaviour (theme, lightbox, reveal).
    Styles self-contained, prefixed `.art-`, scoped under `.art-root`.
    ===================================================================== */
 
@@ -47,18 +48,11 @@ function oneDate(s: string | null): string | null {
 function levelPct(level: unknown): number | null {
   if (level === null || level === undefined || level === "") return null;
   const clamp = (n: number) => Math.max(0, Math.min(100, n));
-  if (typeof level === "number") {
-    if (Number.isNaN(level)) return null;
-    return clamp(level <= 5 ? (level / 5) * 100 : level);
-  }
+  if (typeof level === "number") { if (Number.isNaN(level)) return null; return clamp(level <= 5 ? (level / 5) * 100 : level); }
   const s = String(level).trim().toLowerCase();
   const num = parseFloat(s);
   if (!Number.isNaN(num) && /^[\d.]+\s*%?$/.test(s)) return clamp(s.includes("%") ? num : num <= 5 ? (num / 5) * 100 : num);
-  const map: Record<string, number> = {
-    beginner: 35, basic: 35, novice: 30, elementary: 40, learning: 30,
-    intermediate: 60, competent: 62, proficient: 75, skilled: 72,
-    advanced: 85, expert: 95, master: 100, fluent: 95, native: 100,
-  };
+  const map: Record<string, number> = { beginner: 35, basic: 35, novice: 30, elementary: 40, learning: 30, intermediate: 60, competent: 62, proficient: 75, skilled: 72, advanced: 85, expert: 95, master: 100, fluent: 95, native: 100 };
   for (const k in map) if (s.includes(k)) return map[k];
   return null;
 }
@@ -112,35 +106,18 @@ function detectSocial(platform: string | null, url: string | null, label: string
   return "globe";
 }
 function SocialIcon({ name }: { name: string }) {
-  return (
-    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden focusable="false">
-      <path d={SOCIAL_ICONS[name] || SOCIAL_ICONS.globe} />
-    </svg>
-  );
+  return (<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden focusable="false"><path d={SOCIAL_ICONS[name] || SOCIAL_ICONS.globe} /></svg>);
 }
 
-/* ---- hand-drawn doodles (decorative, inline SVG) ---- */
+/* ---- hand-drawn doodles ---- */
 function DoodleUnderline() {
-  return (
-    <svg className="art-underline" viewBox="0 0 300 24" preserveAspectRatio="none" aria-hidden focusable="false">
-      <path d="M4 14 C 60 4, 120 22, 180 10 S 280 6, 296 16" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-    </svg>
-  );
+  return (<svg className="art-underline" viewBox="0 0 300 24" preserveAspectRatio="none" aria-hidden focusable="false"><path d="M4 15 C 60 5, 120 22, 180 11 S 280 7, 296 17" fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round" /></svg>);
 }
 function DoodleCrown() {
-  return (
-    <svg className="art-crown" viewBox="0 0 60 40" aria-hidden focusable="false">
-      <path d="M6 34 L10 12 L22 26 L30 6 L38 26 L50 12 L54 34 Z" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-    </svg>
-  );
+  return (<svg className="art-crown" viewBox="0 0 60 40" aria-hidden focusable="false"><path d="M6 34 L10 12 L22 26 L30 6 L38 26 L50 12 L54 34 Z" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round" /></svg>);
 }
-function DoodleArrow({ className }: { className?: string }) {
-  return (
-    <svg className={`art-doodle-arrow ${className || ""}`} viewBox="0 0 80 60" aria-hidden focusable="false">
-      <path d="M6 10 C 30 6, 54 20, 62 44" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <path d="M50 40 L64 46 L58 32" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+function DoodleStar({ className }: { className?: string }) {
+  return (<svg className={`art-star ${className || ""}`} viewBox="0 0 40 40" aria-hidden focusable="false"><path d="M20 4 L23 16 L36 16 L26 24 L30 37 L20 29 L10 37 L14 24 L4 16 L17 16 Z" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round" /></svg>);
 }
 
 /* ------------------------------ component ------------------------------ */
@@ -169,7 +146,7 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
     const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const targets = root.querySelectorAll("[data-reveal],[data-bar]");
     if (reduce || typeof IntersectionObserver === "undefined") { targets.forEach((el) => el.classList.add("art-in")); return; }
-    const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("art-in"); io.unobserve(e.target); } }), { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("art-in"); io.unobserve(e.target); } }), { threshold: 0.1, rootMargin: "0px 0px -6% 0px" });
     targets.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
@@ -198,15 +175,14 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
   const navSpec: { href: string; label: string; on: boolean }[] = [
     { href: "#top", label: "Home", on: true },
     { href: "#about", label: "About", on: has.about },
-    { href: "#work", label: "Projects", on: has.projects },
+    { href: "#work", label: "Work", on: has.projects },
     { href: "#skills", label: "Skills", on: has.skills },
-    { href: "#experience", label: "Experience", on: has.experience },
-    { href: "#testimonials", label: "Testimonials", on: has.testimonials },
-    { href: "#contact", label: "Contact", on: has.contact },
+    { href: "#experience", label: "Journey", on: has.experience },
+    { href: "#testimonials", label: "Words", on: has.testimonials },
+    { href: "#contact", label: "Hello", on: has.contact },
   ];
   const navItems = navSpec.filter((n) => n.on);
 
-  const label = (t: string) => <span className="art-label">// {t}</span>;
   const themeBtn = (extra?: string) => (
     <button type="button" className={`art-icbtn ${extra || ""}`} onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} aria-pressed={theme === "dark"} title="Toggle theme">
       <span aria-hidden>{theme === "dark" ? "☀" : "☾"}</span>
@@ -221,54 +197,73 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
     data.links.length > 0 ? (
       <div className={`art-socials ${extra || ""}`}>
         {data.links.map((l) => (
-          <a key={l.id} className="art-soc" href={ext(l.url)} target="_blank" rel="noopener noreferrer" aria-label={l.label || l.platform} title={l.label || l.platform}>
-            <SocialIcon name={detectSocial(l.platform, l.url, l.label)} />
-          </a>
+          <a key={l.id} className="art-soc" href={ext(l.url)} target="_blank" rel="noopener noreferrer" aria-label={l.label || l.platform} title={l.label || l.platform}><SocialIcon name={detectSocial(l.platform, l.url, l.label)} /></a>
         ))}
       </div>
     ) : null;
+
+  // editorial section shell: handwritten margin (number + tag) + content
+  const Sec = ({ id, sec, tag, heading, children }: { id: string; sec?: string; tag: string; heading?: ReactNode; children: ReactNode }) => (
+    <section id={id} data-sec={sec} data-reveal className="art-section">
+      <aside className="art-margin">
+        <span className="art-num" aria-hidden />
+        <span className="art-mtag art-script">{tag}</span>
+        <span className="art-mline" aria-hidden />
+      </aside>
+      <div className="art-content">
+        {heading && <h2 className="art-h2 art-script">{heading}</h2>}
+        {children}
+      </div>
+    </section>
+  );
 
   const sections: Record<string, () => ReactNode> = {
     about: () => {
       if (!has.about) return null;
       const aboutText = p?.about ?? p?.bio ?? null;
       const stats = [
-        { n: data.experience.length, label: "Years / roles" },
-        { n: data.projects.length, label: "Projects done" },
-        { n: data.testimonials.length, label: "Happy clients" },
+        { n: data.experience.length, label: "years & roles" },
+        { n: data.projects.length, label: "projects done" },
+        { n: data.testimonials.length, label: "happy clients" },
       ].filter((s) => s.n > 0).slice(0, 3);
-      const photo = data.gallery.find((g) => g.image_url)?.image_url || p?.avatar_url || null;
+      const photo = data.gallery.find((g) => g.image_url)?.image_url || null;
       return (
-        <section id="about" data-sec="about" data-reveal className="art-section">
+        <Sec id="about" sec="about" tag="about me" heading={<>More than just<br />a maker<span className="art-dot">.</span></>}>
           <div className="art-about">
-            <div className="art-about-txt">
-              {label("about me")}
-              <h2 className="art-h2 art-script">{p?.tagline || "More Than Just a Developer"}<span className="art-dot">.</span></h2>
+            <div>
               {aboutText && aboutText.split(/\n{2,}/).map((para, i) => <p key={i} className="art-lead">{para}</p>)}
               {stats.length > 0 && (
                 <div className="art-stats">
-                  {stats.map((s) => (
-                    <div key={s.label} className="art-stat">
-                      <b>{s.n}+</b>
-                      <span>{s.label}</span>
-                    </div>
-                  ))}
+                  {stats.map((s) => (<div key={s.label} className="art-stat"><b>{s.n}+</b><span>{s.label}</span></div>))}
                 </div>
               )}
-              {p?.resume_url && (
-                <a className="art-btn art-btn-dark art-mt" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">My Story <span aria-hidden>→</span></a>
-              )}
+              {p?.resume_url && <a className="art-btn art-btn-dark art-mt" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">My story <span aria-hidden>→</span></a>}
             </div>
             {photo && (
-              <div className="art-about-photo">
-                <div className="art-blob-frame art-tilt-r">
-                  <ZImg src={photo} alt={name} className="art-zoom-fill" />
-                </div>
-                <span className="art-note art-note-a">Good code, better products ✎</span>
+              <div className="art-blob-frame art-tilt-r">
+                <ZImg src={photo} alt={name} className="art-zoom-fill" />
               </div>
             )}
           </div>
-        </section>
+        </Sec>
+      );
+    },
+
+    services: () => {
+      if (!has.services) return null;
+      return (
+        <Sec id="services" sec="services" tag="what I do" heading="Services I offer">
+          <div className="art-grid-4">
+            {data.services.map((s, i) => (
+              <article key={s.id} className={`art-paper art-card ${i === 0 ? "art-card-hot" : ""}`}>
+                <div className="art-card-top"><span className="art-card-ic" aria-hidden>✦</span><span className="art-card-num art-script">{String(i + 1).padStart(2, "0")}</span></div>
+                <h3 className="art-card-title">{s.title}</h3>
+                {s.description && <p className="art-muted art-clamp-3">{s.description}</p>}
+                <div className="art-card-foot">{s.price && <span className="art-price">{s.price}</span>}<span className="art-arrow" aria-hidden>↗</span></div>
+              </article>
+            ))}
+          </div>
+        </Sec>
       );
     },
 
@@ -276,9 +271,7 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
       if (!has.skills) return null;
       const sorted = [...data.skills].sort((a, b) => (a.category || "").localeCompare(b.category || ""));
       return (
-        <section id="skills" data-sec="skills" data-reveal className="art-section">
-          {label("skills & tools")}
-          <h2 className="art-h2 art-script">Technologies I Use</h2>
+        <Sec id="skills" sec="skills" tag="my toolkit" heading="Things I work with">
           <div className="art-skills">
             {sorted.map((s) => {
               const pct = levelPct(s.level);
@@ -286,42 +279,12 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
                 <div key={s.id} className="art-skill art-paper" data-bar style={{ ["--pct" as string]: `${pct ?? 0}%` } as CSSProperties}>
                   <span className="art-skill-ic" aria-hidden>{initials(s.name, "•")}</span>
                   <span className="art-skill-name">{s.name}</span>
-                  {pct != null && (
-                    <span className="art-skill-bar" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label={`${s.name} level`}>
-                      <span className="art-skill-fill" />
-                    </span>
-                  )}
+                  {pct != null && (<span className="art-skill-bar" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label={`${s.name} level`}><span className="art-skill-fill" /></span>)}
                 </div>
               );
             })}
           </div>
-        </section>
-      );
-    },
-
-    services: () => {
-      if (!has.services) return null;
-      return (
-        <section id="services" data-sec="services" data-reveal className="art-section">
-          {label("what I do")}
-          <h2 className="art-h2 art-script art-head-arrow">Services I Offer <DoodleArrow /></h2>
-          <div className="art-grid-4">
-            {data.services.map((s, i) => (
-              <article key={s.id} className={`art-paper art-card ${i === 0 ? "art-card-hot" : ""}`}>
-                <div className="art-card-top">
-                  <span className="art-card-ic" aria-hidden>◈</span>
-                  <span className="art-card-num">{String(i + 1).padStart(2, "0")}</span>
-                </div>
-                <h3 className="art-card-title">{s.title}</h3>
-                {s.description && <p className="art-muted art-clamp-3">{s.description}</p>}
-                <div className="art-card-foot">
-                  {s.price && <span className="art-price">{s.price}</span>}
-                  <span className="art-arrow" aria-hidden>↗</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+        </Sec>
       );
     },
 
@@ -329,56 +292,39 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
       if (!has.projects) return null;
       const ordered = [...data.projects].sort((a, b) => Number(!!b.is_featured) - Number(!!a.is_featured));
       return (
-        <section id="work" data-sec="projects" data-reveal className="art-section">
-          <div className="art-sechead">
-            <div>
-              {label("featured projects")}
-              <h2 className="art-h2 art-script">Selected Work</h2>
-            </div>
-            <span className="art-pill">{data.projects.length} projects →</span>
-          </div>
+        <Sec id="work" sec="projects" tag="selected work" heading="Things I've built">
           <div className="art-grid-3">
             {ordered.map((pr, i) => {
               const category = pr.role || (pr.tags && pr.tags[0]) || null;
               return (
                 <article key={pr.id} className={`art-paper art-proj ${i % 2 ? "art-tilt-r" : "art-tilt-l"}`}>
                   <div className="art-proj-media">
-                    {pr.image_url ? (
-                      <ZImg src={pr.image_url} alt={pr.title || "Project image"} cap={pr.title || undefined} />
-                    ) : (
-                      <div className="art-proj-ph" aria-hidden>{initials(pr.title, "P")}</div>
-                    )}
+                    {pr.image_url ? <ZImg src={pr.image_url} alt={pr.title || "Project image"} cap={pr.title || undefined} /> : <div className="art-proj-ph" aria-hidden>{initials(pr.title, "P")}</div>}
                     {pr.is_featured && <span className="art-badge">★ featured</span>}
                   </div>
                   <div className="art-proj-body">
-                    <h3 className="art-card-title">
-                      {pr.url ? <a className="art-linktext" href={ext(pr.url)} target="_blank" rel="noopener noreferrer">{pr.title || "Untitled"} <span aria-hidden>↗</span></a> : (pr.title || "Untitled")}
-                    </h3>
+                    <h3 className="art-card-title">{pr.url ? <a className="art-linktext" href={ext(pr.url)} target="_blank" rel="noopener noreferrer">{pr.title || "Untitled"} <span aria-hidden>↗</span></a> : (pr.title || "Untitled")}</h3>
                     {category && <p className="art-muted art-small">{category}</p>}
                     {pr.description && <p className="art-muted art-clamp-2">{pr.description}</p>}
-                    {pr.tags && pr.tags.length > 0 && (
-                      <div className="art-tags">{pr.tags.slice(0, 4).map((t) => <span key={t} className="art-tag">{t}</span>)}</div>
-                    )}
+                    {pr.tags && pr.tags.length > 0 && <div className="art-tags">{pr.tags.slice(0, 4).map((t) => <span key={t} className="art-tag">{t}</span>)}</div>}
                   </div>
                 </article>
               );
             })}
           </div>
-        </section>
+        </Sec>
       );
     },
 
     experience: () => {
       if (!has.experience) return null;
       return (
-        <section id="experience" data-sec="experience" data-reveal className="art-section">
-          {label("experience")}
-          <h2 className="art-h2 art-script">My Journey</h2>
+        <Sec id="experience" sec="experience" tag="the journey" heading="Where I've been">
           <div className="art-timeline">
             {data.experience.map((e) => (
               <article key={e.id} className="art-tl-item">
                 <span className="art-tl-dot" aria-hidden />
-                <span className="art-tl-date">{dateRange(e.start_date, e.end_date, e.is_current)}</span>
+                <span className="art-tl-date art-script">{dateRange(e.start_date, e.end_date, e.is_current)}</span>
                 <div className="art-tl-body">
                   <h3 className="art-tl-role">{e.title || e.company || "Role"}</h3>
                   <p className="art-muted art-small">{[e.company, e.location].filter(Boolean).join(" · ")}</p>
@@ -387,174 +333,120 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
               </article>
             ))}
           </div>
-        </section>
+        </Sec>
       );
     },
 
     education: () => {
       if (!(sv("education") && data.education.length > 0)) return null;
       return (
-        <section id="education" data-sec="education" data-reveal className="art-section">
-          {label("education")}
-          <h2 className="art-h2 art-script">Education</h2>
+        <Sec id="education" sec="education" tag="the study" heading="Education">
           <div className="art-grid-2">
             {data.education.map((ed) => (
               <article key={ed.id} className="art-paper art-card">
-                <div className="art-card-foot art-card-foot-top">
-                  <h3 className="art-card-title">{ed.school || "School"}</h3>
-                  <span className="art-price">{dateRange(ed.start_date, ed.end_date)}</span>
-                </div>
+                <div className="art-card-foot art-card-foot-top"><h3 className="art-card-title">{ed.school || "School"}</h3><span className="art-price">{dateRange(ed.start_date, ed.end_date)}</span></div>
                 {(ed.degree || ed.field) && <p className="art-muted">{[ed.degree, ed.field].filter(Boolean).join(", ")}</p>}
                 {ed.description && <p className="art-muted">{ed.description}</p>}
               </article>
             ))}
           </div>
-        </section>
+        </Sec>
       );
     },
 
     certifications: () => {
       if (!(sv("certifications") && data.certifications.length > 0)) return null;
       return (
-        <section id="certifications" data-sec="certifications" data-reveal className="art-section">
-          {label("credentials")}
-          <h2 className="art-h2 art-script">Certifications</h2>
+        <Sec id="certifications" sec="certifications" tag="credentials" heading="Certifications">
           <div className="art-grid-3">
             {data.certifications.map((c) => {
-              const body = (
-                <>
-                  <span className="art-card-ic" aria-hidden>✓</span>
-                  <h3 className="art-card-title">{c.name}</h3>
-                  {c.issuer && <p className="art-muted">{c.issuer}</p>}
-                  <div className="art-card-foot">
-                    {oneDate(c.issue_date) && <span className="art-price">{oneDate(c.issue_date)}</span>}
-                    {c.credential_id && <span className="art-muted art-small">#{c.credential_id}</span>}
-                  </div>
-                </>
-              );
+              const body = (<><span className="art-card-ic" aria-hidden>✓</span><h3 className="art-card-title">{c.name}</h3>{c.issuer && <p className="art-muted">{c.issuer}</p>}<div className="art-card-foot">{oneDate(c.issue_date) && <span className="art-price">{oneDate(c.issue_date)}</span>}{c.credential_id && <span className="art-muted art-small">#{c.credential_id}</span>}</div></>);
               return c.url ? <a key={c.id} className="art-paper art-card art-card-link" href={ext(c.url)} target="_blank" rel="noopener noreferrer">{body}</a> : <article key={c.id} className="art-paper art-card">{body}</article>;
             })}
           </div>
-        </section>
+        </Sec>
       );
     },
 
     achievements: () => {
       if (!(sv("achievements") && data.achievements.length > 0)) return null;
       return (
-        <section id="achievements" data-sec="achievements" data-reveal className="art-section">
-          {label("highlights")}
-          <h2 className="art-h2 art-script">Achievements</h2>
+        <Sec id="achievements" sec="achievements" tag="little wins" heading="Achievements">
           <div className="art-grid-3">
             {data.achievements.map((a) => (
-              <article key={a.id} className="art-paper art-card">
-                <span className="art-card-ic" aria-hidden>★</span>
-                <h3 className="art-card-title">{a.title}</h3>
-                {oneDate(a.date) && <span className="art-price">{oneDate(a.date)}</span>}
-                {a.description && <p className="art-muted art-clamp-3">{a.description}</p>}
-              </article>
+              <article key={a.id} className="art-paper art-card"><span className="art-card-ic" aria-hidden>★</span><h3 className="art-card-title">{a.title}</h3>{oneDate(a.date) && <span className="art-price">{oneDate(a.date)}</span>}{a.description && <p className="art-muted art-clamp-3">{a.description}</p>}</article>
             ))}
           </div>
-        </section>
+        </Sec>
       );
     },
 
     publications: () => {
       if (!(sv("publications") && data.publications.length > 0)) return null;
       return (
-        <section id="publications" data-sec="publications" data-reveal className="art-section">
-          {label("writing")}
-          <h2 className="art-h2 art-script">Publications</h2>
+        <Sec id="publications" sec="publications" tag="some words" heading="Publications">
           <div className="art-list">
             {data.publications.map((pub) => {
               const meta = [pub.publisher, oneDate(pub.date)].filter(Boolean).join(" · ");
-              const body = (
-                <>
-                  <div className="art-card-foot art-card-foot-top">
-                    <h3 className="art-card-title">{pub.title}</h3>
-                    {pub.url && <span className="art-arrow" aria-hidden>↗</span>}
-                  </div>
-                  {meta && <p className="art-muted art-small">{meta}</p>}
-                  {pub.description && <p className="art-muted">{pub.description}</p>}
-                </>
-              );
+              const body = (<><div className="art-card-foot art-card-foot-top"><h3 className="art-card-title">{pub.title}</h3>{pub.url && <span className="art-arrow" aria-hidden>↗</span>}</div>{meta && <p className="art-muted art-small">{meta}</p>}{pub.description && <p className="art-muted">{pub.description}</p>}</>);
               return pub.url ? <a key={pub.id} className="art-paper art-listitem art-card-link" href={ext(pub.url)} target="_blank" rel="noopener noreferrer">{body}</a> : <article key={pub.id} className="art-paper art-listitem">{body}</article>;
             })}
           </div>
-        </section>
+        </Sec>
       );
     },
 
     gallery: () => {
       if (!(sv("gallery") && data.gallery.length > 0)) return null;
       return (
-        <section id="gallery" data-sec="gallery" data-reveal className="art-section">
-          {label("visuals")}
-          <h2 className="art-h2 art-script">Gallery</h2>
+        <Sec id="gallery" sec="gallery" tag="the wall" heading="Gallery">
           <div className="art-gallery">
-            {data.gallery.map((g, i) =>
-              g.image_url ? (
-                <figure key={g.id} className={`art-polaroid ${i % 2 ? "art-tilt-r" : "art-tilt-l"}`}>
-                  <ZImg src={g.image_url} alt={g.caption || "Gallery image"} cap={g.caption || undefined} className="art-zoom-gallery" />
-                  <figcaption>{g.caption || "\u00a0"}</figcaption>
-                </figure>
-              ) : null
-            )}
+            {data.gallery.map((g, i) => g.image_url ? (
+              <figure key={g.id} className={`art-polaroid ${i % 2 ? "art-tilt-r" : "art-tilt-l"}`}>
+                <ZImg src={g.image_url} alt={g.caption || "Gallery image"} cap={g.caption || undefined} className="art-zoom-gallery" />
+                <figcaption>{g.caption || "\u00a0"}</figcaption>
+              </figure>
+            ) : null)}
           </div>
-        </section>
+        </Sec>
       );
     },
 
     videos: () => {
       if (!(sv("videos") && data.videos.length > 0)) return null;
       return (
-        <section id="videos" data-sec="videos" data-reveal className="art-section">
-          {label("watch")}
-          <h2 className="art-h2 art-script">Videos</h2>
+        <Sec id="videos" sec="videos" tag="the reel" heading="Videos">
           <div className="art-grid-2">
             {data.videos.map((v) => {
               const src = v.url ? videoEmbed(v.url) : null;
               if (!src) return null;
-              return (
-                <figure key={v.id} className="art-paper art-video">
-                  <div className="art-video-frame">
-                    <iframe src={src} title={v.title || "Video"} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-                  </div>
-                  {v.title && <figcaption className="art-muted art-small">{v.title}</figcaption>}
-                </figure>
-              );
+              return (<figure key={v.id} className="art-paper art-video"><div className="art-video-frame"><iframe src={src} title={v.title || "Video"} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div>{v.title && <figcaption className="art-muted art-small">{v.title}</figcaption>}</figure>);
             })}
           </div>
-        </section>
+        </Sec>
       );
     },
 
     testimonials: () => {
       if (!has.testimonials) return null;
       return (
-        <section id="testimonials" data-sec="testimonials" data-reveal className="art-section">
-          {label("testimonials")}
-          <h2 className="art-h2 art-script">What Clients Say</h2>
+        <Sec id="testimonials" sec="testimonials" tag="kind words" heading="What clients say">
           <div className="art-tgrid">
             {data.testimonials.map((t, i) => (
               <figure key={t.id} className={`art-paper art-quote ${i % 2 ? "art-tilt-r" : "art-tilt-l"}`}>
-                <span className="art-quote-mark" aria-hidden>&ldquo;</span>
+                <span className="art-quote-mark art-script" aria-hidden>&ldquo;</span>
                 {t.quote && <blockquote>{t.quote}</blockquote>}
-                <figcaption className="art-quote-by">
-                  <span className="art-avatar" aria-hidden>{t.avatar_url ? <img src={t.avatar_url} alt="" loading="lazy" /> : initials(t.author, "•")}</span>
-                  <span>{t.author && <b>{t.author}</b>}{t.role && <em className="art-muted">{t.role}</em>}</span>
-                </figcaption>
+                <figcaption className="art-quote-by"><span className="art-avatar" aria-hidden>{t.avatar_url ? <img src={t.avatar_url} alt="" loading="lazy" /> : initials(t.author, "•")}</span><span>{t.author && <b>{t.author}</b>}{t.role && <em className="art-muted">{t.role}</em>}</span></figcaption>
               </figure>
             ))}
           </div>
-        </section>
+        </Sec>
       );
     },
   };
 
   const order = resolveOrder(data.settings);
-  const termLines = has.services ? data.services.slice(0, 4).map((s) => s.title) : p?.tagline ? [p.tagline] : [];
-  const heroStat = data.projects.length > 0 ? { n: data.projects.length, label: "Projects" } : data.experience.length > 0 ? { n: data.experience.length, label: "Roles" } : null;
+  const heroStat = data.projects.length > 0 ? { n: data.projects.length, label: "projects" } : data.experience.length > 0 ? { n: data.experience.length, label: "roles" } : null;
   const year = new Date().getFullYear();
 
   return (
@@ -567,23 +459,15 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
         <div className="art-shell art-nav-in">
           <a className="art-brand" href="#top">
             <span className="art-brand-name art-script">{name}</span>
-            {p?.title && <span className="art-brand-sub">{p.title}</span>}
-            <span className="art-online" aria-hidden />
+            {p?.availability && <span className="art-online" aria-hidden title="available" />}
           </a>
           {navItems.length > 1 && (
-            <nav className="art-navlinks" aria-label="Primary">
-              {navItems.map((it) => <a key={it.href} href={it.href}>{it.label}</a>)}
-            </nav>
+            <nav className="art-navlinks" aria-label="Primary">{navItems.map((it) => <a key={it.href} href={it.href}>{it.label}</a>)}</nav>
           )}
           <div className="art-nav-right">
             {themeBtn()}
-            {contactHref && <a className="art-btn art-btn-dark art-nav-cta" href={contactHref}>Let&apos;s Talk <span aria-hidden>→</span></a>}
-            {navItems.length > 1 && (
-              <details className="art-menu">
-                <summary aria-label="Menu"><span /><span /><span /></summary>
-                <ul>{navItems.map((it) => <li key={it.href}><a href={it.href}>{it.label}</a></li>)}</ul>
-              </details>
-            )}
+            {contactHref && <a className="art-btn art-btn-dark art-nav-cta" href={contactHref}>Let&apos;s talk <span aria-hidden>→</span></a>}
+            {navItems.length > 1 && (<details className="art-menu"><summary aria-label="Menu"><span /><span /><span /></summary><ul>{navItems.map((it) => <li key={it.href}><a href={it.href}>{it.label}</a></li>)}</ul></details>)}
           </div>
         </div>
       </header>
@@ -592,48 +476,32 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
         {/* ---------------- HERO ---------------- */}
         <header className="art-hero">
           <div className="art-hero-left">
-            <span className="art-eyebrow">HELLO, I&apos;M</span>
+            <span className="art-eyebrow art-script">hello, I&apos;m</span>
             <h1 className="art-hero-name art-script">
-              <span className="art-name-wrap">
-                <DoodleCrown />
-                {name}
-                <DoodleUnderline />
-              </span>
+              <span className="art-name-wrap"><DoodleCrown />{name}<DoodleUnderline /></span>
             </h1>
-            {p?.title && <p className="art-hero-title art-script">{p.title}</p>}
+            {p?.title && <p className="art-hero-title">{p.title}</p>}
             {(p?.tagline || p?.bio) && <p className="art-hero-intro">{p?.tagline || p?.bio}</p>}
-
             <div className="art-btnrow">
-              {has.projects && <a className="art-btn art-btn-dark" href="#work">View My Work <span aria-hidden>→</span></a>}
+              {has.projects && <a className="art-btn art-btn-dark" href="#work">View my work <span aria-hidden>→</span></a>}
               {p?.resume_url && <a className="art-btn art-btn-ghost" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">Download CV <span aria-hidden>↓</span></a>}
-              {!has.projects && !p?.resume_url && contactHref && <a className="art-btn art-btn-dark" href={contactHref}>Get in touch <span aria-hidden>→</span></a>}
+              {!has.projects && !p?.resume_url && contactHref && <a className="art-btn art-btn-dark" href={contactHref}>Say hello <span aria-hidden>→</span></a>}
             </div>
-
             {socialRow("art-hero-soc")}
-            <span className="art-scribble art-script" aria-hidden>Code · Design · Build · Repeat ↴</span>
           </div>
 
           <div className="art-hero-right">
-            {termLines.length > 0 && (
-              <div className="art-term art-tilt-l">
-                <div className="art-term-bar"><i /><i /><i /><span className="art-term-host">{(username || "me").toLowerCase()}@portfolio:~$</span></div>
-                <div className="art-term-body">
-                  {termLines.map((l, i) => <div key={i} className="art-term-line">{"> "}{l}<span className="art-caret">_</span></div>)}
-                </div>
-              </div>
-            )}
-
             <figure className="art-portrait art-tilt-r">
-              {p?.avatar_url ? (
-                <ZImg src={p.avatar_url} alt={name} className="art-zoom-fill" />
-              ) : (
-                <div className="art-portrait-ph" aria-hidden>{mono}</div>
-              )}
-              <figcaption className="art-script">{p?.title || "creator"}</figcaption>
-              {heroStat && (
-                <span className="art-oval art-script" aria-hidden>{heroStat.n}+ {heroStat.label}</span>
-              )}
+              {p?.avatar_url ? <ZImg src={p.avatar_url} alt={name} className="art-zoom-fill" /> : <div className="art-portrait-ph" aria-hidden>{mono}</div>}
+              <figcaption className="art-script">{p?.title || "maker"}</figcaption>
+              {heroStat && <span className="art-oval art-script" aria-hidden>{heroStat.n}+ {heroStat.label}</span>}
+              <DoodleStar className="art-star-hero" />
             </figure>
+            {(p?.location || p?.availability) && (
+              <span className="art-tag-note art-script">
+                {[p?.location, p?.availability].filter(Boolean).join(" · ")} ✦
+              </span>
+            )}
           </div>
         </header>
 
@@ -642,11 +510,9 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
 
         {/* ---------------- CONTACT ---------------- */}
         {username && (
-          <section id="contact" data-reveal className="art-section">
-            {label("let's connect")}
+          <Sec id="contact" tag="say hello" heading={<>Let&apos;s build<br />something lovely.</>}>
             <div className="art-contact">
               <div className="art-contact-left">
-                <h2 className="art-h2 art-script">Have a project in mind? Let&apos;s build something amazing.</h2>
                 <div className="art-contact-rows">
                   {p?.email && <a className="art-crow" href={`mailto:${p.email}`}><span aria-hidden>✉</span><span>{p.email}</span></a>}
                   {p?.phone && <a className="art-crow" href={`tel:${p.phone}`}><span aria-hidden>☎</span><span>{p.phone}</span></a>}
@@ -654,35 +520,22 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
                   {p?.location && <div className="art-crow"><span aria-hidden>⌖</span><span>{p.location}</span></div>}
                 </div>
                 {socialRow()}
-                {p?.availability && <span className="art-note art-note-b art-script">Open for {p.availability} ✦</span>}
+                {p?.availability && <span className="art-tag-note art-script art-note-inline">Open for {p.availability} ✦</span>}
               </div>
-              <div className="art-paper art-formcard">
-                <ContactForm username={username} />
-              </div>
+              <div className="art-paper art-formcard"><ContactForm username={username} /></div>
             </div>
-          </section>
+          </Sec>
         )}
       </div>
 
       {/* ---------------- FOOTER ---------------- */}
       <footer className="art-footer">
         <div className="art-shell art-footer-in">
-          <a className="art-brand art-brand-foot" href="#top">
-            <span className="art-brand-name art-script">{name}</span>
-            {p?.title && <span className="art-brand-sub">{p.title}</span>}
-          </a>
-          {navItems.length > 1 && (
-            <nav className="art-footer-nav" aria-label="Footer">
-              {navItems.filter((n) => n.href !== "#top").map((it) => <a key={it.href} href={it.href}>{it.label}</a>)}
-            </nav>
-          )}
+          <a className="art-brand art-brand-foot" href="#top"><span className="art-brand-name art-script">{name}</span>{p?.title && <span className="art-brand-sub">{p.title}</span>}</a>
+          {navItems.length > 1 && <nav className="art-footer-nav" aria-label="Footer">{navItems.filter((n) => n.href !== "#top").map((it) => <a key={it.href} href={it.href}>{it.label}</a>)}</nav>}
           <div className="art-footer-right">
             {socialRow("art-footer-soc")}
-            <div className="art-footer-meta">
-              {themeBtn("art-icbtn-foot")}
-              <span>© {year} {name}</span>
-              {!data.hide_branding && <a className="art-madewith" href="https://folio.assetprim.com" target="_blank" rel="noopener noreferrer">Made with <b>Folio</b></a>}
-            </div>
+            <div className="art-footer-meta">{themeBtn("art-icbtn-foot")}<span>© {year} {name}</span>{!data.hide_branding && <a className="art-madewith" href="https://folio.assetprim.com" target="_blank" rel="noopener noreferrer">Made with <b>Folio</b></a>}</div>
           </div>
         </div>
       </footer>
@@ -691,10 +544,7 @@ export function ArtisanTemplate({ data }: { data: PublicPortfolio }) {
       {lb && (
         <div className="art-lb" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLb(null)}>
           <button ref={closeRef} type="button" className="art-lb-close" onClick={() => setLb(null)} aria-label="Close image viewer">✕</button>
-          <figure className="art-lb-fig" onClick={(e) => e.stopPropagation()}>
-            <img src={lb.src} alt={lb.alt} />
-            {lb.cap && <figcaption>{lb.cap}</figcaption>}
-          </figure>
+          <figure className="art-lb-fig" onClick={(e) => e.stopPropagation()}><img src={lb.src} alt={lb.alt} />{lb.cap && <figcaption>{lb.cap}</figcaption>}</figure>
         </div>
       )}
     </div>
@@ -705,21 +555,21 @@ export default ArtisanTemplate;
 
 /* =====================================================================
    STYLES — self-contained, prefixed `.art-`, scoped under `.art-root`.
-   Light (paper) is default; dark (craft board) under [data-theme="dark"].
+   Editorial margin/content sections that alternate sides.
+   Light (paper) default; dark (craft board) under [data-theme="dark"].
    ===================================================================== */
 
 const ART_CSS = `
 .art-root{
-  --bg:#f4f3ee; --bg2:#eceae3; --panel:#ffffff; --panel2:#faf9f5;
-  --ink:#181613; --ink2:#6c675f; --line:rgba(24,22,19,.14); --line2:rgba(24,22,19,.24);
+  --bg:#f5f4ef; --bg2:#edece5; --panel:#ffffff; --panel2:#faf9f4;
+  --ink:#1c1a16; --ink2:#6f6a60; --line:rgba(28,26,22,.12); --line2:rgba(28,26,22,.22);
   --accent:var(--tpl-accent,#7c6cff);
-  --accent2: color-mix(in srgb, var(--accent) 62%, #4b3bd6);
-  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
-  --dark:#16151a; --tape:rgba(240,224,140,.42); --ok:#33cc77;
+  --accent2: color-mix(in srgb, var(--accent) 60%, #4b3bd6);
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  --dark:#191722; --ok:#37c976;
   --script: "Segoe Script", "Bradley Hand", "Snell Roundhand", "Brush Script MT", "Comic Sans MS", cursive;
   --display: "Bricolage Grotesque", "Inter", ui-sans-serif, system-ui, sans-serif;
   --body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
   --r:16px;
   position:relative; isolation:isolate; background:var(--bg); color:var(--ink);
   font-family:var(--body); font-size:16px; line-height:1.62; -webkit-font-smoothing:antialiased;
@@ -727,9 +577,8 @@ const ART_CSS = `
   transition:background-color .4s ease, color .3s ease;
 }
 .art-root[data-theme="dark"]{
-  --bg:#17161b; --bg2:#1e1d24; --panel:#232128; --panel2:#1c1b22;
-  --ink:#f0eee9; --ink2:#a49f97; --line:rgba(255,255,255,.13); --line2:rgba(255,255,255,.22);
-  --dark:#0e0d12; --tape:rgba(240,224,140,.20);
+  --bg:#18171c; --bg2:#201e25; --panel:#242229; --panel2:#1d1b22;
+  --ink:#f1efe9; --ink2:#a6a199; --line:rgba(255,255,255,.13); --line2:rgba(255,255,255,.22); --dark:#100f14;
 }
 .art-root *{ box-sizing:border-box; }
 .art-root img{ max-width:100%; display:block; }
@@ -737,50 +586,48 @@ const ART_CSS = `
 .art-root h1,.art-root h2,.art-root h3,.art-root p,.art-root blockquote{ overflow-wrap:anywhere; }
 
 /* paper grain */
-.art-grain{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5; mix-blend-mode:multiply;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
-.art-root[data-theme="dark"] .art-grain{ mix-blend-mode:overlay; opacity:.35; }
+.art-grain{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.42; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+.art-root[data-theme="dark"] .art-grain{ mix-blend-mode:overlay; opacity:.3; }
 .art-root > *{ position:relative; z-index:1; }
 
-.art-shell{ width:100%; max-width:1200px; margin-inline:auto; padding-inline:clamp(16px,4vw,36px); }
+.art-shell{ width:100%; max-width:1180px; margin-inline:auto; padding-inline:clamp(18px,4vw,40px); counter-reset:artsec; }
 
-/* type helpers */
+/* type */
 .art-script{ font-family:var(--script); }
-.art-label{ display:inline-block; font-family:var(--mono); color:var(--accent2); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; margin-bottom:6px; }
-.art-h2{ font-size:clamp(2rem,4.4vw,3rem); font-weight:400; line-height:1.05; margin:0 0 22px; letter-spacing:.01em; }
+.art-h2{ font-family:var(--script); font-size:clamp(2rem,4.6vw,3.2rem); font-weight:400; line-height:1.02; margin:0 0 24px; }
 .art-dot{ color:var(--accent); }
-.art-lead{ color:var(--ink2); margin:14px 0 0; max-width:52ch; }
+.art-lead{ color:var(--ink2); margin:0 0 14px; max-width:58ch; font-size:1.04rem; }
 .art-muted{ color:var(--ink2); margin:6px 0 0; }
-.art-small{ font-size:.84rem; }
-.art-mt{ margin-top:18px; }
+.art-small{ font-size:.85rem; }
+.art-mt{ margin-top:20px; }
 .art-clamp-2,.art-clamp-3{ display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
 .art-clamp-2{ -webkit-line-clamp:2; } .art-clamp-3{ -webkit-line-clamp:3; }
 
-/* paper card base */
-.art-paper{ position:relative; background:var(--panel); border:1.5px solid var(--line); border-radius:var(--r);
-  box-shadow:3px 4px 0 var(--line), 0 14px 30px -22px rgba(30,20,60,.4);
-  transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, border-color .25s ease, background .4s ease; }
+/* paper cards (soft, aligned — no harsh colored offsets) */
+.art-paper{ position:relative; background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:0 14px 30px -20px rgba(30,20,60,.35); transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, border-color .25s ease, background .4s ease; }
 
-/* buttons */
-.art-btn{ display:inline-flex; align-items:center; gap:8px; padding:12px 20px; border-radius:999px;
-  font-family:var(--body); font-weight:600; font-size:.94rem; text-decoration:none; cursor:pointer;
-  border:1.5px solid var(--ink); transition:transform .18s ease, box-shadow .18s ease, background .2s; }
+/* buttons — clean, soft shadow (accent kept subtle) */
+.art-btn{ display:inline-flex; align-items:center; gap:8px; padding:12px 22px; border-radius:999px;
+  font-family:var(--body); font-weight:600; font-size:.94rem; text-decoration:none; cursor:pointer; border:1px solid transparent;
+  transition:transform .18s ease, box-shadow .2s ease, background .2s, border-color .2s; }
 .art-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
-.art-btn-dark{ background:var(--ink); color:var(--bg); box-shadow:3px 3px 0 var(--accent); }
-.art-btn-dark:hover{ transform:translate(-1px,-2px); box-shadow:5px 6px 0 var(--accent); }
-.art-btn-ghost{ background:transparent; color:var(--ink); box-shadow:3px 3px 0 var(--line2); }
-.art-btn-ghost:hover{ transform:translate(-1px,-2px); box-shadow:5px 6px 0 var(--line2); }
-.art-btnrow{ display:flex; flex-wrap:wrap; gap:14px; margin-top:26px; }
+.art-btn-dark{ background:var(--ink); color:var(--bg); box-shadow:0 12px 24px -12px rgba(28,26,22,.55); }
+.art-btn-dark:hover{ transform:translateY(-2px); box-shadow:0 18px 32px -14px rgba(28,26,22,.6); }
+.art-btn-ghost{ background:var(--panel); color:var(--ink); border-color:var(--line2); box-shadow:0 10px 22px -14px rgba(28,26,22,.4); }
+.art-btn-ghost:hover{ transform:translateY(-2px); border-color:var(--accent); color:var(--accent); }
+.art-btnrow{ display:flex; flex-wrap:wrap; gap:14px; margin-top:28px; }
 
 .art-icbtn{ width:42px; height:42px; flex:0 0 auto; border-radius:50%; cursor:pointer; display:grid; place-items:center;
-  background:var(--panel); border:1.5px solid var(--ink); color:var(--ink); box-shadow:2px 2px 0 var(--line2);
-  transition:transform .18s ease, box-shadow .18s ease; }
-.art-icbtn:hover{ transform:translate(-1px,-2px); box-shadow:3px 4px 0 var(--accent); }
+  background:var(--panel); border:1px solid var(--line2); color:var(--ink); box-shadow:0 6px 14px -8px rgba(28,26,22,.4);
+  transition:transform .18s ease, box-shadow .18s ease, color .18s, border-color .18s; }
+.art-icbtn:hover{ transform:translateY(-2px); color:var(--accent); border-color:var(--accent); }
 .art-icbtn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 .art-icbtn-foot{ width:36px; height:36px; }
 
-/* tilts (collage) */
-.art-tilt-l{ transform:rotate(-1.6deg); } .art-tilt-r{ transform:rotate(1.5deg); }
+/* tilts */
+.art-tilt-l{ transform:rotate(-1.4deg); } .art-tilt-r{ transform:rotate(1.4deg); }
 .art-tilt-l:hover, .art-tilt-r:hover{ transform:rotate(0deg) translateY(-3px); }
 
 /* reveal */
@@ -788,114 +635,98 @@ const ART_CSS = `
 .art-root.art-anim-ready [data-reveal].art-in{ opacity:1; transform:none; }
 
 /* navbar */
-.art-nav{ position:sticky; top:0; z-index:40; border-bottom:1.5px solid var(--line);
-  background:color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
-.art-nav-in{ display:flex; align-items:center; gap:16px; min-height:64px; }
-.art-brand{ display:flex; align-items:baseline; gap:8px; text-decoration:none; position:relative; min-width:0; }
-.art-brand-name{ font-size:1.5rem; font-weight:400; line-height:1; }
-.art-brand-sub{ font-family:var(--mono); font-size:.66rem; color:var(--ink2); white-space:nowrap; }
-.art-online{ width:8px; height:8px; border-radius:50%; background:var(--ok); box-shadow:0 0 8px var(--ok); align-self:center; }
-.art-navlinks{ display:flex; gap:4px; margin-inline:auto; }
-.art-navlinks a{ text-decoration:none; color:var(--ink2); font-size:.9rem; padding:8px 12px; border-radius:999px; transition:color .16s, background .16s; }
+.art-nav{ position:sticky; top:0; z-index:40; border-bottom:1px solid var(--line);
+  background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.art-nav-in{ display:flex; align-items:center; gap:16px; min-height:66px; }
+.art-brand{ display:flex; align-items:center; gap:8px; text-decoration:none; min-width:0; }
+.art-brand-name{ font-size:1.7rem; line-height:1; }
+.art-online{ width:9px; height:9px; border-radius:50%; background:var(--ok); box-shadow:0 0 8px color-mix(in srgb,var(--ok) 70%, transparent); flex:0 0 auto; }
+.art-navlinks{ display:flex; gap:2px; margin-inline:auto; }
+.art-navlinks a{ text-decoration:none; color:var(--ink2); font-size:.92rem; padding:8px 14px; border-radius:999px; transition:color .16s, background .16s; }
 .art-navlinks a:hover{ color:var(--ink); background:var(--accent-soft); }
 .art-nav-right{ display:flex; align-items:center; gap:8px; }
-.art-nav-cta{ padding:9px 16px; }
-
+.art-nav-cta{ padding:9px 18px; }
 .art-menu{ display:none; position:relative; }
-.art-menu summary{ list-style:none; width:42px; height:42px; border-radius:50%; cursor:pointer; display:grid; place-items:center; gap:4px; border:1.5px solid var(--ink); }
+.art-menu summary{ list-style:none; width:42px; height:42px; border-radius:50%; cursor:pointer; display:grid; place-items:center; gap:4px; border:1px solid var(--line2); }
 .art-menu summary::-webkit-details-marker{ display:none; }
 .art-menu summary span{ display:block; width:18px; height:2px; background:var(--ink); border-radius:2px; }
-.art-menu ul{ position:absolute; right:0; top:52px; min-width:190px; list-style:none; margin:0; padding:8px; z-index:50;
-  border:1.5px solid var(--line); border-radius:14px; background:var(--panel); box-shadow:4px 6px 0 var(--line); }
+.art-menu ul{ position:absolute; right:0; top:52px; min-width:190px; list-style:none; margin:0; padding:8px; z-index:50; border:1px solid var(--line); border-radius:14px; background:var(--panel); box-shadow:0 18px 40px -18px rgba(28,26,22,.5); }
 .art-menu ul a{ display:block; padding:9px 12px; border-radius:8px; text-decoration:none; color:var(--ink); font-size:.92rem; }
 .art-menu ul a:hover{ background:var(--accent-soft); }
 
 /* hero */
-.art-hero{ display:grid; grid-template-columns:1.08fr .92fr; gap:clamp(24px,4vw,54px); align-items:center;
-  padding-block:clamp(28px,5vw,64px); }
-.art-eyebrow{ font-family:var(--mono); letter-spacing:.24em; font-size:.8rem; color:var(--ink2); }
-.art-hero-name{ font-size:clamp(3.4rem,10vw,6rem); font-weight:400; line-height:.95; margin:6px 0 0; }
-.art-name-wrap{ position:relative; display:inline-block; padding:14px 6px 0; }
-.art-crown{ position:absolute; top:-22px; right:6%; width:52px; height:34px; color:var(--accent); }
-.art-underline{ position:absolute; left:-2%; bottom:-14px; width:104%; height:22px; color:var(--accent); opacity:.85; }
-.art-hero-title{ font-size:clamp(1.6rem,4.6vw,2.6rem); margin:20px 0 0; color:var(--ink); }
-.art-hero-intro{ color:var(--ink2); margin:18px 0 0; max-width:46ch; font-size:1.04rem; }
-.art-hero-soc{ margin-top:22px; }
-.art-scribble{ display:inline-block; margin-top:24px; color:var(--ink2); font-size:1.15rem; transform:rotate(-3deg); }
+.art-hero{ display:grid; grid-template-columns:1.15fr .85fr; gap:clamp(24px,4vw,56px); align-items:center; padding-block:clamp(34px,6vw,72px); }
+.art-eyebrow{ font-size:1.5rem; color:var(--ink2); display:inline-block; transform:rotate(-3deg); }
+.art-hero-name{ font-size:clamp(3.6rem,10vw,6.4rem); font-weight:400; line-height:.92; margin:2px 0 0; }
+.art-name-wrap{ position:relative; display:inline-block; padding:18px 8px 0; }
+.art-crown{ position:absolute; top:-18px; right:8%; width:54px; height:36px; color:var(--accent); }
+.art-underline{ position:absolute; left:-2%; bottom:-16px; width:104%; height:24px; color:var(--accent); opacity:.9; }
+.art-hero-title{ font-family:var(--display); font-weight:700; font-size:clamp(1.3rem,3.4vw,1.9rem); margin:26px 0 0; }
+.art-hero-intro{ color:var(--ink2); margin:16px 0 0; max-width:46ch; font-size:1.05rem; }
+.art-hero-soc{ margin-top:24px; }
 
-.art-hero-right{ position:relative; display:flex; flex-direction:column; gap:20px; align-items:center; }
-.art-term{ width:100%; max-width:360px; background:var(--dark); color:#e7e7ea; border-radius:12px; overflow:hidden;
-  border:1.5px solid rgba(0,0,0,.4); box-shadow:6px 8px 0 color-mix(in srgb,var(--accent) 40%, transparent), 0 20px 40px -20px rgba(0,0,0,.6); font-family:var(--mono); }
-.art-term-bar{ display:flex; align-items:center; gap:6px; padding:9px 12px; background:rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.08); }
-.art-term-bar i{ width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.3); }
-.art-term-bar i:first-child{ background:var(--accent); }
-.art-term-host{ margin-left:6px; font-size:.72rem; color:#9aa0aa; }
-.art-term-body{ padding:14px; font-size:.82rem; display:flex; flex-direction:column; gap:6px; }
-.art-term-line{ color:#c9d8c0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.art-caret{ color:var(--accent); animation:art-blink 1.1s steps(1) infinite; }
-@keyframes art-blink{ 0%,50%{opacity:1;} 51%,100%{opacity:0;} }
-
-.art-portrait{ position:relative; width:min(340px,86%); background:var(--panel); padding:12px 12px 46px; border:1.5px solid var(--line);
-  border-radius:6px; box-shadow:4px 6px 0 var(--line), 0 20px 40px -22px rgba(30,20,60,.5); transition:transform .3s ease; }
+.art-hero-right{ display:flex; flex-direction:column; align-items:center; gap:16px; }
+.art-portrait{ position:relative; width:min(340px,88%); background:var(--panel); padding:14px 14px 48px; border:1px solid var(--line);
+  border-radius:6px; box-shadow:0 26px 50px -26px rgba(30,20,60,.5); }
 .art-portrait .art-zoom, .art-portrait .art-zoom img{ width:100%; }
-.art-portrait .art-zoom img{ aspect-ratio:4/5; object-fit:cover; filter:grayscale(.35) contrast(1.05); border-radius:3px; }
-.art-portrait figcaption{ position:absolute; left:0; right:0; bottom:12px; text-align:center; font-size:1.15rem; color:var(--ink2); }
+.art-portrait .art-zoom img{ aspect-ratio:4/5; object-fit:cover; filter:grayscale(.3) contrast(1.04); border-radius:3px; }
+.art-portrait figcaption{ position:absolute; left:0; right:0; bottom:14px; text-align:center; font-size:1.2rem; color:var(--ink2); }
 .art-portrait-ph{ width:100%; aspect-ratio:4/5; display:grid; place-items:center; font-family:var(--display); font-size:3.4rem; font-weight:700; color:#fff; border-radius:3px; background:linear-gradient(150deg,var(--accent),var(--accent2)); }
-.art-oval{ position:absolute; top:-16px; right:-26px; padding:10px 16px; font-size:1rem; color:var(--ink); background:var(--panel);
-  border:2px solid var(--accent); border-radius:50%/60%; transform:rotate(6deg); box-shadow:2px 3px 0 var(--accent-soft); white-space:nowrap; }
+.art-oval{ position:absolute; top:-14px; right:-22px; padding:10px 18px; font-size:1.05rem; color:var(--ink); background:var(--panel); border:2.5px solid var(--accent); border-radius:50%/58%; transform:rotate(6deg); white-space:nowrap; box-shadow:0 8px 18px -12px rgba(30,20,60,.5); }
+.art-star-hero{ position:absolute; bottom:-16px; left:-18px; width:40px; height:40px; color:var(--accent); }
+.art-tag-note{ display:inline-block; font-size:1.15rem; color:var(--ink2); transform:rotate(-2deg); }
+.art-star{ }
 
-/* sections */
-.art-section{ padding-block:clamp(40px,6vw,72px); border-top:1.5px dashed var(--line); scroll-margin-top:80px; }
-.art-sechead{ display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap; }
-.art-sechead .art-h2{ margin-bottom:0; }
-.art-head-arrow{ position:relative; display:inline-flex; align-items:center; gap:10px; }
-.art-doodle-arrow{ width:56px; height:42px; color:var(--accent); }
-.art-pill{ padding:8px 16px; border:1.5px solid var(--ink); border-radius:999px; font-size:.82rem; font-weight:600; box-shadow:2px 2px 0 var(--accent-soft); }
+/* ---- EDITORIAL SECTION: margin + content, alternating sides ---- */
+.art-section{ counter-increment:artsec; display:grid; grid-template-columns:186px 1fr; gap:clamp(20px,3vw,48px);
+  padding-block:clamp(42px,6vw,78px); border-top:1px dashed var(--line); }
+.art-section:nth-of-type(even){ grid-template-columns:1fr 186px; }
+.art-section:nth-of-type(even) .art-margin{ order:2; text-align:right; align-items:flex-end; }
+.art-margin{ display:flex; flex-direction:column; align-items:flex-start; gap:10px; position:sticky; top:92px; align-self:start; }
+.art-num{ font-family:var(--script); font-size:3.4rem; line-height:.9; color:var(--accent); opacity:.9; }
+.art-num::before{ content:counter(artsec, decimal-leading-zero); }
+.art-mtag{ font-size:1.4rem; color:var(--ink); }
+.art-mline{ width:46px; height:3px; border-radius:3px; background:var(--accent); opacity:.8; }
+.art-section:nth-of-type(even) .art-mline{ align-self:flex-end; }
+.art-content{ min-width:0; }
 
 /* about */
-.art-about{ display:grid; grid-template-columns:1.15fr .85fr; gap:clamp(24px,4vw,48px); align-items:center; }
-.art-stats{ display:flex; flex-wrap:wrap; gap:26px; margin-top:24px; }
+.art-about{ display:grid; grid-template-columns:1.3fr .7fr; gap:clamp(20px,3vw,40px); align-items:center; }
+.art-stats{ display:flex; flex-wrap:wrap; gap:28px; margin-top:24px; }
 .art-stat{ display:flex; flex-direction:column; }
 .art-stat b{ font-family:var(--display); font-size:2rem; color:var(--accent); line-height:1; }
-.art-stat span{ font-family:var(--script); font-size:1rem; color:var(--ink2); margin-top:2px; }
-.art-about-photo{ position:relative; display:flex; justify-content:center; }
-.art-blob-frame{ width:min(320px,90%); padding:12px; background:var(--panel); border:1.5px solid var(--line);
-  border-radius:56% 44% 52% 48% / 48% 52% 46% 54%; overflow:hidden; box-shadow:4px 6px 0 var(--line); }
+.art-stat span{ font-family:var(--script); font-size:1.05rem; color:var(--ink2); margin-top:2px; }
+.art-blob-frame{ width:100%; max-width:300px; justify-self:center; padding:12px; background:var(--panel); border:1px solid var(--line);
+  border-radius:56% 44% 52% 48% / 48% 52% 46% 54%; overflow:hidden; box-shadow:0 20px 40px -22px rgba(30,20,60,.45); }
 .art-blob-frame .art-zoom, .art-blob-frame .art-zoom img{ width:100%; }
 .art-blob-frame .art-zoom img{ aspect-ratio:1/1; object-fit:cover; border-radius:52% 48% 48% 52% / 48% 52% 48% 52%; }
-.art-note{ position:absolute; font-family:var(--script); font-size:1.05rem; color:var(--ink); background:var(--panel);
-  padding:8px 12px; border:1.5px solid var(--line); box-shadow:2px 3px 0 var(--line); transform:rotate(-4deg); }
-.art-note::before{ content:""; position:absolute; top:-9px; left:50%; transform:translateX(-50%) rotate(-5deg); width:52px; height:16px; background:var(--tape); }
-.art-note-a{ bottom:-14px; right:-6px; }
-.art-note-b{ display:inline-block; position:static; margin-top:20px; transform:rotate(-2deg); }
 
 /* skills */
 .art-skills{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:16px; }
 .art-skill{ padding:18px 14px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; }
-.art-skill:hover{ transform:translateY(-4px); box-shadow:4px 7px 0 var(--line), 0 18px 30px -22px rgba(30,20,60,.5); border-color:var(--accent); }
-.art-skill-ic{ width:52px; height:52px; border-radius:50%; display:grid; place-items:center; font-family:var(--display);
-  font-weight:700; color:#fff; background:linear-gradient(150deg,var(--accent),var(--accent2)); box-shadow:2px 3px 0 var(--accent-soft); }
+.art-skill:hover{ transform:translateY(-4px); border-color:var(--accent); box-shadow:0 18px 34px -22px rgba(30,20,60,.5); }
+.art-skill-ic{ width:52px; height:52px; border-radius:50%; display:grid; place-items:center; font-family:var(--display); font-weight:700; color:#fff; background:linear-gradient(150deg,var(--accent),var(--accent2)); }
 .art-skill-name{ font-weight:600; font-size:.92rem; }
 .art-skill-bar{ width:80%; height:6px; border-radius:99px; background:var(--line); overflow:hidden; }
 .art-skill-fill{ display:block; height:100%; width:var(--pct); border-radius:99px; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width 1.1s cubic-bezier(.2,.8,.2,1); }
 .art-root.art-anim-ready .art-skill[data-bar] .art-skill-fill{ width:0; }
 .art-root.art-anim-ready .art-skill[data-bar].art-in .art-skill-fill{ width:var(--pct); }
 
-/* cards / grids */
-.art-grid-4{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-.art-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+/* grids / cards */
+.art-grid-4{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+.art-grid-3{ display:grid; grid-template-columns:repeat(2,1fr); gap:18px; }
 .art-grid-2{ display:grid; grid-template-columns:repeat(2,1fr); gap:18px; }
 .art-list{ display:flex; flex-direction:column; gap:14px; }
 .art-card{ padding:22px; display:flex; flex-direction:column; gap:8px; text-decoration:none; color:inherit; }
-.art-card:hover, .art-card-link:hover{ transform:translateY(-4px); box-shadow:4px 7px 0 var(--line), 0 20px 34px -22px rgba(30,20,60,.5); border-color:var(--accent); }
-.art-card-hot{ background:color-mix(in srgb, var(--accent) 12%, var(--panel)); border-color:var(--accent); }
+.art-card:hover, .art-card-link:hover{ transform:translateY(-4px); border-color:var(--accent); box-shadow:0 20px 36px -22px rgba(30,20,60,.5); }
+.art-card-hot{ background:color-mix(in srgb, var(--accent) 10%, var(--panel)); border-color:var(--accent); }
 .art-card-top{ display:flex; align-items:center; justify-content:space-between; }
-.art-card-ic{ width:44px; height:44px; display:grid; place-items:center; border-radius:12px; color:var(--accent); font-size:1.1rem; background:var(--accent-soft); border:1.5px solid var(--line); }
-.art-card-num{ font-family:var(--mono); color:var(--ink2); font-size:.9rem; }
+.art-card-ic{ width:44px; height:44px; display:grid; place-items:center; border-radius:12px; color:var(--accent); font-size:1.1rem; background:var(--accent-soft); }
+.art-card-num{ color:var(--ink2); font-size:1.4rem; }
 .art-card-title{ font-family:var(--display); font-size:1.12rem; font-weight:700; margin:6px 0 0; }
 .art-card-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:8px; flex-wrap:wrap; }
 .art-card-foot-top{ margin-top:0; padding-top:0; align-items:baseline; }
-.art-price{ font-family:var(--mono); color:var(--accent); font-size:.85rem; }
+.art-price{ color:var(--accent); font-size:.9rem; font-weight:600; }
 .art-arrow{ color:var(--accent); font-weight:700; }
 .art-listitem{ padding:18px 22px; text-decoration:none; color:inherit; }
 .art-listitem:hover{ border-color:var(--accent); }
@@ -908,26 +739,26 @@ const ART_CSS = `
 .art-proj-ph{ width:100%; height:100%; display:grid; place-items:center; font-family:var(--display); font-size:2rem; font-weight:700; color:#fff; background:linear-gradient(150deg,var(--accent),var(--accent2)); }
 .art-badge{ position:absolute; top:8px; left:8px; padding:4px 10px; border-radius:999px; font-size:.68rem; font-weight:700; color:#fff; background:var(--accent); z-index:2; }
 .art-proj-body{ padding:14px 8px 6px; display:flex; flex-direction:column; gap:6px; }
-.art-linktext{ text-decoration:none; }
-.art-linktext:hover{ color:var(--accent); }
+.art-linktext{ text-decoration:none; } .art-linktext:hover{ color:var(--accent); }
 .art-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
-.art-tag{ font-size:.74rem; padding:4px 11px; border:1.5px solid var(--line); border-radius:999px; color:var(--ink2); }
+.art-tag{ font-size:.74rem; padding:4px 12px; border:1px solid var(--line); border-radius:999px; color:var(--ink2); }
 
 /* timeline */
 .art-timeline{ display:flex; flex-direction:column; padding-left:6px; border-left:2px solid var(--line); }
 .art-tl-item{ position:relative; display:grid; grid-template-columns:130px 1fr; gap:18px; padding:0 0 26px 20px; align-items:start; }
 .art-tl-item:last-child{ padding-bottom:0; }
 .art-tl-dot{ position:absolute; left:-11px; top:5px; width:14px; height:14px; border-radius:50%; background:var(--accent); border:3px solid var(--bg); box-shadow:0 0 0 2px var(--accent); }
-.art-tl-date{ font-family:var(--mono); color:var(--accent); font-size:.82rem; padding-top:3px; }
+.art-tl-date{ color:var(--accent); font-size:1.15rem; padding-top:2px; }
 .art-tl-role{ font-family:var(--display); font-size:1.1rem; font-weight:700; margin:0; }
 
 /* gallery / polaroid */
-.art-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:22px; }
-.art-polaroid{ background:var(--panel); padding:12px 12px 40px; border:1.5px solid var(--line); border-radius:4px; box-shadow:4px 6px 0 var(--line); transition:transform .3s ease; position:relative; }
-.art-polaroid::before{ content:""; position:absolute; top:-10px; left:50%; transform:translateX(-50%) rotate(-4deg); width:60px; height:18px; background:var(--tape); }
+.art-gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:24px; }
+.art-polaroid{ background:var(--panel); padding:12px 12px 40px; border:1px solid var(--line); border-radius:4px; box-shadow:0 16px 32px -20px rgba(30,20,60,.45); position:relative; transition:transform .3s ease; }
+.art-polaroid::before{ content:""; position:absolute; top:-10px; left:50%; transform:translateX(-50%) rotate(-4deg); width:60px; height:18px; background:rgba(240,224,140,.42); }
+.art-root[data-theme="dark"] .art-polaroid::before{ background:rgba(240,224,140,.18); }
 .art-polaroid .art-zoom, .art-polaroid .art-zoom img{ width:100%; }
 .art-polaroid .art-zoom img{ aspect-ratio:1/1; object-fit:cover; border-radius:2px; }
-.art-polaroid figcaption{ position:absolute; left:0; right:0; bottom:12px; text-align:center; font-family:var(--script); font-size:1rem; color:var(--ink2); }
+.art-polaroid figcaption{ position:absolute; left:0; right:0; bottom:12px; text-align:center; font-family:var(--script); font-size:1.05rem; color:var(--ink2); }
 
 /* videos */
 .art-video{ padding:8px; }
@@ -942,10 +773,10 @@ const ART_CSS = `
 .art-zoom:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
 /* testimonials */
-.art-tgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.art-tgrid{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
 .art-quote{ padding:24px; display:flex; flex-direction:column; gap:12px; }
-.art-quote-mark{ font-family:var(--script); color:var(--accent); font-size:3rem; line-height:.4; height:22px; }
-.art-quote blockquote{ margin:0; }
+.art-quote-mark{ color:var(--accent); font-size:3.2rem; line-height:.4; height:24px; }
+.art-quote blockquote{ margin:0; font-size:1.02rem; }
 .art-quote-by{ display:flex; align-items:center; gap:12px; margin-top:auto; }
 .art-quote-by span{ display:flex; flex-direction:column; line-height:1.2; }
 .art-quote-by b{ font-weight:700; font-size:.9rem; }
@@ -955,67 +786,69 @@ const ART_CSS = `
 
 /* socials */
 .art-socials{ display:flex; flex-wrap:wrap; gap:10px; }
-.art-soc{ width:42px; height:42px; display:grid; place-items:center; border-radius:50%; border:1.5px solid var(--ink); color:var(--ink); text-decoration:none; box-shadow:2px 2px 0 var(--line2); transition:transform .16s, box-shadow .16s, color .16s; }
-.art-soc:hover{ color:var(--accent); transform:translate(-1px,-2px); box-shadow:3px 4px 0 var(--accent); }
+.art-soc{ width:42px; height:42px; display:grid; place-items:center; border-radius:50%; border:1px solid var(--line2); color:var(--ink); text-decoration:none; box-shadow:0 6px 14px -10px rgba(28,26,22,.4); transition:transform .16s, color .16s, border-color .16s; }
+.art-soc:hover{ color:var(--accent); border-color:var(--accent); transform:translateY(-2px); }
 .art-soc svg{ width:17px; height:17px; }
 
 /* contact */
-.art-contact{ display:grid; grid-template-columns:.9fr 1.1fr; gap:clamp(24px,4vw,48px); align-items:start; }
-.art-contact-rows{ display:flex; flex-direction:column; gap:12px; margin:22px 0; }
+.art-contact{ display:grid; grid-template-columns:.85fr 1.15fr; gap:clamp(24px,4vw,48px); align-items:start; }
+.art-contact-rows{ display:flex; flex-direction:column; gap:12px; margin-bottom:20px; }
 .art-crow{ display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; word-break:break-word; }
 .art-crow span:first-child{ color:var(--accent); width:22px; text-align:center; flex:0 0 auto; font-size:1.1rem; }
 .art-crow:hover{ color:var(--accent); }
+.art-note-inline{ display:inline-block; margin-top:20px; }
 .art-formcard{ padding:clamp(18px,2.6vw,30px); }
-.art-formcard :where(input, textarea, select){ width:100%; font-family:var(--body); font-size:.95rem; color:var(--ink);
-  background:var(--panel2); border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:12px; transition:border-color .16s; }
+.art-formcard :where(input, textarea, select){ width:100%; font-family:var(--body); font-size:.95rem; color:var(--ink); background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:12px; transition:border-color .16s; }
 .art-formcard :where(input, textarea, select):focus{ outline:none; border-color:var(--accent); }
 .art-formcard :where(input, textarea, select)::placeholder{ color:var(--ink2); }
 .art-formcard textarea{ min-height:120px; resize:vertical; }
-.art-formcard :where(button, [type="submit"]){ width:100%; font-family:var(--body); font-weight:700; cursor:pointer;
-  color:var(--bg); background:var(--ink); border:1.5px solid var(--ink); border-radius:999px; padding:13px 18px; box-shadow:3px 3px 0 var(--accent); transition:transform .18s, box-shadow .18s; }
-.art-formcard :where(button, [type="submit"]):hover{ transform:translate(-1px,-2px); box-shadow:5px 6px 0 var(--accent); }
+.art-formcard :where(button, [type="submit"]){ width:100%; font-family:var(--body); font-weight:700; cursor:pointer; color:var(--bg); background:var(--ink); border:1px solid var(--ink); border-radius:999px; padding:13px 18px; box-shadow:0 12px 24px -12px rgba(28,26,22,.5); transition:transform .18s, box-shadow .18s; }
+.art-formcard :where(button, [type="submit"]):hover{ transform:translateY(-2px); box-shadow:0 18px 30px -14px rgba(28,26,22,.55); }
 .art-formcard label{ color:var(--ink2); font-size:.84rem; }
 
 /* footer */
-.art-footer{ position:relative; margin-top:clamp(40px,6vw,72px); background:var(--dark); color:#f0eee9; }
-.art-footer::before{ content:""; position:absolute; top:-14px; left:0; right:0; height:16px; background:var(--bg);
-  clip-path:polygon(0 0,4% 70%,9% 20%,15% 80%,21% 30%,27% 75%,34% 25%,40% 85%,47% 35%,54% 78%,61% 22%,68% 80%,75% 32%,82% 75%,89% 24%,95% 78%,100% 30%,100% 0); }
-.art-footer-in{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; padding-block:30px 26px; }
-.art-brand-foot .art-brand-name{ color:#fff; } .art-brand-foot .art-brand-sub{ color:rgba(255,255,255,.55); }
+.art-footer{ position:relative; margin-top:clamp(40px,6vw,72px); background:var(--dark); color:#f1efe9; }
+.art-footer::before{ content:""; position:absolute; top:-13px; left:0; right:0; height:15px; background:var(--bg);
+  clip-path:polygon(0 0,4% 70%,9% 22%,15% 78%,21% 32%,27% 74%,34% 26%,40% 82%,47% 36%,54% 76%,61% 24%,68% 80%,75% 34%,82% 74%,89% 26%,95% 78%,100% 32%,100% 0); }
+.art-footer-in{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; padding-block:32px 26px; }
+.art-brand-foot{ flex-direction:column; align-items:flex-start; gap:2px; }
+.art-brand-foot .art-brand-name{ color:#fff; } .art-brand-sub{ font-size:.8rem; color:rgba(255,255,255,.55); }
 .art-footer-nav{ display:flex; flex-wrap:wrap; gap:8px 18px; }
 .art-footer-nav a{ text-decoration:none; color:rgba(255,255,255,.7); font-size:.9rem; }
 .art-footer-nav a:hover{ color:var(--accent); }
 .art-footer-right{ display:flex; flex-direction:column; align-items:flex-end; gap:12px; }
-.art-footer-soc .art-soc{ border-color:rgba(255,255,255,.4); color:#fff; box-shadow:none; }
-.art-footer-soc .art-soc:hover{ color:var(--accent); box-shadow:2px 2px 0 var(--accent); }
+.art-footer-soc .art-soc{ border-color:rgba(255,255,255,.35); color:#fff; box-shadow:none; }
+.art-footer-soc .art-soc:hover{ color:var(--accent); border-color:var(--accent); }
 .art-footer-meta{ display:flex; align-items:center; gap:14px; color:rgba(255,255,255,.6); font-size:.84rem; flex-wrap:wrap; justify-content:flex-end; }
-.art-footer-meta .art-icbtn{ background:transparent; border-color:rgba(255,255,255,.4); color:#fff; box-shadow:none; }
+.art-footer-meta .art-icbtn{ background:transparent; border-color:rgba(255,255,255,.35); color:#fff; box-shadow:none; }
 .art-madewith{ text-decoration:none; color:rgba(255,255,255,.6); } .art-madewith b{ color:var(--accent); }
 
 /* lightbox */
-.art-lb{ position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:clamp(16px,4vw,48px);
-  background:rgba(20,18,24,.82); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); animation:art-fade .2s ease both; }
+.art-lb{ position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:clamp(16px,4vw,48px); background:rgba(20,18,24,.82); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); animation:art-fade .2s ease both; }
 .art-lb-fig{ margin:0; max-width:94vw; max-height:92vh; display:flex; flex-direction:column; gap:10px; align-items:center; animation:art-pop .3s cubic-bezier(.2,.8,.2,1) both; }
 .art-lb-fig img{ max-width:92vw; max-height:84vh; width:auto; height:auto; object-fit:contain; background:#fff; padding:10px; border-radius:4px; box-shadow:0 30px 70px -20px rgba(0,0,0,.7); }
-.art-lb-fig figcaption{ color:#f0eee9; font-family:var(--script); font-size:1.05rem; text-align:center; }
-.art-lb-close{ position:fixed; top:18px; right:18px; z-index:1001; width:46px; height:46px; border-radius:50%; cursor:pointer;
-  color:#fff; background:rgba(255,255,255,.12); border:1.5px solid rgba(255,255,255,.3); font-size:1.1rem; transition:background .18s, transform .18s; }
+.art-lb-fig figcaption{ color:#f1efe9; font-family:var(--script); font-size:1.1rem; text-align:center; }
+.art-lb-close{ position:fixed; top:18px; right:18px; z-index:1001; width:46px; height:46px; border-radius:50%; cursor:pointer; color:#fff; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); font-size:1.1rem; transition:background .18s, transform .18s; }
 .art-lb-close:hover{ background:var(--accent); border-color:var(--accent); transform:rotate(90deg); }
 .art-lb-close:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
 @keyframes art-fade{ from{opacity:0;} to{opacity:1;} }
 @keyframes art-pop{ from{opacity:0; transform:scale(.94);} to{opacity:1; transform:none;} }
 
 /* responsive */
-@media (max-width:1080px){ .art-grid-4{ grid-template-columns:repeat(2,1fr); } }
+@media (min-width:1000px){ .art-grid-4{ grid-template-columns:repeat(4,1fr); } .art-grid-3{ grid-template-columns:repeat(3,1fr); } }
 @media (max-width:940px){
   .art-hero{ grid-template-columns:1fr; }
   .art-hero-right{ order:-1; }
+  .art-navlinks{ display:none; } .art-menu{ display:block; }
+  .art-section, .art-section:nth-of-type(even){ grid-template-columns:1fr; gap:16px; }
+  .art-section:nth-of-type(even) .art-margin{ order:0; text-align:left; align-items:flex-start; }
+  .art-section:nth-of-type(even) .art-mline{ align-self:flex-start; }
+  .art-margin{ position:static; flex-direction:row; align-items:baseline; gap:14px; }
+  .art-num{ font-size:2.4rem; }
+  .art-mline{ display:none; }
   .art-about{ grid-template-columns:1fr; }
   .art-contact{ grid-template-columns:1fr; }
-  .art-grid-3{ grid-template-columns:repeat(2,1fr); }
-  .art-navlinks{ display:none; }
-  .art-menu{ display:block; }
-  .art-tgrid{ display:flex; overflow-x:auto; gap:16px; scroll-snap-type:x mandatory; padding-bottom:8px; margin-inline:calc(-1 * clamp(16px,4vw,36px)); padding-inline:clamp(16px,4vw,36px); }
+  .art-tgrid{ display:flex; overflow-x:auto; gap:16px; scroll-snap-type:x mandatory; padding-bottom:8px; margin-inline:calc(-1 * clamp(18px,4vw,40px)); padding-inline:clamp(18px,4vw,40px); }
   .art-tgrid .art-quote{ flex:0 0 84%; scroll-snap-align:start; }
 }
 @media (max-width:680px){
@@ -1024,11 +857,7 @@ const ART_CSS = `
   .art-footer-right{ align-items:flex-start; }
   .art-nav-cta{ display:none; }
 }
-@media (max-width:520px){
-  .art-grid-3{ grid-template-columns:1fr; }
-  .art-grid-4{ grid-template-columns:1fr; }
-  .art-brand-sub{ display:none; }
-}
+@media (max-width:520px){ .art-grid-4, .art-grid-3{ grid-template-columns:1fr; } }
 
 @media (prefers-reduced-motion: reduce){
   .art-root{ scroll-behavior:auto; }
