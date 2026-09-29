@@ -135,7 +135,7 @@ export function JournalTemplate({ data }: { data: PublicPortfolio }) {
     const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const targets = root.querySelectorAll("[data-reveal]");
     if (reduce || typeof IntersectionObserver === "undefined") { targets.forEach((el) => el.classList.add("nb-in")); return; }
-    const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("nb-in"); io.unobserve(e.target); } }), { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("nb-in"); io.unobserve(e.target); } }), { threshold: 0, rootMargin: "0px 0px 28% 0px" });
     targets.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
@@ -437,7 +437,7 @@ const NB_CSS = `
 .nb-page-in::before{ content:""; position:absolute; left:clamp(38px,5.5vw,72px); top:0; bottom:0; width:2px; background:var(--pink); opacity:.7; }
 
 /* pop-in reveal (cute bounce) */
-.nb-root.nb-ready [data-reveal]{ opacity:0; transform:translateY(34px) scale(.96); transition:opacity .5s ease, transform .6s cubic-bezier(.34,1.4,.5,1); will-change:opacity, transform; }
+.nb-root.nb-ready [data-reveal]{ opacity:0; transform:translateY(22px) scale(.98); transition:opacity .45s ease, transform .55s cubic-bezier(.34,1.4,.5,1); will-change:opacity, transform; }
 .nb-root.nb-ready [data-reveal].nb-in{ opacity:1; transform:none; }
 
 /* doodles */
@@ -604,15 +604,18 @@ const NB_CSS = `
   .nb-page-in{ padding:24px 18px 26px 46px; }
   .nb-page-in::before{ left:32px; }
   .nb-spiral{ width:24px; left:-10px; background-size:24px 28px; }
-  .nb-feat-wrap{ grid-template-columns:1fr; }
+  .nb-feat-wrap{ grid-template-columns:1fr; gap:14px; }
+  .nb-feat-doodle{ flex-direction:row; justify-content:center; gap:14px; }
+  .nb-laptop{ width:92px; }
+  .nb-bubble{ max-width:150px; }
   .nb-grid2{ grid-template-columns:1fr; }
   .nb-contact{ grid-template-columns:1fr; }
   .nb-masonry{ columns:2 140px; }
   .nb-time-row{ grid-template-columns:14px 1fr; }
   .nb-time-date{ grid-column:2; margin-top:2px; }
   .nb-about{ justify-content:center; }
-  .nb-sticker{ padding:24px 18px; margin:28px 0; }
-  .nb-num{ top:-16px; left:-6px; width:38px; height:38px; font-size:1.05rem; }
+  .nb-sticker{ padding:22px 18px; margin:22px 0; }
+  .nb-num{ top:-15px; left:-6px; width:36px; height:36px; font-size:1rem; }
 }
 @media (max-width:480px){
   .nb-page{ border-radius:14px; margin-inline:8px; }
