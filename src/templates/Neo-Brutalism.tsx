@@ -107,7 +107,7 @@ function ArrowUpRight() {
 
 /* ------------------------------ component ------------------------------ */
 
-export function Neo-Brutalism({ data }: { data: PublicPortfolio }) {
+export function NeoBrutalism({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const accent = data.accent || "#7c3aed"; // Default to vivid purple
 
@@ -471,7 +471,7 @@ export function Neo-Brutalism({ data }: { data: PublicPortfolio }) {
   );
 }
 
-export default Neo-Brutalism;
+export default NeoBrutalism;
 
 /* =====================================================================
    STYLES — Bold Neo-Brutalism. Prefixed `.neo-`.
