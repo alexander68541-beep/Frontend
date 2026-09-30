@@ -11,7 +11,7 @@ import { NovaTemplate } from "./NovaTemplate";
 import { FuturisticTemplete } from "./FuturisticTemplete";
 import { JournalTemplate } from "./JournalTemplate";
 import { NeoBrutalism } from "./NeoBrutalism";
-import { Cyberpunk } from "./Cyberpunk";
+
 
 
 // ============================================================================
@@ -42,7 +42,6 @@ export const TEMPLATE_COMPONENTS: Record<string, TemplateComponent> = {
   Futuristic: ({ data }) => <FuturisticTemplete data={data} />,
   Journal: ({ data }) => <JournalTemplate data={data} />,
   NeoBrutalism: ({ data }) => <NeoBrutalism data={data} />,
-  Cyberpunk: ({ data }) => <Cyberpunk data={data} />,
 };
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATE_COMPONENTS);
