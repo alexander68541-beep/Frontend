@@ -68,6 +68,7 @@ function detectSocial(platform: string | null, url: string | null, label: string
   if (/linkedin/.test(H)) return "linkedin";
   if (/twitter|x\.com/.test(H)) return "twitter";
   if (/instagram/.test(H)) return "instagram";
+  if (/facebook/.test(H)) return "facebook";
   return "globe";
 }
 
@@ -77,7 +78,7 @@ function SocialIcon({ name }: { name: string }) {
 
 /* ------------------------------ component ------------------------------ */
 
-export function CyberpunkTemplate({ data }: { data: PublicPortfolio }) {
+export function Cyberpunk({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const username = data.username;
   const name = p?.display_name || username || "SYSTEM_ADMIN";
@@ -150,7 +151,7 @@ export function CyberpunkTemplate({ data }: { data: PublicPortfolio }) {
        </div>
 
        <div className="cyb-hero-center">
-          <p className="cyb-mono-sub">>> AUTHENTICATED_USER:</p>
+          <p className="cyb-mono-sub">&gt;&gt; AUTHENTICATED_USER:</p>
           <h1 className="cyb-glitch-title" data-text={name}>{name}</h1>
           {p?.title && <h2 className="cyb-hero-role">{p.title}</h2>}
           
@@ -175,7 +176,7 @@ export function CyberpunkTemplate({ data }: { data: PublicPortfolio }) {
   if ((sv("about") && (p?.about || p?.bio)) || (sv("skills") && data.skills.length > 0)) {
     slides.push(
       <div key="about" className="cyb-slide-inner">
-         <h2 className="cyb-section-title">> TARGET_PROFILE</h2>
+         <h2 className="cyb-section-title">&gt; TARGET_PROFILE</h2>
          <div className="cyb-grid-2 cyb-full-height cyb-scrollable">
             <div className="cyb-col">
                <div className="cyb-cyber-box">
@@ -217,7 +218,7 @@ export function CyberpunkTemplate({ data }: { data: PublicPortfolio }) {
   if ((sv("experience") && data.experience.length > 0) || (sv("education") && data.education.length > 0)) {
     slides.push(
       <div key="journey" className="cyb-slide-inner">
-         <h2 className="cyb-section-title">> SYSTEM_LOGS</h2>
+         <h2 className="cyb-section-title">&gt; SYSTEM_LOGS</h2>
          <div className="cyb-grid-2 cyb-full-height cyb-scrollable">
             {sv("experience") && data.experience.length > 0 && (
               <div className="cyb-col">
@@ -260,7 +261,7 @@ export function CyberpunkTemplate({ data }: { data: PublicPortfolio }) {
   if (sv("projects") && data.projects.length > 0) {
     slides.push(
       <div key="projects" className="cyb-slide-inner">
-         <h2 className="cyb-section-title">> EXECUTABLE_FILES</h2>
+         <h2 className="cyb-section-title">&gt; EXECUTABLE_FILES</h2>
          <div className="cyb-full-height cyb-scrollable">
             <div className="cyb-projects-grid">
                {data.projects.map((pr, i) => (
@@ -287,7 +288,7 @@ export function CyberpunkTemplate({ data }: { data: PublicPortfolio }) {
   if ((sv("services") && data.services.length > 0) || (sv("testimonials") && data.testimonials.length > 0)) {
     slides.push(
       <div key="services" className="cyb-slide-inner">
-         <h2 className="cyb-section-title">> SUB_ROUTINES & COMM_LOGS</h2>
+         <h2 className="cyb-section-title">&gt; SUB_ROUTINES &amp; COMM_LOGS</h2>
          <div className="cyb-grid-2 cyb-full-height cyb-scrollable">
             {sv("services") && data.services.length > 0 && (
               <div className="cyb-col">
@@ -339,7 +340,7 @@ export function CyberpunkTemplate({ data }: { data: PublicPortfolio }) {
   if (hasCerts || hasAchieves || hasMedia) {
     slides.push(
       <div key="media" className="cyb-slide-inner">
-         <h2 className="cyb-section-title">> ATTACHMENTS & DIRECTORIES</h2>
+         <h2 className="cyb-section-title">&gt; ATTACHMENTS &amp; DIRECTORIES</h2>
          <div className="cyb-grid-2 cyb-full-height cyb-scrollable">
             <div className="cyb-col">
                {hasCerts && (
@@ -422,7 +423,7 @@ export function CyberpunkTemplate({ data }: { data: PublicPortfolio }) {
   if (username) {
     slides.push(
       <div key="contact" className="cyb-slide-inner">
-         <h2 className="cyb-section-title">> TERMINAL_ACCESS</h2>
+         <h2 className="cyb-section-title">&gt; TERMINAL_ACCESS</h2>
          <div className="cyb-grid-2 cyb-full-height cyb-scrollable">
             <div className="cyb-col cyb-center-all">
                <h1 className="cyb-glitch-title" data-text="TRANSMIT">TRANSMIT</h1>
@@ -585,7 +586,7 @@ export function CyberpunkTemplate({ data }: { data: PublicPortfolio }) {
   );
 }
 
-export default CyberpunkTemplate;
+export default Cyberpunk;
 
 /* =====================================================================
    STYLES — Cyberpunk Dark Dashboard + Lightbox + Scroll Hijacking
