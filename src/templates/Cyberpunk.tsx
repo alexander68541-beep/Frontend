@@ -74,7 +74,7 @@ function SocialIcon({ name }: { name: string }) {
 
 /* ------------------------------ component ------------------------------ */
 
-export function JournalTemplate({ data }: { data: PublicPortfolio }) {
+export function Cyberpunk({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const username = data.username;
   const name = p?.display_name || username || "ROBIN";
@@ -411,7 +411,7 @@ export function JournalTemplate({ data }: { data: PublicPortfolio }) {
   );
 }
 
-export default JournalTemplate;
+export default Cyberpunk;
 
 /* =====================================================================
    STYLES — Notebook / Pixel / Mixed Media + Scroll Hijacking
