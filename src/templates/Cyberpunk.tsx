@@ -7,33 +7,31 @@ import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
-   NotebookTheme — Playful Sketchbook/Tech mixed media with Typing Effect
-   and Full-Page Scroll Hijacking. Prefixed `.nt-`.
+   NotebookTheme — Playful Sketchbook/Tech mixed media with Typing Effect,
+   Full-Page Scroll Hijacking, and all data sections included. 
+   Prefixed `.nt-`.
    ===================================================================== */
 
 const DEFAULT_ORDER = [
-  "about", "projects", "skills", "services", "experience",
-  "education", "certifications", "achievements", "publications",
-  "gallery", "videos", "testimonials",
+  "about", "skills", "services", "experience", "education", 
+  "projects", "certifications", "achievements", 
+  "publications", "gallery", "videos", "testimonials",
 ];
+
 function resolveOrder(settings: PublicPortfolio["settings"]): string[] {
   const custom = settings?.section_order;
   const order = custom && custom.length ? [...custom] : [...DEFAULT_ORDER];
   for (const k of DEFAULT_ORDER) if (!order.includes(k)) order.push(k);
   return order;
 }
-function initials(name: string | null | undefined, fallback: string | null | undefined): string {
-  const src = (name || fallback || "").trim();
-  if (!src) return "◆";
-  const parts = src.split(/\s+/).filter(Boolean);
-  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : src.slice(0, 2)).toUpperCase();
-}
+
 function oneDate(s: string | null): string | null {
   if (!s) return null;
   const d = new Date(s);
   if (Number.isNaN(d.getTime())) return s;
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short" });
 }
+
 function levelPct(level: unknown): number | null {
   if (level === null || level === undefined || level === "") return null;
   const clamp = (n: number) => Math.max(0, Math.min(100, n));
@@ -55,7 +53,6 @@ const SOCIAL_ICONS: Record<string, string> = {
   facebook: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
   globe: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z",
 };
-
 function detectSocial(platform: string | null, url: string | null, label: string | null): string {
   let host = "";
   try { host = new URL(ext(url || "")).hostname.replace(/^www\./, "").toLowerCase(); } catch { host = ""; }
@@ -67,7 +64,6 @@ function detectSocial(platform: string | null, url: string | null, label: string
   if (/facebook/.test(H)) return "facebook";
   return "globe";
 }
-
 function SocialIcon({ name }: { name: string }) {
   return (<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d={SOCIAL_ICONS[name] || SOCIAL_ICONS.globe} /></svg>);
 }
@@ -84,10 +80,28 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
   const touchStartY = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Typing Effect State
   const [typedText, setTypedText] = useState("");
   const headline = p?.tagline || p?.bio || "I design software that gets out of your way.";
 
-  // Wow vibe typing effect on mount
+  // Lightbox State
+  const [lb, setLb] = useState<{ src: string; alt: string; cap?: string } | null>(null);
+  const closeRef = useRef<HTMLButtonElement | null>(null);
+
+  const openLb = useCallback((src: string, alt: string, cap?: string) => setLb({ src, alt, cap }), []);
+
+  // Lightbox Keyboard Accessibility
+  useEffect(() => {
+    if (!lb) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLb(null); };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [lb]);
+
+  // Wow vibe typing effect
   useEffect(() => {
     let i = 0;
     setTypedText("");
@@ -104,197 +118,342 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
 
   const photo = p?.avatar_url || data.gallery.find((g) => g.image_url)?.image_url || null;
 
-  // Compile slides
-  const slides: ReactNode[] = [];
+  // Zoomable Image Component
+  const ZImg = useCallback(({ src, alt, cap, className }: { src: string; alt: string; cap?: string; className?: string }) => (
+    <button type="button" className={`nt-zoom-btn ${className || ""}`} onClick={() => openLb(src, alt, cap)} aria-label={alt ? `Zoom in on ${alt}` : "Zoom image"}>
+      <img src={src} alt={alt} loading="lazy" />
+    </button>
+  ), [openLb]);
+
+  // Compile Dynamic Slides
+  const slides: { id: string, content: ReactNode }[] = [];
 
   // SLIDE 0: Hero (Notebook + Pixel Font + Typing)
-  slides.push(
-    <div key="hero" className="nt-slide-inner nt-hero-slide">
-       <div className="nt-top-bar">
-          <div className="nt-nav">
-             <span className="nt-circle nt-red"></span>
-             <span className="nt-circle nt-yellow"></span>
-             <span className="nt-circle nt-green"></span>
-          </div>
-          {p?.email && <a href={`mailto:${p.email}`} className="nt-contact-btn">CONTACT ♥</a>}
-       </div>
-
-       <div className="nt-hero-center">
-          <p className="nt-handwritten nt-fade-in">my name is</p>
-          <div className="nt-name-box">
-             <h1 className="nt-pixel-title">{name}</h1>
-             {/* Floating elements mimicking the image */}
-             <span className="nt-float nt-f1" style={{background: ntColor(0)}}>MADE THINGS</span>
-             <span className="nt-float nt-f2" style={{background: ntColor(1)}}>SWEAT THE DETAILS</span>
-             {p?.title && <span className="nt-float nt-f3" style={{background: ntColor(2)}}>{p.title}</span>}
-             <span className="nt-float nt-f4" style={{background: ntColor(3)}}>OPEN TO WORK</span>
-          </div>
-
-          <h2 className="nt-typing-text">
-             {typedText}<span className="nt-cursor">|</span> ❋
-          </h2>
-          
-          <div className="nt-hero-socials">
-             {data.links.map((l, i) => (
-                <a key={l.id} href={ext(l.url)} target="_blank" rel="noopener noreferrer" className="nt-soc-icon" style={{background: ntColor(i)}}>
-                   <SocialIcon name={detectSocial(l.platform, l.url, l.label)} />
-                </a>
-             ))}
-          </div>
-          
-          <div className="nt-scroll-down">scroll down ↓</div>
-       </div>
-    </div>
-  );
+  slides.push({
+    id: "hero",
+    content: (
+      <div className="nt-slide-inner nt-hero-slide">
+         <div className="nt-top-bar">
+            <div className="nt-nav">
+               <span className="nt-circle nt-red"></span>
+               <span className="nt-circle nt-yellow"></span>
+               <span className="nt-circle nt-green"></span>
+            </div>
+            {p?.email && <a href={`mailto:${p.email}`} className="nt-contact-btn">CONTACT ♥</a>}
+         </div>
+  
+         <div className="nt-hero-center">
+            <p className="nt-handwritten nt-fade-in">my name is</p>
+            <div className="nt-name-box">
+               <h1 className="nt-pixel-title">{name}</h1>
+               <span className="nt-float nt-f1" style={{background: ntColor(0)}}>CREATOR</span>
+               <span className="nt-float nt-f2" style={{background: ntColor(1)}}>VISIONARY</span>
+               {p?.title && <span className="nt-float nt-f3" style={{background: ntColor(2)}}>{p.title}</span>}
+               <span className="nt-float nt-f4" style={{background: ntColor(3)}}>READY TO WORK</span>
+            </div>
+  
+            <h2 className="nt-typing-text">
+               {typedText}<span className="nt-cursor">|</span> ❋
+            </h2>
+            
+            <div className="nt-hero-socials">
+               {data.links.map((l, i) => (
+                  <a key={l.id} href={ext(l.url)} target="_blank" rel="noopener noreferrer" className="nt-soc-icon" style={{background: ntColor(i)}}>
+                     <SocialIcon name={detectSocial(l.platform, l.url, l.label)} />
+                  </a>
+               ))}
+            </div>
+            
+            <div className="nt-scroll-down">scroll down ↓</div>
+         </div>
+      </div>
+    )
+  });
 
   // SLIDE 1: About & Skills
   if ((sv("about") && (p?.about || p?.bio)) || (sv("skills") && data.skills.length > 0)) {
-    slides.push(
-      <div key="about-skills" className="nt-slide-inner">
-         <p className="nt-handwritten nt-margin-top">about me!</p>
-         <div className="nt-grid-2">
-            <div className="nt-col">
-               <div className="nt-box-label">what's up</div>
-               <p className="nt-handwritten-bio">{p?.about || "I'm a designer who gets a little too excited about making complicated things feel simple. I care about the small details and shipping work that genuinely makes someone's day easier. 🎨"}</p>
-               
-               {sv("skills") && data.skills.length > 0 && (
-                 <div className="nt-skills-wrapper">
-                    {data.skills.map((s, i) => (
-                      <span key={s.id} className="nt-skill-pill" style={{background: ntColor(i)}}>
-                        {s.name}
-                      </span>
-                    ))}
-                 </div>
-               )}
-            </div>
+    slides.push({
+      id: "about-skills",
+      content: (
+        <div className="nt-slide-inner" data-sec="about">
+           <p className="nt-handwritten nt-margin-top">about me!</p>
+           <div className="nt-grid-2">
+              <div className="nt-col">
+                 <div className="nt-box-label">what's up</div>
+                 <p className="nt-handwritten-bio">{p?.about || p?.bio || "I'm a passionate professional who loves turning ideas into reality. I care about the small details and shipping work that makes an impact."}</p>
+                 
+                 {p?.resume_url && (
+                    <a className="nt-resume-btn" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">Download Resume ↗</a>
+                 )}
 
-            <div className="nt-col nt-center">
-               {photo && (
-                 <div className="nt-polaroid">
-                    <div className="nt-tape"></div>
-                    <img src={photo} alt={name} />
-                    <div className="nt-polaroid-cap">hi there!</div>
-                 </div>
-               )}
-            </div>
-         </div>
-      </div>
-    );
+                 {sv("skills") && data.skills.length > 0 && (
+                   <div className="nt-skills-wrapper" data-sec="skills">
+                      {data.skills.map((s, i) => (
+                        <span key={s.id} className="nt-skill-pill" style={{background: ntColor(i)}}>
+                          {s.name} {s.level && <small>({s.level})</small>}
+                        </span>
+                      ))}
+                   </div>
+                 )}
+              </div>
+  
+              <div className="nt-col nt-center">
+                 {photo && (
+                   <div className="nt-polaroid">
+                      <div className="nt-tape"></div>
+                      <ZImg src={photo} alt={name} />
+                      <div className="nt-polaroid-cap">hi there!</div>
+                   </div>
+                 )}
+              </div>
+           </div>
+        </div>
+      )
+    });
   }
 
-  // SLIDE 2: Projects (Dark Tech Folders)
-  if (sv("projects") && data.projects.length > 0) {
-    slides.push(
-      <div key="projects" className="nt-slide-inner">
-         <p className="nt-handwritten nt-margin-top">my works</p>
-         <div className="nt-scrollable nt-full-height">
-            <div className="nt-projects-grid">
-               {data.projects.map((pr, i) => (
-                 <div key={pr.id} className="nt-project-folder">
-                    <div className="nt-folder-tabs">
-                       <div className="nt-tab nt-tab-active">• PROJECT 0{i+1}</div>
-                       <div className="nt-tab-bg"></div>
-                    </div>
-                    <div className="nt-folder-body">
-                       <div className="nt-folder-content">
-                          <span className="nt-date-mono">● {(pr.tags && pr.tags[0]) ? pr.tags[0].toUpperCase() : "RECENT"}</span>
-                          <h3>{pr.title || "Untitled"}</h3>
-                          <p>{pr.role || pr.description || "View details to see more about this project and the challenges solved."}</p>
-                          {pr.url && <a href={ext(pr.url)} target="_blank" rel="noopener noreferrer" className="nt-view-btn">VIEW PROJECT ↗</a>}
-                       </div>
-                       <div className="nt-folder-img">
-                          <div className="nt-tape"></div>
-                          {pr.image_url ? <img src={pr.image_url} alt={pr.title}/> : <div className="nt-ph">P</div>}
-                       </div>
-                    </div>
-                 </div>
-               ))}
-            </div>
-         </div>
-      </div>
-    );
-  }
-
-  // SLIDE 3: Experience & Education
+  // SLIDE 2: Experience & Education (Timeline)
   if ((sv("experience") && data.experience.length > 0) || (sv("education") && data.education.length > 0)) {
-    slides.push(
-      <div key="exp-edu" className="nt-slide-inner">
-         <p className="nt-handwritten nt-margin-top">my journey</p>
-         <div className="nt-grid-2 nt-full-height nt-scrollable">
-            {sv("experience") && data.experience.length > 0 && (
-              <div className="nt-col">
-                 <div className="nt-box-label">Experience</div>
-                 <div className="nt-timeline">
-                    {data.experience.map(ex => (
-                      <div key={ex.id} className="nt-tl-item">
-                         <div className="nt-tl-dot"></div>
-                         <strong>{ex.title}</strong>
-                         <span className="nt-tl-sub">{ex.company} • {dateRange(ex.start_date, ex.end_date, ex.is_current)}</span>
-                         {ex.description && <p>{ex.description}</p>}
-                      </div>
-                    ))}
-                 </div>
-              </div>
-            )}
-            {sv("education") && data.education.length > 0 && (
-              <div className="nt-col">
-                 <div className="nt-box-label">Education</div>
-                 <div className="nt-timeline">
-                    {data.education.map(ed => (
-                      <div key={ed.id} className="nt-tl-item">
-                         <div className="nt-tl-dot" style={{borderColor: '#f472b6'}}></div>
-                         <strong>{ed.school}</strong>
-                         <span className="nt-tl-sub">{[ed.degree, ed.field].filter(Boolean).join(", ")} • {dateRange(ed.start_date, ed.end_date)}</span>
-                         {ed.description && <p>{ed.description}</p>}
-                      </div>
-                    ))}
-                 </div>
-              </div>
-            )}
-         </div>
-      </div>
-    );
+    slides.push({
+      id: "exp-edu",
+      content: (
+        <div className="nt-slide-inner">
+           <p className="nt-handwritten nt-margin-top">my journey</p>
+           <div className="nt-grid-2 nt-full-height nt-scrollable">
+              {sv("experience") && data.experience.length > 0 && (
+                <div className="nt-col" data-sec="experience">
+                   <div className="nt-box-label">Experience</div>
+                   <div className="nt-timeline">
+                      {data.experience.map(ex => (
+                        <div key={ex.id} className="nt-tl-item">
+                           <div className="nt-tl-dot"></div>
+                           <strong>{ex.title}</strong>
+                           <span className="nt-tl-sub">{ex.company} • {dateRange(ex.start_date, ex.end_date, ex.is_current)}</span>
+                           {ex.description && <p>{ex.description}</p>}
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              )}
+              {sv("education") && data.education.length > 0 && (
+                <div className="nt-col" data-sec="education">
+                   <div className="nt-box-label">Education</div>
+                   <div className="nt-timeline">
+                      {data.education.map(ed => (
+                        <div key={ed.id} className="nt-tl-item">
+                           <div className="nt-tl-dot" style={{borderColor: '#f472b6'}}></div>
+                           <strong>{ed.school}</strong>
+                           <span className="nt-tl-sub">{[ed.degree, ed.field].filter(Boolean).join(", ")} • {dateRange(ed.start_date, ed.end_date)}</span>
+                           {ed.description && <p>{ed.description}</p>}
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              )}
+           </div>
+        </div>
+      )
+    });
   }
 
-  // SLIDE 4: Other Media & Contact
-  const hasMedia = (sv("gallery") && data.gallery.length > 0) || (sv("certifications") && data.certifications.length > 0);
-  if (hasMedia || username) {
-    slides.push(
-      <div key="contact-media" className="nt-slide-inner">
-         <p className="nt-handwritten nt-margin-top">let's talk</p>
-         <div className="nt-grid-2 nt-full-height nt-scrollable">
-            {username && (
+  // SLIDE 3: Services & Testimonials
+  if ((sv("services") && data.services.length > 0) || (sv("testimonials") && data.testimonials.length > 0)) {
+    slides.push({
+      id: "services-testi",
+      content: (
+        <div className="nt-slide-inner">
+           <p className="nt-handwritten nt-margin-top">what i offer & what people say</p>
+           <div className="nt-grid-2 nt-full-height nt-scrollable">
+              {sv("services") && data.services.length > 0 && (
+                <div className="nt-col" data-sec="services">
+                   <div className="nt-box-label">Services</div>
+                   <div className="nt-services-list">
+                      {data.services.map((svItem, i) => (
+                        <div key={svItem.id} className="nt-service-card" style={{borderColor: ntColor(i)}}>
+                           <strong>{svItem.title}</strong>
+                           {svItem.description && <p>{svItem.description}</p>}
+                           {svItem.price && <span className="nt-price-tag">{svItem.price}</span>}
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              )}
+              {sv("testimonials") && data.testimonials.length > 0 && (
+                <div className="nt-col" data-sec="testimonials">
+                   <div className="nt-box-label">Testimonials</div>
+                   <div className="nt-testi-list">
+                      {data.testimonials.map(t => (
+                        <div key={t.id} className="nt-testi-card">
+                           <p className="nt-quote-text">"{t.quote}"</p>
+                           <div className="nt-quote-author">
+                              {t.avatar_url && <img src={t.avatar_url} alt={t.author || "User"} />}
+                              <div>
+                                 <strong>{t.author}</strong>
+                                 <span>{t.role}</span>
+                              </div>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              )}
+           </div>
+        </div>
+      )
+    });
+  }
+
+  // SLIDE 4: Projects (Dark Tech Folders)
+  if (sv("projects") && data.projects.length > 0) {
+    slides.push({
+      id: "projects",
+      content: (
+        <div className="nt-slide-inner" data-sec="projects">
+           <p className="nt-handwritten nt-margin-top">my works</p>
+           <div className="nt-scrollable nt-full-height">
+              <div className="nt-projects-grid">
+                 {data.projects.map((pr, i) => (
+                   <div key={pr.id} className="nt-project-folder">
+                      <div className="nt-folder-tabs">
+                         <div className="nt-tab nt-tab-active">• PROJECT 0{i+1}</div>
+                         <div className="nt-tab-bg"></div>
+                      </div>
+                      <div className="nt-folder-body">
+                         <div className="nt-folder-content">
+                            <span className="nt-date-mono">● {dateRange(pr.start_date, pr.end_date) || "RECENT"}</span>
+                            <h3>{pr.title || "Untitled"}</h3>
+                            <p>{pr.role || pr.description || "View details to see more about this project and the challenges solved."}</p>
+                            {pr.url && <a href={ext(pr.url)} target="_blank" rel="noopener noreferrer" className="nt-view-btn">VIEW PROJECT ↗</a>}
+                         </div>
+                         <div className="nt-folder-img">
+                            <div className="nt-tape"></div>
+                            {pr.image_url ? <ZImg src={pr.image_url} alt={pr.title || "Project"} /> : <div className="nt-ph">P</div>}
+                         </div>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+      )
+    });
+  }
+
+  // SLIDE 5: Certifications, Achievements & Media (Gallery, Videos, Publications)
+  const hasCertsAch = (sv("certifications") && data.certifications.length > 0) || (sv("achievements") && data.achievements.length > 0);
+  const hasMedia = (sv("gallery") && data.gallery.length > 0) || (sv("videos") && data.videos.length > 0) || (sv("publications") && data.publications.length > 0);
+
+  if (hasCertsAch || hasMedia) {
+    slides.push({
+      id: "achievements-media",
+      content: (
+        <div className="nt-slide-inner">
+           <p className="nt-handwritten nt-margin-top">extras & media</p>
+           <div className="nt-grid-2 nt-full-height nt-scrollable">
+              {/* Left Col: Certs & Achieves & Pubs */}
               <div className="nt-col">
-                 <div className="nt-box-label">Contact</div>
+                 {sv("certifications") && data.certifications.length > 0 && (
+                   <div data-sec="certifications">
+                     <div className="nt-box-label">Certifications</div>
+                     <ul className="nt-simple-list">
+                       {data.certifications.map(c => (
+                         <li key={c.id}>
+                           {c.url ? <a href={ext(c.url)} target="_blank" rel="noopener noreferrer"><strong>{c.name} ↗</strong></a> : <strong>{c.name}</strong>}
+                           <br />{c.issuer} {oneDate(c.issue_date) && `(${oneDate(c.issue_date)})`}
+                         </li>
+                       ))}
+                     </ul>
+                   </div>
+                 )}
+                 {sv("achievements") && data.achievements.length > 0 && (
+                   <div data-sec="achievements" style={{marginTop: '20px'}}>
+                     <div className="nt-box-label">Achievements</div>
+                     <ul className="nt-simple-list">
+                       {data.achievements.map(a => (
+                         <li key={a.id}><strong>{a.title}</strong> - {oneDate(a.date)}<br />{a.description}</li>
+                       ))}
+                     </ul>
+                   </div>
+                 )}
+                 {sv("publications") && data.publications.length > 0 && (
+                   <div data-sec="publications" style={{marginTop: '20px'}}>
+                     <div className="nt-box-label">Publications</div>
+                     <ul className="nt-simple-list">
+                       {data.publications.map(p => (
+                         <li key={p.id}>
+                           {p.url ? <a href={ext(p.url)} target="_blank" rel="noopener noreferrer"><strong>{p.title} ↗</strong></a> : <strong>{p.title}</strong>}
+                           <br />{p.publisher} {oneDate(p.date) && `(${oneDate(p.date)})`}
+                         </li>
+                       ))}
+                     </ul>
+                   </div>
+                 )}
+              </div>
+
+              {/* Right Col: Gallery & Videos */}
+              <div className="nt-col">
+                 {sv("gallery") && data.gallery.length > 0 && (
+                   <div data-sec="gallery">
+                     <div className="nt-box-label">Gallery</div>
+                     <div className="nt-mini-gallery">
+                        {data.gallery.map(g => g.image_url && <ZImg key={g.id} src={g.image_url} alt={g.caption || "Gallery Image"} cap={g.caption || undefined} />)}
+                     </div>
+                   </div>
+                 )}
+                 {sv("videos") && data.videos.length > 0 && (
+                   <div data-sec="videos" style={{marginTop: '20px'}}>
+                     <div className="nt-box-label">Videos</div>
+                     <div className="nt-video-list">
+                        {data.videos.map(v => {
+                           const src = v.url ? videoEmbed(v.url) : null;
+                           if (!src) return null;
+                           return (
+                             <div key={v.id} className="nt-video-frame">
+                                <iframe src={src} title={v.title || "Video"} loading="lazy" allowFullScreen />
+                             </div>
+                           )
+                        })}
+                     </div>
+                   </div>
+                 )}
+              </div>
+           </div>
+        </div>
+      )
+    });
+  }
+
+  // SLIDE 6: Contact
+  if (username) {
+    slides.push({
+      id: "contact",
+      content: (
+        <div className="nt-slide-inner" data-sec="contact">
+           <p className="nt-handwritten nt-margin-top">let's talk</p>
+           <div className="nt-grid-2 nt-full-height nt-scrollable">
+              <div className="nt-col nt-center" style={{textAlign: 'center'}}>
+                 <h2 style={{fontFamily: 'Silkscreen', fontSize: '3rem', margin: '0 0 20px 0'}}>REACH OUT</h2>
+                 <p style={{fontSize: '1.2rem', marginBottom: '20px'}}>Have a project in mind or just want to chat? Drop me a message below.</p>
+                 <div className="nt-hero-socials" style={{justifyContent: 'center'}}>
+                     {data.links.map((l, i) => (
+                        <a key={l.id} href={ext(l.url)} target="_blank" rel="noopener noreferrer" className="nt-soc-icon" style={{background: ntColor(i)}}>
+                           <SocialIcon name={detectSocial(l.platform, l.url, l.label)} />
+                        </a>
+                     ))}
+                 </div>
+              </div>
+              <div className="nt-col">
                  <div className="nt-contact-box">
                     <ContactForm username={username} />
                  </div>
               </div>
-            )}
-            
-            <div className="nt-col">
-              {sv("certifications") && data.certifications.length > 0 && (
-                 <>
-                   <div className="nt-box-label">Certs</div>
-                   <ul className="nt-simple-list">
-                     {data.certifications.map(c => (
-                       <li key={c.id}><strong>{c.name}</strong> - {c.issuer}</li>
-                     ))}
-                   </ul>
-                 </>
-              )}
-              {sv("gallery") && data.gallery.length > 0 && (
-                 <>
-                   <div className="nt-box-label" style={{marginTop: '20px'}}>Gallery</div>
-                   <div className="nt-mini-gallery">
-                      {data.gallery.slice(0,4).map(g => g.image_url && <img key={g.id} src={g.image_url} alt="Gallery" />)}
-                   </div>
-                 </>
-              )}
-            </div>
-         </div>
-      </div>
-    );
+           </div>
+           {!data.hide_branding && (
+              <footer className="nt-footer">Made with Folio</footer>
+           )}
+        </div>
+      )
+    });
   }
 
   const numSlides = slides.length;
@@ -380,7 +539,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
   }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
-    <div className="nt-root">
+    <div className="nt-root" style={{ ["--tpl-accent" as string]: accent } as CSSProperties}>
       <style dangerouslySetInnerHTML={{ __html: NT_CSS }} />
 
       <div className="nt-dots">
@@ -402,11 +561,24 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
         {slides.map((slide, idx) => (
           <div key={idx} className={`nt-slide ${activeSlide === idx ? 'nt-slide-active' : ''}`}>
              <div className="nt-container">
-               {slide}
+               {slide.content}
              </div>
           </div>
         ))}
       </div>
+
+      {/* Lightbox / Zoom Image Overlay */}
+      {lb && (
+        <div className="nt-lb" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLb(null)}>
+          <div className="nt-lb-card" onClick={(e) => e.stopPropagation()}>
+            <button ref={closeRef} type="button" className="nt-lb-close" onClick={() => setLb(null)} aria-label="Close image viewer">✕</button>
+            <figure className="nt-lb-fig">
+               <img src={lb.src} alt={lb.alt} />
+               {lb.cap && <figcaption>{lb.cap}</figcaption>}
+            </figure>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -414,7 +586,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
 export default Cyberpunk;
 
 /* =====================================================================
-   STYLES — Notebook / Pixel / Mixed Media + Scroll Hijacking
+   STYLES — Notebook / Pixel / Mixed Media + Scroll Hijacking + Lightbox
    ===================================================================== */
 
 const NT_CSS = `
@@ -511,16 +683,29 @@ body, html {
 .nt-box-label { font-family: 'Inter', sans-serif; font-weight: 800; text-transform: uppercase; border: 2px solid #111; display: inline-block; padding: 6px 16px; background: #fff; box-shadow: 3px 3px 0px rgba(0,0,0,0.1); align-self: flex-start; }
 .nt-margin-top { margin-top: -20px; margin-bottom: 20px; }
 
-/* About */
+/* About & Resume */
 .nt-handwritten-bio { font-family: 'Caveat', cursive; font-size: 1.8rem; line-height: 1.4; color: #333; margin: 0; }
+.nt-resume-btn { display: inline-block; background: #111; color: #fff; padding: 10px 20px; font-weight: bold; border-radius: 8px; text-decoration: none; align-self: flex-start; transition: transform 0.2s; }
+.nt-resume-btn:hover { transform: translateY(-2px); }
+
+/* Skills & Services */
 .nt-skills-wrapper { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .nt-skill-pill { border: 2px solid #111; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; box-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
+.nt-services-list { display: flex; flex-direction: column; gap: 15px; }
+.nt-service-card { border: 2px solid #111; border-left-width: 6px; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
+.nt-service-card strong { display: block; font-size: 1.1rem; margin-bottom: 6px; }
+.nt-service-card p { font-size: 0.95rem; margin: 0 0 10px 0; color: #555; }
+.nt-price-tag { display: inline-block; background: #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 1px solid #111; }
 
 /* Polaroid */
 .nt-polaroid { background: #fff; padding: 10px 10px 30px 10px; border: 1px solid #ddd; box-shadow: 5px 5px 15px rgba(0,0,0,0.1); transform: rotate(3deg); position: relative; max-width: 250px; }
 .nt-polaroid img { width: 100%; height: auto; border: 1px solid #eee; }
 .nt-tape { position: absolute; width: 80px; height: 25px; background: rgba(255,255,255,0.6); border: 1px solid #eee; top: -10px; left: 50%; transform: translateX(-50%) rotate(-2deg); box-shadow: 1px 1px 3px rgba(0,0,0,0.1); z-index: 2; backdrop-filter: blur(2px); }
 .nt-polaroid-cap { font-family: 'Caveat', cursive; text-align: center; margin-top: 10px; font-size: 1.2rem; color: #555; }
+
+/* Zoom Button Reset */
+.nt-zoom-btn { background: none; border: none; padding: 0; cursor: zoom-in; width: 100%; display: block; }
+.nt-zoom-btn img { width: 100%; display: block; }
 
 /* Projects Folders */
 .nt-projects-grid { display: flex; flex-direction: column; gap: 40px; margin-top: 20px; padding-bottom: 40px;}
@@ -539,7 +724,7 @@ body, html {
 .nt-folder-img img { width: 100%; height: auto; border-radius: 4px; }
 .nt-ph { font-family: 'Silkscreen'; font-size: 3rem; color: #555; }
 
-/* Timeline */
+/* Timeline (Exp/Edu) */
 .nt-timeline { display: flex; flex-direction: column; gap: 20px; border-left: 2px dashed #cbd5e1; padding-left: 20px; margin-left: 10px; margin-top: 20px; }
 .nt-tl-item { position: relative; }
 .nt-tl-dot { position: absolute; left: -27px; top: 4px; width: 12px; height: 12px; background: #fff; border: 3px solid #60a5fa; border-radius: 50%; }
@@ -547,22 +732,54 @@ body, html {
 .nt-tl-sub { display: block; font-size: 0.85rem; color: #64748b; margin-top: 2px; font-weight: 600; }
 .nt-tl-item p { font-size: 0.9rem; color: #475569; margin: 5px 0 0 0; }
 
-/* Misc */
+/* Testimonials */
+.nt-testi-list { display: flex; flex-direction: column; gap: 20px; margin-top: 20px; }
+.nt-testi-card { background: #fff; border: 2px solid #111; padding: 20px; border-radius: 12px; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
+.nt-quote-text { font-family: 'Caveat', cursive; font-size: 1.5rem; margin: 0 0 15px 0; color: #333; }
+.nt-quote-author { display: flex; align-items: center; gap: 15px; }
+.nt-quote-author img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #111; object-fit: cover; }
+.nt-quote-author strong { display: block; font-size: 0.95rem; color: #111; }
+.nt-quote-author span { font-size: 0.85rem; color: #666; }
+
+/* Misc / Media */
 .nt-simple-list { list-style: circle; padding-left: 20px; margin-top: 15px; }
 .nt-simple-list li { margin-bottom: 8px; font-size: 0.95rem; }
+.nt-simple-list a { color: var(--tpl-accent, #2563eb); text-decoration: none; }
 .nt-mini-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-.nt-mini-gallery img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 2px solid #111; border-radius: 8px; }
+.nt-mini-gallery .nt-zoom-btn { border: 2px solid #111; border-radius: 8px; overflow: hidden; aspect-ratio: 1; }
+.nt-mini-gallery img { width: 100%; height: 100%; object-fit: cover; }
+.nt-video-list { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
+.nt-video-frame { position: relative; padding-bottom: 56.25%; border: 2px solid #111; border-radius: 8px; overflow: hidden; }
+.nt-video-frame iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+/* Contact Form */
 .nt-contact-box { background: #fff; border: 2px solid #111; padding: 20px; border-radius: 12px; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); margin-top: 15px; }
 .nt-contact-box :where(input, textarea) { width: 100%; border: 2px solid #e2e8f0; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-family: 'Inter', sans-serif; }
 .nt-contact-box :where(input, textarea):focus { outline: none; border-color: #111; }
-.nt-contact-box button { width: 100%; background: #111; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+.nt-contact-box button { width: 100%; background: #111; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: transform 0.2s; }
+.nt-contact-box button:hover { transform: translateY(-2px); }
 
-/* Dots */
+/* Footer */
+.nt-footer { text-align: center; padding: 20px; font-family: 'Silkscreen', cursive; font-size: 0.8rem; color: #888; position: absolute; bottom: 0; width: 100%; }
+
+/* Dots Navigation */
 .nt-dots { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; z-index: 10; }
 .nt-dot { width: 12px; height: 12px; border-radius: 50%; background: transparent; border: 2px solid #94a3b8; cursor: pointer; transition: 0.3s; }
 .nt-dot:hover { border-color: #111; }
 .nt-dot-active { background: #111; border-color: #111; transform: scale(1.2); }
 
+/* LIGHTBOX (Zoom Image) */
+.nt-lb { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: nt-fade 0.2s ease both; }
+.nt-lb-card { position: relative; background: #fff; padding: 16px; border: 2px solid #111; border-radius: 8px; max-width: 95vw; max-height: 95vh; box-shadow: 8px 8px 0px #000; animation: nt-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+.nt-lb-fig { margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.nt-lb-fig img { max-width: 90vw; max-height: 80vh; width: auto; height: auto; object-fit: contain; border: 2px solid #111; border-radius: 4px; }
+.nt-lb-fig figcaption { font-family: 'Inter', sans-serif; font-weight: 700; color: #111; text-transform: uppercase; }
+.nt-lb-close { position: absolute; top: -15px; right: -15px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: #fff; background: #ef4444; border: 2px solid #111; font-size: 1.2rem; font-weight: bold; box-shadow: 3px 3px 0px #000; display: flex; align-items: center; justify-content: center; transition: transform 0.15s; }
+.nt-lb-close:hover { transform: scale(1.1); }
+@keyframes nt-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nt-pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: none; } }
+
+/* Mobile Adaptations */
 @media (max-width: 800px) {
   .nt-grid-2 { grid-template-columns: 1fr; }
   .nt-name-box { padding: 10px 20px; }
