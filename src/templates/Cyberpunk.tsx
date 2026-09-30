@@ -7,8 +7,9 @@ import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
-   NotebookTheme — Playful Sketchbook/Tech mixed media with Typing Effect
-   and Full-Page Scroll Hijacking. Prefixed `.nt-`.
+   CyberpunkTemplate — Futuristic Dark Dashboard UI.
+   Features: Scroll-jacking, Typing Effect, Lightbox Zoom, Neon Glows.
+   Prefixed exclusively with `.cyb-` to prevent any CSS clashes.
    ===================================================================== */
 
 const DEFAULT_ORDER = [
@@ -16,24 +17,28 @@ const DEFAULT_ORDER = [
   "education", "certifications", "achievements", "publications",
   "gallery", "videos", "testimonials",
 ];
+
 function resolveOrder(settings: PublicPortfolio["settings"]): string[] {
   const custom = settings?.section_order;
   const order = custom && custom.length ? [...custom] : [...DEFAULT_ORDER];
   for (const k of DEFAULT_ORDER) if (!order.includes(k)) order.push(k);
   return order;
 }
+
 function initials(name: string | null | undefined, fallback: string | null | undefined): string {
   const src = (name || fallback || "").trim();
   if (!src) return "◆";
   const parts = src.split(/\s+/).filter(Boolean);
   return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : src.slice(0, 2)).toUpperCase();
 }
+
 function oneDate(s: string | null): string | null {
   if (!s) return null;
   const d = new Date(s);
   if (Number.isNaN(d.getTime())) return s;
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short" });
 }
+
 function levelPct(level: unknown): number | null {
   if (level === null || level === undefined || level === "") return null;
   const clamp = (n: number) => Math.max(0, Math.min(100, n));
@@ -44,17 +49,17 @@ function levelPct(level: unknown): number | null {
   return null;
 }
 
-const NT_COLORS = ["#fef08a", "#86efac", "#f9a8d4", "#93c5fd", "#c4b5fd", "#fca5a5"];
-const ntColor = (i: number) => NT_COLORS[((i % NT_COLORS.length) + NT_COLORS.length) % NT_COLORS.length];
+const CYB_COLORS = ["#00f3ff", "#ff007c", "#39ff14", "#b026ff", "#fde047"];
+const cybColor = (i: number) => CYB_COLORS[((i % CYB_COLORS.length) + CYB_COLORS.length) % CYB_COLORS.length];
 
 const SOCIAL_ICONS: Record<string, string> = {
   github: "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
   linkedin: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z",
   twitter: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z",
   instagram: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.332.014 7.052.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z",
-  facebook: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
   globe: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z",
 };
+
 function detectSocial(platform: string | null, url: string | null, label: string | null): string {
   let host = "";
   try { host = new URL(ext(url || "")).hostname.replace(/^www\./, "").toLowerCase(); } catch { host = ""; }
@@ -63,20 +68,20 @@ function detectSocial(platform: string | null, url: string | null, label: string
   if (/linkedin/.test(H)) return "linkedin";
   if (/twitter|x\.com/.test(H)) return "twitter";
   if (/instagram/.test(H)) return "instagram";
-  if (/facebook/.test(H)) return "facebook";
   return "globe";
 }
+
 function SocialIcon({ name }: { name: string }) {
   return (<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d={SOCIAL_ICONS[name] || SOCIAL_ICONS.globe} /></svg>);
 }
 
 /* ------------------------------ component ------------------------------ */
 
-export function Cyberpunk({ data }: { data: PublicPortfolio }) {
+export function CyberpunkTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const username = data.username;
-  const name = p?.display_name || username || "ROBIN";
-  const accent = data.accent || "#fca5a5";
+  const name = p?.display_name || username || "SYSTEM_ADMIN";
+  const accent = data.accent || "#00f3ff";
   
   const [activeSlide, setActiveSlide] = useState(0);
   const isScrolling = useRef(false);
@@ -85,7 +90,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
 
   // Typing Effect State
   const [typedText, setTypedText] = useState("");
-  const headline = p?.tagline || p?.bio || "I design software that gets out of your way.";
+  const headline = p?.tagline || p?.bio || "INITIALIZING PROTOCOLS... ESTABLISHING CONNECTION...";
 
   // Lightbox State
   const [lb, setLb] = useState<{ src: string; alt: string; cap?: string } | null>(null);
@@ -93,7 +98,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
 
   const openLb = useCallback((src: string, alt: string, cap?: string) => setLb({ src, alt, cap }), []);
 
-  // Lightbox Keyboard Accessibility
+  // Keyboard Accessibility for Lightbox
   useEffect(() => {
     if (!lb) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLb(null); };
@@ -104,7 +109,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [lb]);
 
-  // Wow vibe typing effect
+  // Wow Vibe Typing Effect
   useEffect(() => {
     let i = 0;
     setTypedText("");
@@ -112,7 +117,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
       setTypedText(headline.substring(0, i + 1));
       i++;
       if (i >= headline.length) clearInterval(typing);
-    }, 40);
+    }, 45); // Speed of typing
     return () => clearInterval(typing);
   }, [headline]);
 
@@ -121,351 +126,338 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
 
   const photo = p?.avatar_url || data.gallery.find((g) => g.image_url)?.image_url || null;
 
-  // Zoomable Image Component
+  // Zoomable Image Trigger
   const ZImg = useCallback(({ src, alt, cap, className }: { src: string; alt: string; cap?: string; className?: string }) => (
-    <button type="button" className={`nt-zoom-btn ${className || ""}`} onClick={() => openLb(src, alt, cap)} aria-label={alt ? `Zoom in on ${alt}` : "Zoom image"}>
+    <button type="button" className={`cyb-zoom-btn ${className || ""}`} onClick={() => openLb(src, alt, cap)} aria-label="Zoom image">
       <img src={src} alt={alt} loading="lazy" />
     </button>
   ), [openLb]);
 
   // Compile Dynamic Slides
-  const slides: { id: string, content: ReactNode }[] = [];
+  const slides: ReactNode[] = [];
 
-  // SLIDE 0: Hero (Notebook + Pixel Font + Typing)
-  slides.push({
-    id: "hero",
-    content: (
-      <div className="nt-slide-inner nt-hero-slide">
-         <div className="nt-top-bar">
-            <div className="nt-nav">
-               <span className="nt-circle nt-red"></span>
-               <span className="nt-circle nt-yellow"></span>
-               <span className="nt-circle nt-green"></span>
-            </div>
-            {p?.email && <a href={`mailto:${p.email}`} className="nt-contact-btn">CONTACT ♥</a>}
-         </div>
-  
-         <div className="nt-hero-center">
-            <p className="nt-handwritten nt-fade-in">my name is</p>
-            <div className="nt-name-box">
-               <h1 className="nt-pixel-title">{name}</h1>
-               <span className="nt-float nt-f1" style={{background: ntColor(0)}}>CREATOR</span>
-               <span className="nt-float nt-f2" style={{background: ntColor(1)}}>VISIONARY</span>
-               {p?.title && <span className="nt-float nt-f3" style={{background: ntColor(2)}}>{p.title}</span>}
-               <span className="nt-float nt-f4" style={{background: ntColor(3)}}>READY TO WORK</span>
-            </div>
-  
-            <h2 className="nt-typing-text">
-               {typedText}<span className="nt-cursor">|</span> ❋
-            </h2>
-            
-            <div className="nt-hero-socials">
-               {data.links.map((l, i) => (
-                  <a key={l.id} href={ext(l.url)} target="_blank" rel="noopener noreferrer" className="nt-soc-icon" style={{background: ntColor(i)}}>
-                     <SocialIcon name={detectSocial(l.platform, l.url, l.label)} />
-                  </a>
-               ))}
-            </div>
-            
-            <div className="nt-scroll-down">scroll down ↓</div>
-         </div>
-      </div>
-    )
-  });
+  // SLIDE 0: Hero 
+  slides.push(
+    <div key="hero" className="cyb-slide-inner cyb-hero-slide">
+       <div className="cyb-top-bar">
+          <div className="cyb-nav-dots">
+             <span className="cyb-dot-red"></span>
+             <span className="cyb-dot-yellow"></span>
+             <span className="cyb-dot-green"></span>
+             <span className="cyb-system-text">SYS.VER_1.0.4</span>
+          </div>
+          {p?.email && <a href={`mailto:${p.email}`} className="cyb-glow-btn">INITIATE_CONTACT</a>}
+       </div>
+
+       <div className="cyb-hero-center">
+          <p className="cyb-mono-sub">>> AUTHENTICATED_USER:</p>
+          <h1 className="cyb-glitch-title" data-text={name}>{name}</h1>
+          {p?.title && <h2 className="cyb-hero-role">{p.title}</h2>}
+          
+          <div className="cyb-typing-container">
+             <span className="cyb-typing-text">{typedText}</span><span className="cyb-cursor">█</span>
+          </div>
+          
+          <div className="cyb-hero-socials">
+             {data.links.map((l, i) => (
+                <a key={l.id} href={ext(l.url)} target="_blank" rel="noopener noreferrer" className="cyb-soc-icon" style={{ borderColor: cybColor(i), color: cybColor(i) }}>
+                   <SocialIcon name={detectSocial(l.platform, l.url, l.label)} />
+                </a>
+             ))}
+          </div>
+          
+          <div className="cyb-scroll-down">SCROLL_DOWN ↓</div>
+       </div>
+    </div>
+  );
 
   // SLIDE 1: About & Skills
   if ((sv("about") && (p?.about || p?.bio)) || (sv("skills") && data.skills.length > 0)) {
-    slides.push({
-      id: "about-skills",
-      content: (
-        <div className="nt-slide-inner" data-sec="about">
-           <p className="nt-handwritten nt-margin-top">about me!</p>
-           <div className="nt-grid-2">
-              <div className="nt-col">
-                 <div className="nt-box-label">what's up</div>
-                 <p className="nt-handwritten-bio">{p?.about || p?.bio || "I'm a passionate professional who loves turning ideas into reality. I care about the small details and shipping work that makes an impact."}</p>
-                 
-                 {p?.resume_url && (
-                    <a className="nt-resume-btn" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">Download Resume ↗</a>
-                 )}
+    slides.push(
+      <div key="about" className="cyb-slide-inner">
+         <h2 className="cyb-section-title">> TARGET_PROFILE</h2>
+         <div className="cyb-grid-2 cyb-full-height cyb-scrollable">
+            <div className="cyb-col">
+               <div className="cyb-cyber-box">
+                  <div className="cyb-box-header">SYS.ABOUT</div>
+                  <p className="cyb-body-text">{p?.about || p?.bio || "Data stream corrupted. Re-establishing link... Profile loaded successfully. Passionate tech operative ready for deployment."}</p>
+                  {p?.resume_url && (
+                    <a className="cyb-glow-btn cyb-mt-10" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">DOWNLOAD_DATA_PACK ↗</a>
+                  )}
+               </div>
 
-                 {sv("skills") && data.skills.length > 0 && (
-                   <div className="nt-skills-wrapper" data-sec="skills">
-                      {data.skills.map((s, i) => (
-                        <span key={s.id} className="nt-skill-pill" style={{background: ntColor(i)}}>
-                          {s.name} {s.level && <small>({s.level})</small>}
-                        </span>
-                      ))}
-                   </div>
-                 )}
-              </div>
-  
-              <div className="nt-col nt-center">
-                 {photo && (
-                   <div className="nt-polaroid">
-                      <div className="nt-tape"></div>
-                      <ZImg src={photo} alt={name} />
-                      <div className="nt-polaroid-cap">hi there!</div>
-                   </div>
-                 )}
-              </div>
-           </div>
-        </div>
-      )
-    });
+               {sv("skills") && data.skills.length > 0 && (
+                 <div className="cyb-cyber-box cyb-mt-20">
+                    <div className="cyb-box-header">SYS.SKILLS</div>
+                    <div className="cyb-skills-wrapper">
+                       {data.skills.map((s, i) => (
+                         <span key={s.id} className="cyb-skill-pill" style={{ color: cybColor(i), borderColor: cybColor(i) }}>
+                           {s.name} {s.level && <span className="cyb-skill-lvl">[{s.level}]</span>}
+                         </span>
+                       ))}
+                    </div>
+                 </div>
+               )}
+            </div>
+
+            <div className="cyb-col cyb-center-all">
+               {photo && (
+                 <div className="cyb-hologram-frame">
+                    <div className="cyb-scanline"></div>
+                    <ZImg src={photo} alt={name} />
+                 </div>
+               )}
+            </div>
+         </div>
+      </div>
+    );
   }
 
-  // SLIDE 2: Experience & Education (Timeline)
+  // SLIDE 2: Experience & Education
   if ((sv("experience") && data.experience.length > 0) || (sv("education") && data.education.length > 0)) {
-    slides.push({
-      id: "exp-edu",
-      content: (
-        <div className="nt-slide-inner">
-           <p className="nt-handwritten nt-margin-top">my journey</p>
-           <div className="nt-grid-2 nt-full-height nt-scrollable">
-              {sv("experience") && data.experience.length > 0 && (
-                <div className="nt-col" data-sec="experience">
-                   <div className="nt-box-label">Experience</div>
-                   <div className="nt-timeline">
-                      {data.experience.map(ex => (
-                        <div key={ex.id} className="nt-tl-item">
-                           <div className="nt-tl-dot"></div>
-                           <strong>{ex.title}</strong>
-                           <span className="nt-tl-sub">{ex.company} • {dateRange(ex.start_date, ex.end_date, ex.is_current)}</span>
-                           {ex.description && <p>{ex.description}</p>}
-                        </div>
-                      ))}
-                   </div>
-                </div>
-              )}
-              {sv("education") && data.education.length > 0 && (
-                <div className="nt-col" data-sec="education">
-                   <div className="nt-box-label">Education</div>
-                   <div className="nt-timeline">
-                      {data.education.map(ed => (
-                        <div key={ed.id} className="nt-tl-item">
-                           <div className="nt-tl-dot" style={{borderColor: '#f472b6'}}></div>
-                           <strong>{ed.school}</strong>
-                           <span className="nt-tl-sub">{[ed.degree, ed.field].filter(Boolean).join(", ")} • {dateRange(ed.start_date, ed.end_date)}</span>
-                           {ed.description && <p>{ed.description}</p>}
-                        </div>
-                      ))}
-                   </div>
-                </div>
-              )}
-           </div>
-        </div>
-      )
-    });
-  }
-
-  // SLIDE 3: Services & Testimonials
-  if ((sv("services") && data.services.length > 0) || (sv("testimonials") && data.testimonials.length > 0)) {
-    slides.push({
-      id: "services-testi",
-      content: (
-        <div className="nt-slide-inner">
-           <p className="nt-handwritten nt-margin-top">what i offer & what people say</p>
-           <div className="nt-grid-2 nt-full-height nt-scrollable">
-              {sv("services") && data.services.length > 0 && (
-                <div className="nt-col" data-sec="services">
-                   <div className="nt-box-label">Services</div>
-                   <div className="nt-services-list">
-                      {data.services.map((svItem, i) => (
-                        <div key={svItem.id} className="nt-service-card" style={{borderColor: ntColor(i)}}>
-                           <strong>{svItem.title}</strong>
-                           {svItem.description && <p>{svItem.description}</p>}
-                           {svItem.price && <span className="nt-price-tag">{svItem.price}</span>}
-                        </div>
-                      ))}
-                   </div>
-                </div>
-              )}
-              {sv("testimonials") && data.testimonials.length > 0 && (
-                <div className="nt-col" data-sec="testimonials">
-                   <div className="nt-box-label">Testimonials</div>
-                   <div className="nt-testi-list">
-                      {data.testimonials.map(t => (
-                        <div key={t.id} className="nt-testi-card">
-                           <p className="nt-quote-text">"{t.quote}"</p>
-                           <div className="nt-quote-author">
-                              {t.avatar_url && <img src={t.avatar_url} alt={t.author || "User"} />}
-                              <div>
-                                 <strong>{t.author}</strong>
-                                 <span>{t.role}</span>
-                              </div>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-              )}
-           </div>
-        </div>
-      )
-    });
-  }
-
-  // SLIDE 4: Projects (Dark Tech Folders)
-  if (sv("projects") && data.projects.length > 0) {
-    slides.push({
-      id: "projects",
-      content: (
-        <div className="nt-slide-inner" data-sec="projects">
-           <p className="nt-handwritten nt-margin-top">my works</p>
-           <div className="nt-scrollable nt-full-height">
-              <div className="nt-projects-grid">
-                 {data.projects.map((pr, i) => (
-                   <div key={pr.id} className="nt-project-folder">
-                      <div className="nt-folder-tabs">
-                         <div className="nt-tab nt-tab-active">• PROJECT 0{i+1}</div>
-                         <div className="nt-tab-bg"></div>
-                      </div>
-                      <div className="nt-folder-body">
-                         <div className="nt-folder-content">
-                            <span className="nt-date-mono">● {(pr.tags && pr.tags.length > 0) ? pr.tags[0].toUpperCase() : "RECENT"}</span>
-                            <h3>{pr.title || "Untitled"}</h3>
-                            <p>{pr.role || pr.description || "View details to see more about this project and the challenges solved."}</p>
-                            {pr.url && <a href={ext(pr.url)} target="_blank" rel="noopener noreferrer" className="nt-view-btn">VIEW PROJECT ↗</a>}
+    slides.push(
+      <div key="journey" className="cyb-slide-inner">
+         <h2 className="cyb-section-title">> SYSTEM_LOGS</h2>
+         <div className="cyb-grid-2 cyb-full-height cyb-scrollable">
+            {sv("experience") && data.experience.length > 0 && (
+              <div className="cyb-col">
+                 <div className="cyb-cyber-box">
+                    <div className="cyb-box-header">EXPERIENCE_HISTORY</div>
+                    <div className="cyb-timeline">
+                       {data.experience.map((ex, i) => (
+                         <div key={ex.id} className="cyb-tl-item" style={{ '--node-color': cybColor(i) } as CSSProperties}>
+                            <strong className="cyb-tl-title">{ex.title}</strong>
+                            <span className="cyb-tl-meta">{ex.company} // {dateRange(ex.start_date, ex.end_date, ex.is_current)}</span>
+                            {ex.description && <p className="cyb-body-text cyb-tl-desc">{ex.description}</p>}
                          </div>
-                         <div className="nt-folder-img">
-                            <div className="nt-tape"></div>
-                            {pr.image_url ? <ZImg src={pr.image_url} alt={pr.title || "Project"} /> : <div className="nt-ph">P</div>}
-                         </div>
-                      </div>
-                   </div>
-                 ))}
+                       ))}
+                    </div>
+                 </div>
               </div>
-           </div>
-        </div>
-      )
-    });
+            )}
+            {sv("education") && data.education.length > 0 && (
+              <div className="cyb-col">
+                 <div className="cyb-cyber-box">
+                    <div className="cyb-box-header">EDUCATION_ARCHIVE</div>
+                    <div className="cyb-timeline">
+                       {data.education.map((ed, i) => (
+                         <div key={ed.id} className="cyb-tl-item" style={{ '--node-color': cybColor(i+2) } as CSSProperties}>
+                            <strong className="cyb-tl-title">{ed.school}</strong>
+                            <span className="cyb-tl-meta">{[ed.degree, ed.field].filter(Boolean).join(" - ")} // {dateRange(ed.start_date, ed.end_date)}</span>
+                            {ed.description && <p className="cyb-body-text cyb-tl-desc">{ed.description}</p>}
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+              </div>
+            )}
+         </div>
+      </div>
+    );
   }
 
-  // SLIDE 5: Certifications, Achievements & Media (Gallery, Videos, Publications)
-  const hasCertsAch = (sv("certifications") && data.certifications.length > 0) || (sv("achievements") && data.achievements.length > 0);
+  // SLIDE 3: Projects
+  if (sv("projects") && data.projects.length > 0) {
+    slides.push(
+      <div key="projects" className="cyb-slide-inner">
+         <h2 className="cyb-section-title">> EXECUTABLE_FILES</h2>
+         <div className="cyb-full-height cyb-scrollable">
+            <div className="cyb-projects-grid">
+               {data.projects.map((pr, i) => (
+                 <div key={pr.id} className="cyb-project-card">
+                    <div className="cyb-project-img">
+                       {pr.image_url ? <ZImg src={pr.image_url} alt={pr.title || "Project"} /> : <div className="cyb-ph">NO_IMAGE</div>}
+                       <div className="cyb-project-overlay"></div>
+                    </div>
+                    <div className="cyb-project-content" style={{ borderTopColor: cybColor(i) }}>
+                       <span className="cyb-project-tags">{(pr.tags && pr.tags.length > 0) ? pr.tags[0].toUpperCase() : "MODULE"}</span>
+                       <h3 className="cyb-project-title">{pr.title || "UNTITLED_FILE"}</h3>
+                       <p className="cyb-body-text">{pr.role || pr.description}</p>
+                       {pr.url && <a href={ext(pr.url)} target="_blank" rel="noopener noreferrer" className="cyb-link-btn">EXECUTE ↗</a>}
+                    </div>
+                 </div>
+               ))}
+            </div>
+         </div>
+      </div>
+    );
+  }
+
+  // SLIDE 4: Services & Testimonials
+  if ((sv("services") && data.services.length > 0) || (sv("testimonials") && data.testimonials.length > 0)) {
+    slides.push(
+      <div key="services" className="cyb-slide-inner">
+         <h2 className="cyb-section-title">> SUB_ROUTINES & COMM_LOGS</h2>
+         <div className="cyb-grid-2 cyb-full-height cyb-scrollable">
+            {sv("services") && data.services.length > 0 && (
+              <div className="cyb-col">
+                 <div className="cyb-cyber-box">
+                    <div className="cyb-box-header">AVAILABLE_SERVICES</div>
+                    <div className="cyb-services-list">
+                       {data.services.map((svItem, i) => (
+                         <div key={svItem.id} className="cyb-service-item" style={{ borderLeftColor: cybColor(i) }}>
+                            <strong>{svItem.title}</strong>
+                            {svItem.description && <p className="cyb-body-text">{svItem.description}</p>}
+                            {svItem.price && <span className="cyb-price-badge">{svItem.price}</span>}
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+              </div>
+            )}
+            {sv("testimonials") && data.testimonials.length > 0 && (
+              <div className="cyb-col">
+                 <div className="cyb-cyber-box">
+                    <div className="cyb-box-header">CLIENT_FEEDBACK</div>
+                    <div className="cyb-testi-list">
+                       {data.testimonials.map((t, i) => (
+                         <div key={t.id} className="cyb-testi-card">
+                            <p className="cyb-quote-text">"{t.quote}"</p>
+                            <div className="cyb-quote-author">
+                               {t.avatar_url && <img src={t.avatar_url} alt={t.author || "User"} />}
+                               <div>
+                                  <strong style={{color: cybColor(i)}}>{t.author}</strong>
+                                  <span>{t.role}</span>
+                               </div>
+                            </div>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+              </div>
+            )}
+         </div>
+      </div>
+    );
+  }
+
+  // SLIDE 5: Certs, Achieves, Media
+  const hasCerts = sv("certifications") && data.certifications.length > 0;
+  const hasAchieves = sv("achievements") && data.achievements.length > 0;
   const hasMedia = (sv("gallery") && data.gallery.length > 0) || (sv("videos") && data.videos.length > 0) || (sv("publications") && data.publications.length > 0);
 
-  if (hasCertsAch || hasMedia) {
-    slides.push({
-      id: "achievements-media",
-      content: (
-        <div className="nt-slide-inner">
-           <p className="nt-handwritten nt-margin-top">extras & media</p>
-           <div className="nt-grid-2 nt-full-height nt-scrollable">
-              {/* Left Col: Certs & Achieves & Pubs */}
-              <div className="nt-col">
-                 {sv("certifications") && data.certifications.length > 0 && (
-                   <div data-sec="certifications">
-                     <div className="nt-box-label">Certifications</div>
-                     <ul className="nt-simple-list">
+  if (hasCerts || hasAchieves || hasMedia) {
+    slides.push(
+      <div key="media" className="cyb-slide-inner">
+         <h2 className="cyb-section-title">> ATTACHMENTS & DIRECTORIES</h2>
+         <div className="cyb-grid-2 cyb-full-height cyb-scrollable">
+            <div className="cyb-col">
+               {hasCerts && (
+                 <div className="cyb-cyber-box">
+                    <div className="cyb-box-header">CERTIFICATIONS</div>
+                    <ul className="cyb-tech-list">
                        {data.certifications.map(c => (
                          <li key={c.id}>
-                           {c.url ? <a href={ext(c.url)} target="_blank" rel="noopener noreferrer"><strong>{c.name} ↗</strong></a> : <strong>{c.name}</strong>}
-                           <br />{c.issuer} {oneDate(c.issue_date) && `(${oneDate(c.issue_date)})`}
+                           {c.url ? <a href={ext(c.url)} target="_blank" rel="noopener noreferrer" className="cyb-link-text">{c.name} ↗</a> : <strong>{c.name}</strong>}
+                           <br/><span className="cyb-body-text">{c.issuer} // {oneDate(c.issue_date)}</span>
                          </li>
                        ))}
-                     </ul>
-                   </div>
-                 )}
-                 {sv("achievements") && data.achievements.length > 0 && (
-                   <div data-sec="achievements" style={{marginTop: '20px'}}>
-                     <div className="nt-box-label">Achievements</div>
-                     <ul className="nt-simple-list">
+                    </ul>
+                 </div>
+               )}
+               {hasAchieves && (
+                 <div className="cyb-cyber-box cyb-mt-20">
+                    <div className="cyb-box-header">ACHIEVEMENTS</div>
+                    <ul className="cyb-tech-list">
                        {data.achievements.map(a => (
-                         <li key={a.id}><strong>{a.title}</strong> - {oneDate(a.date)}<br />{a.description}</li>
+                         <li key={a.id}>
+                            <strong>{a.title}</strong> - <span className="cyb-body-text">{oneDate(a.date)}</span>
+                            <br/><span className="cyb-body-text">{a.description}</span>
+                         </li>
                        ))}
-                     </ul>
-                   </div>
-                 )}
-                 {sv("publications") && data.publications.length > 0 && (
-                   <div data-sec="publications" style={{marginTop: '20px'}}>
-                     <div className="nt-box-label">Publications</div>
-                     <ul className="nt-simple-list">
+                    </ul>
+                 </div>
+               )}
+               {sv("publications") && data.publications.length > 0 && (
+                 <div className="cyb-cyber-box cyb-mt-20">
+                    <div className="cyb-box-header">PUBLICATIONS</div>
+                    <ul className="cyb-tech-list">
                        {data.publications.map(p => (
                          <li key={p.id}>
-                           {p.url ? <a href={ext(p.url)} target="_blank" rel="noopener noreferrer"><strong>{p.title} ↗</strong></a> : <strong>{p.title}</strong>}
-                           <br />{p.publisher} {oneDate(p.date) && `(${oneDate(p.date)})`}
+                           {p.url ? <a href={ext(p.url)} target="_blank" rel="noopener noreferrer" className="cyb-link-text">{p.title} ↗</a> : <strong>{p.title}</strong>}
+                           <br/><span className="cyb-body-text">{p.publisher} // {oneDate(p.date)}</span>
                          </li>
                        ))}
-                     </ul>
-                   </div>
-                 )}
-              </div>
+                    </ul>
+                 </div>
+               )}
+            </div>
 
-              {/* Right Col: Gallery & Videos */}
-              <div className="nt-col">
-                 {sv("gallery") && data.gallery.length > 0 && (
-                   <div data-sec="gallery">
-                     <div className="nt-box-label">Gallery</div>
-                     <div className="nt-mini-gallery">
-                        {data.gallery.map(g => g.image_url && <ZImg key={g.id} src={g.image_url} alt={g.caption || "Gallery Image"} cap={g.caption || undefined} />)}
-                     </div>
-                   </div>
-                 )}
-                 {sv("videos") && data.videos.length > 0 && (
-                   <div data-sec="videos" style={{marginTop: '20px'}}>
-                     <div className="nt-box-label">Videos</div>
-                     <div className="nt-video-list">
-                        {data.videos.map(v => {
-                           const src = v.url ? videoEmbed(v.url) : null;
-                           if (!src) return null;
-                           return (
-                             <div key={v.id} className="nt-video-frame">
-                                <iframe src={src} title={v.title || "Video"} loading="lazy" allowFullScreen />
-                             </div>
-                           )
-                        })}
-                     </div>
-                   </div>
-                 )}
-              </div>
-           </div>
-        </div>
-      )
-    });
+            <div className="cyb-col">
+               {sv("gallery") && data.gallery.length > 0 && (
+                 <div className="cyb-cyber-box">
+                    <div className="cyb-box-header">IMAGE_CACHE</div>
+                    <div className="cyb-mini-gallery">
+                       {data.gallery.map((g, i) => g.image_url && (
+                         <div key={g.id} style={{ borderColor: cybColor(i) }} className="cyb-gal-item">
+                            <ZImg src={g.image_url} alt={g.caption || "Image"} cap={g.caption || undefined} />
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+               )}
+               {sv("videos") && data.videos.length > 0 && (
+                 <div className="cyb-cyber-box cyb-mt-20">
+                    <div className="cyb-box-header">VIDEO_STREAM</div>
+                    <div className="cyb-video-list">
+                       {data.videos.map(v => {
+                          const src = v.url ? videoEmbed(v.url) : null;
+                          if (!src) return null;
+                          return (
+                            <div key={v.id} className="cyb-video-frame">
+                               <iframe src={src} title={v.title || "Video"} loading="lazy" allowFullScreen />
+                            </div>
+                          )
+                       })}
+                    </div>
+                 </div>
+               )}
+            </div>
+         </div>
+      </div>
+    );
   }
 
   // SLIDE 6: Contact
   if (username) {
-    slides.push({
-      id: "contact",
-      content: (
-        <div className="nt-slide-inner" data-sec="contact">
-           <p className="nt-handwritten nt-margin-top">let's talk</p>
-           <div className="nt-grid-2 nt-full-height nt-scrollable">
-              <div className="nt-col nt-center" style={{textAlign: 'center'}}>
-                 <h2 style={{fontFamily: 'Silkscreen', fontSize: '3rem', margin: '0 0 20px 0'}}>REACH OUT</h2>
-                 <p style={{fontSize: '1.2rem', marginBottom: '20px'}}>Have a project in mind or just want to chat? Drop me a message below.</p>
-                 <div className="nt-hero-socials" style={{justifyContent: 'center'}}>
-                     {data.links.map((l, i) => (
-                        <a key={l.id} href={ext(l.url)} target="_blank" rel="noopener noreferrer" className="nt-soc-icon" style={{background: ntColor(i)}}>
-                           <SocialIcon name={detectSocial(l.platform, l.url, l.label)} />
-                        </a>
-                     ))}
-                 </div>
-              </div>
-              <div className="nt-col">
-                 <div className="nt-contact-box">
-                    <ContactForm username={username} />
-                 </div>
-              </div>
-           </div>
-           {!data.hide_branding && (
-              <footer className="nt-footer">Made with Folio</footer>
-           )}
-        </div>
-      )
-    });
+    slides.push(
+      <div key="contact" className="cyb-slide-inner">
+         <h2 className="cyb-section-title">> TERMINAL_ACCESS</h2>
+         <div className="cyb-grid-2 cyb-full-height cyb-scrollable">
+            <div className="cyb-col cyb-center-all">
+               <h1 className="cyb-glitch-title" data-text="TRANSMIT">TRANSMIT</h1>
+               <p className="cyb-body-text" style={{ textAlign: "center", maxWidth: "400px", marginTop: "20px" }}>
+                 Open a secure channel. Transmit your inquiries or collaboration proposals directly to the server.
+               </p>
+               <div className="cyb-hero-socials" style={{ marginTop: "30px" }}>
+                   {data.links.map((l, i) => (
+                      <a key={l.id} href={ext(l.url)} target="_blank" rel="noopener noreferrer" className="cyb-soc-icon" style={{ borderColor: cybColor(i), color: cybColor(i) }}>
+                         <SocialIcon name={detectSocial(l.platform, l.url, l.label)} />
+                      </a>
+                   ))}
+               </div>
+            </div>
+            <div className="cyb-col">
+               <div className="cyb-cyber-box cyb-contact-wrapper">
+                  <div className="cyb-box-header">SECURE_FORM</div>
+                  <ContactForm username={username} />
+               </div>
+            </div>
+         </div>
+         {!data.hide_branding && (
+            <footer className="cyb-footer">SYSTEM_POWERED_BY_FOLIO_v1.0</footer>
+         )}
+      </div>
+    );
   }
 
   const numSlides = slides.length;
 
-  // Scroll Hijacking Handlers
+  // Scroll Hijacking Logic
   const handleWheel = useCallback((e: WheelEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('.nt-scrollable')) {
-      const scrollable = target.closest('.nt-scrollable') as HTMLElement;
+    if (target.closest('.cyb-scrollable')) {
+      const scrollable = target.closest('.cyb-scrollable') as HTMLElement;
       const isAtTop = scrollable.scrollTop === 0;
       const isAtBottom = Math.abs(scrollable.scrollHeight - scrollable.scrollTop - scrollable.clientHeight) <= 2;
       
@@ -491,7 +483,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('.nt-scrollable')) return;
+    if (target.closest('.cyb-scrollable')) return;
     e.preventDefault(); 
   }, []);
 
@@ -500,8 +492,8 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
     const deltaY = touchStartY.current - touchEndY;
     
     const target = e.target as HTMLElement;
-    if (target.closest('.nt-scrollable')) {
-      const scrollable = target.closest('.nt-scrollable') as HTMLElement;
+    if (target.closest('.cyb-scrollable')) {
+      const scrollable = target.closest('.cyb-scrollable') as HTMLElement;
       const isAtTop = scrollable.scrollTop === 0;
       const isAtBottom = Math.abs(scrollable.scrollHeight - scrollable.scrollTop - scrollable.clientHeight) <= 2;
       
@@ -542,42 +534,49 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
   }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
-    <div className="nt-root" style={{ ["--tpl-accent" as string]: accent } as CSSProperties}>
-      <style dangerouslySetInnerHTML={{ __html: NT_CSS }} />
+    <div className="cyb-root" style={{ ["--cyb-accent" as string]: accent } as CSSProperties}>
+      <style dangerouslySetInnerHTML={{ __html: CYB_CSS }} />
 
-      <div className="nt-dots">
+      {/* Cyberpunk Background Grid & Orbs */}
+      <div className="cyb-bg-grid"></div>
+      <div className="cyb-orb cyb-orb-1"></div>
+      <div className="cyb-orb cyb-orb-2"></div>
+
+      {/* Slide Navigation Dots */}
+      <div className="cyb-dots">
         {slides.map((_, idx) => (
           <button 
             key={idx} 
-            className={`nt-dot ${activeSlide === idx ? 'nt-dot-active' : ''}`} 
+            className={`cyb-dot ${activeSlide === idx ? 'cyb-dot-active' : ''}`} 
             onClick={() => { setActiveSlide(idx); lockScroll(); }}
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}
       </div>
 
+      {/* Track Container */}
       <div 
         ref={containerRef} 
-        className="nt-track" 
+        className="cyb-track" 
         style={{ transform: `translateY(-${activeSlide * 100}vh)` }}
       >
         {slides.map((slide, idx) => (
-          <div key={idx} className={`nt-slide ${activeSlide === idx ? 'nt-slide-active' : ''}`}>
-             <div className="nt-container">
-               {slide.content}
+          <div key={idx} className={`cyb-slide ${activeSlide === idx ? 'cyb-slide-active' : ''}`}>
+             <div className="cyb-container">
+               {slide}
              </div>
           </div>
         ))}
       </div>
 
-      {/* Lightbox / Zoom Image Overlay */}
+      {/* LIGHTBOX (Zoom Overlay) */}
       {lb && (
-        <div className="nt-lb" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLb(null)}>
-          <div className="nt-lb-card" onClick={(e) => e.stopPropagation()}>
-            <button ref={closeRef} type="button" className="nt-lb-close" onClick={() => setLb(null)} aria-label="Close image viewer">✕</button>
-            <figure className="nt-lb-fig">
+        <div className="cyb-lb" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLb(null)}>
+          <div className="cyb-lb-card" onClick={(e) => e.stopPropagation()}>
+            <button ref={closeRef} type="button" className="cyb-lb-close" onClick={() => setLb(null)} aria-label="Close">✕</button>
+            <figure className="cyb-lb-fig">
                <img src={lb.src} alt={lb.alt} />
-               {lb.cap && <figcaption>{lb.cap}</figcaption>}
+               {lb.cap && <figcaption className="cyb-lb-cap">{lb.cap}</figcaption>}
             </figure>
           </div>
         </div>
@@ -586,210 +585,221 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
   );
 }
 
-export default Cyberpunk;
+export default CyberpunkTemplate;
 
 /* =====================================================================
-   STYLES — Notebook / Pixel / Mixed Media + Scroll Hijacking + Lightbox
+   STYLES — Cyberpunk Dark Dashboard + Lightbox + Scroll Hijacking
    ===================================================================== */
 
-const NT_CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Silkscreen&family=Inter:wght@400;600;800&display=swap');
-
+const CYB_CSS = `
 body, html {
   margin: 0; padding: 0;
   height: 100%;
   overflow: hidden;
-  background-color: #fdfdfd;
+  background-color: #050505;
 }
 
-.nt-root {
+.cyb-root {
   width: 100vw;
   height: 100vh;
-  background-color: #fdfdfd;
-  background-image: repeating-linear-gradient(transparent, transparent 31px, #e2e8f0 31px, #e2e8f0 32px);
-  color: #111;
-  font-family: 'Inter', sans-serif;
+  background-color: #050505;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   position: relative;
   overflow: hidden;
+  --cyb-neon-cyan: #00f3ff;
+  --cyb-neon-pink: #ff007c;
+  --cyb-border: rgba(0, 243, 255, 0.3);
+  --cyb-bg-card: rgba(10, 15, 20, 0.75);
 }
-.nt-root * { box-sizing: border-box; }
+.cyb-root * { box-sizing: border-box; }
 
-/* Margin Line */
-.nt-root::before {
-  content: ""; position: fixed; top: 0; bottom: 0; left: clamp(40px, 8vw, 80px);
-  width: 2px; background-color: var(--tpl-accent, #fca5a5); z-index: 0; pointer-events: none; opacity: 0.6;
+/* Grid Background & Glowing Orbs */
+.cyb-bg-grid {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: 
+    linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
 }
+.cyb-orb { position: absolute; border-radius: 50%; filter: blur(120px); z-index: 0; opacity: 0.4; pointer-events: none; }
+.cyb-orb-1 { width: 50vw; height: 50vw; top: -10%; left: -10%; background: var(--cyb-neon-pink); }
+.cyb-orb-2 { width: 40vw; height: 40vw; bottom: -10%; right: -10%; background: var(--cyb-neon-cyan); }
 
 /* Track & Slides */
-.nt-track {
+.cyb-track {
   position: absolute; top: 0; left: 0; width: 100%; height: 100vh;
-  transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: transform 0.8s cubic-bezier(0.8, 0, 0.2, 1);
   will-change: transform; z-index: 2;
 }
-.nt-slide {
+.cyb-slide {
   width: 100vw; height: 100vh;
   display: flex; align-items: center; justify-content: center;
   padding: 40px clamp(20px, 5vw, 60px);
-  opacity: 0.2; transform: scale(0.98);
+  opacity: 0.1; transform: scale(0.95);
   transition: opacity 0.8s ease, transform 0.8s ease;
 }
-.nt-slide-active { opacity: 1; transform: scale(1); }
+.cyb-slide-active { opacity: 1; transform: scale(1); }
 
-.nt-container {
-  width: 100%; max-width: 1000px; height: 100%; max-height: 85vh;
-  position: relative; padding-left: clamp(20px, 5vw, 60px); /* Clear the margin line */
+.cyb-container {
+  width: 100%; max-width: 1100px; height: 100%; max-height: 85vh;
+  position: relative;
 }
-.nt-slide-inner { display: flex; flex-direction: column; height: 100%; position: relative; }
-.nt-full-height { flex: 1; min-height: 0; }
-.nt-scrollable {
-  overflow-y: auto; scrollbar-width: none; padding-right: 10px;
-}
-.nt-scrollable::-webkit-scrollbar { display: none; }
+.cyb-slide-inner { display: flex; flex-direction: column; height: 100%; position: relative; }
+.cyb-full-height { flex: 1; min-height: 0; }
+.cyb-scrollable { overflow-y: auto; scrollbar-width: none; padding-right: 10px; }
+.cyb-scrollable::-webkit-scrollbar { display: none; }
+.cyb-mt-10 { margin-top: 10px; }
+.cyb-mt-20 { margin-top: 20px; }
 
 /* Typography */
-.nt-handwritten { font-family: 'Caveat', cursive; font-size: 1.8rem; color: #555; transform: rotate(-2deg); margin: 0; }
-.nt-pixel-title { font-family: 'Silkscreen', cursive; font-size: clamp(3rem, 8vw, 6rem); margin: 0; line-height: 1; text-align: center; }
+.cyb-section-title { font-size: clamp(1.5rem, 3vw, 2.5rem); margin: 0 0 20px 0; color: var(--cyb-neon-cyan); letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,243,255,0.5); border-bottom: 1px dashed var(--cyb-border); padding-bottom: 10px; }
+.cyb-body-text { font-size: 0.95rem; line-height: 1.6; color: #a0aec0; font-family: system-ui, -apple-system, sans-serif; margin: 0; }
+.cyb-mono-sub { font-size: 0.9rem; color: var(--cyb-neon-pink); letter-spacing: 1px; }
 
-/* Hero Slide */
-.nt-hero-slide { justify-content: space-between; }
-.nt-top-bar { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 2px solid #111; padding: 10px 20px; border-radius: 8px; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); margin-bottom: 20px; }
-.nt-nav { display: flex; gap: 8px; }
-.nt-circle { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #111; }
-.nt-red { background: #ef4444; } .nt-yellow { background: #eab308; } .nt-green { background: #22c55e; }
-.nt-contact-btn { font-size: 0.85rem; font-weight: bold; border: 2px solid #111; padding: 4px 12px; border-radius: 20px; text-decoration: none; color: #111; }
-.nt-contact-btn:hover { background: #111; color: #fff; }
+/* Hero Specific */
+.cyb-hero-slide { justify-content: space-between; }
+.cyb-top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--cyb-bg-card); border: 1px solid var(--cyb-border); padding: 10px 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); backdrop-filter: blur(10px); margin-bottom: 20px; }
+.cyb-nav-dots { display: flex; gap: 8px; align-items: center; }
+.cyb-nav-dots span[class^="cyb-dot-"] { width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+.cyb-dot-red { background: #ff3b30; } .cyb-dot-yellow { background: #ffcc00; } .cyb-dot-green { background: #34c759; }
+.cyb-system-text { font-size: 0.8rem; color: #666; margin-left: 10px; letter-spacing: 1px; }
 
-.nt-hero-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-.nt-name-box { border: 4px solid #111; padding: 10px 40px; position: relative; background: #fff; display: inline-block; margin-top: 10px; box-shadow: 6px 6px 0px rgba(0,0,0,0.1); }
-.nt-float { position: absolute; font-size: 0.7rem; font-weight: bold; border: 2px solid #111; padding: 4px 10px; border-radius: 20px; box-shadow: 2px 2px 0px rgba(0,0,0,0.1); text-transform: uppercase; white-space: nowrap; }
-.nt-f1 { top: -20px; left: -30px; transform: rotate(-5deg); }
-.nt-f2 { top: -25px; right: -40px; transform: rotate(3deg); }
-.nt-f3 { bottom: -20px; left: -20px; transform: rotate(2deg); }
-.nt-f4 { bottom: -15px; right: -30px; transform: rotate(-4deg); }
+.cyb-hero-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.cyb-glitch-title { font-size: clamp(3rem, 8vw, 6rem); margin: 10px 0; color: #fff; letter-spacing: 4px; text-transform: uppercase; position: relative; }
+.cyb-hero-role { font-size: clamp(1rem, 2vw, 1.5rem); font-weight: normal; color: var(--cyb-neon-cyan); letter-spacing: 5px; text-transform: uppercase; margin-bottom: 30px; }
 
-.nt-typing-text { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; text-align: center; margin-top: 60px; max-width: 800px; line-height: 1.2; }
-.nt-cursor { font-weight: 400; animation: blink 1s step-end infinite; }
-@keyframes blink { 50% { opacity: 0; } }
+/* Typing Effect */
+.cyb-typing-container { font-size: clamp(1rem, 3vw, 1.8rem); color: #fff; background: rgba(0,0,0,0.6); padding: 10px 20px; border-left: 3px solid var(--cyb-neon-pink); max-width: 800px; display: inline-block; }
+.cyb-cursor { display: inline-block; width: 10px; background-color: var(--cyb-neon-cyan); margin-left: 5px; animation: cyb-blink 1s step-end infinite; }
+@keyframes cyb-blink { 50% { opacity: 0; } }
 
-.nt-hero-socials { display: flex; gap: 15px; margin-top: 40px; }
-.nt-soc-icon { width: 45px; height: 45px; border: 2px solid #111; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #111; font-size: 1.2rem; box-shadow: 2px 2px 0px rgba(0,0,0,0.1); transition: transform 0.2s; }
-.nt-soc-icon:hover { transform: translateY(-3px); }
-.nt-scroll-down { margin-top: auto; font-family: 'Caveat', cursive; font-size: 1.2rem; color: #888; animation: bounce 2s infinite; }
-@keyframes bounce { 0%,20%,50%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-10px)} 60%{transform:translateY(-5px)} }
+/* Buttons & Socials */
+.cyb-glow-btn { display: inline-block; background: transparent; color: var(--cyb-neon-cyan); border: 1px solid var(--cyb-neon-cyan); padding: 8px 16px; font-size: 0.85rem; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; box-shadow: 0 0 10px rgba(0,243,255,0.2); cursor: pointer; }
+.cyb-glow-btn:hover { background: var(--cyb-neon-cyan); color: #000; box-shadow: 0 0 20px rgba(0,243,255,0.6); }
 
-/* Grids */
-.nt-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
-.nt-col { display: flex; flex-direction: column; gap: 20px; }
-.nt-center { align-items: center; justify-content: center; }
+.cyb-hero-socials { display: flex; gap: 15px; margin-top: 40px; }
+.cyb-soc-icon { width: 45px; height: 45px; border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; background: rgba(0,0,0,0.5); }
+.cyb-soc-icon:hover { transform: translateY(-3px); box-shadow: 0 0 15px currentColor; background: currentColor; }
+.cyb-soc-icon:hover svg { fill: #000; }
 
-/* Box Label */
-.nt-box-label { font-family: 'Inter', sans-serif; font-weight: 800; text-transform: uppercase; border: 2px solid #111; display: inline-block; padding: 6px 16px; background: #fff; box-shadow: 3px 3px 0px rgba(0,0,0,0.1); align-self: flex-start; }
-.nt-margin-top { margin-top: -20px; margin-bottom: 20px; }
+.cyb-scroll-down { margin-top: auto; font-size: 0.85rem; color: #555; letter-spacing: 3px; animation: cyb-bounce 2s infinite; }
+@keyframes cyb-bounce { 0%,20%,50%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-10px)} 60%{transform:translateY(-5px)} }
 
-/* About & Resume */
-.nt-handwritten-bio { font-family: 'Caveat', cursive; font-size: 1.8rem; line-height: 1.4; color: #333; margin: 0; }
-.nt-resume-btn { display: inline-block; background: #111; color: #fff; padding: 10px 20px; font-weight: bold; border-radius: 8px; text-decoration: none; align-self: flex-start; transition: transform 0.2s; }
-.nt-resume-btn:hover { transform: translateY(-2px); }
+/* Grids & Layouts */
+.cyb-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.cyb-col { display: flex; flex-direction: column; }
+.cyb-center-all { align-items: center; justify-content: center; }
 
-/* Skills & Services */
-.nt-skills-wrapper { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-.nt-skill-pill { border: 2px solid #111; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; box-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
-.nt-services-list { display: flex; flex-direction: column; gap: 15px; }
-.nt-service-card { border: 2px solid #111; border-left-width: 6px; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
-.nt-service-card strong { display: block; font-size: 1.1rem; margin-bottom: 6px; }
-.nt-service-card p { font-size: 0.95rem; margin: 0 0 10px 0; color: #555; }
-.nt-price-tag { display: inline-block; background: #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 1px solid #111; }
+/* Cyber Boxes */
+.cyb-cyber-box { background: var(--cyb-bg-card); border: 1px solid var(--cyb-border); padding: 20px; backdrop-filter: blur(10px); position: relative; }
+.cyb-cyber-box::before { content: ""; position: absolute; top: 0; left: 0; width: 20px; height: 2px; background: var(--cyb-neon-pink); }
+.cyb-box-header { font-size: 0.85rem; color: var(--cyb-neon-pink); margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid rgba(255,0,124,0.3); padding-bottom: 5px; display: inline-block; }
 
-/* Polaroid */
-.nt-polaroid { background: #fff; padding: 10px 10px 30px 10px; border: 1px solid #ddd; box-shadow: 5px 5px 15px rgba(0,0,0,0.1); transform: rotate(3deg); position: relative; max-width: 250px; }
-.nt-polaroid img { width: 100%; height: auto; border: 1px solid #eee; }
-.nt-tape { position: absolute; width: 80px; height: 25px; background: rgba(255,255,255,0.6); border: 1px solid #eee; top: -10px; left: 50%; transform: translateX(-50%) rotate(-2deg); box-shadow: 1px 1px 3px rgba(0,0,0,0.1); z-index: 2; backdrop-filter: blur(2px); }
-.nt-polaroid-cap { font-family: 'Caveat', cursive; text-align: center; margin-top: 10px; font-size: 1.2rem; color: #555; }
+/* Skills */
+.cyb-skills-wrapper { display: flex; flex-wrap: wrap; gap: 10px; }
+.cyb-skill-pill { border: 1px solid; padding: 6px 12px; font-size: 0.85rem; text-transform: uppercase; background: rgba(0,0,0,0.4); }
+.cyb-skill-lvl { opacity: 0.7; font-size: 0.75rem; margin-left: 5px; }
 
-/* Zoom Button Reset */
-.nt-zoom-btn { background: none; border: none; padding: 0; cursor: zoom-in; width: 100%; display: block; }
-.nt-zoom-btn img { width: 100%; display: block; }
+/* Hologram Image (About) */
+.cyb-hologram-frame { position: relative; width: 100%; max-width: 320px; aspect-ratio: 3/4; border: 1px solid var(--cyb-neon-cyan); padding: 10px; background: rgba(0,243,255,0.05); box-shadow: 0 0 20px rgba(0,243,255,0.2); }
+.cyb-hologram-frame .cyb-zoom-btn { width: 100%; height: 100%; border: none; background: transparent; padding: 0; cursor: zoom-in; }
+.cyb-hologram-frame img { width: 100%; height: 100%; object-fit: cover; filter: contrast(1.2) grayscale(0.2) drop-shadow(0 0 10px rgba(0,243,255,0.5)); transition: 0.3s; }
+.cyb-scanline { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: rgba(0,243,255,0.5); box-shadow: 0 0 10px #00f3ff; opacity: 0.6; animation: scan 3s linear infinite; z-index: 2; pointer-events: none; }
+@keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
 
-/* Projects Folders */
-.nt-projects-grid { display: flex; flex-direction: column; gap: 40px; margin-top: 20px; padding-bottom: 40px;}
-.nt-project-folder { display: flex; flex-direction: column; width: 100%; }
-.nt-folder-tabs { display: flex; align-items: flex-end; }
-.nt-tab { background: #18181b; color: #fff; padding: 10px 20px; font-weight: bold; font-size: 0.8rem; border-radius: 12px 12px 0 0; }
-.nt-tab-bg { flex: 1; height: 10px; border-bottom: 2px solid #18181b; }
-.nt-folder-body { background: #18181b; color: #fff; padding: 30px; border-radius: 0 12px 12px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; box-shadow: 6px 6px 0px #fde047; }
-.nt-folder-content { display: flex; flex-direction: column; justify-content: center; }
-.nt-date-mono { font-family: monospace; color: #a1a1aa; font-size: 0.85rem; margin-bottom: 10px; }
-.nt-folder-content h3 { font-size: 2rem; margin: 0 0 10px 0; }
-.nt-folder-content p { color: #d4d4d8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; }
-.nt-view-btn { align-self: flex-start; background: transparent; color: #fff; border: 1px solid #fff; padding: 8px 16px; font-size: 0.8rem; font-weight: bold; text-decoration: none; transition: 0.2s; }
-.nt-view-btn:hover { background: #fde047; color: #111; border-color: #fde047; }
-.nt-folder-img { position: relative; background: #27272a; border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center; min-height: 200px; }
-.nt-folder-img img { width: 100%; height: auto; border-radius: 4px; }
-.nt-ph { font-family: 'Silkscreen'; font-size: 3rem; color: #555; }
+/* Timeline (Exp & Edu) */
+.cyb-timeline { display: flex; flex-direction: column; gap: 20px; border-left: 1px dashed var(--cyb-border); padding-left: 20px; margin-left: 10px; }
+.cyb-tl-item { position: relative; }
+.cyb-tl-item::before { content: ""; position: absolute; left: -25px; top: 5px; width: 9px; height: 9px; background: var(--node-color); box-shadow: 0 0 10px var(--node-color); }
+.cyb-tl-title { display: block; font-size: 1.1rem; color: #fff; text-transform: uppercase; }
+.cyb-tl-meta { display: block; font-size: 0.8rem; color: var(--node-color); margin: 4px 0 8px 0; }
+.cyb-tl-desc { color: #a0aec0; }
 
-/* Timeline (Exp/Edu) */
-.nt-timeline { display: flex; flex-direction: column; gap: 20px; border-left: 2px dashed #cbd5e1; padding-left: 20px; margin-left: 10px; margin-top: 20px; }
-.nt-tl-item { position: relative; }
-.nt-tl-dot { position: absolute; left: -27px; top: 4px; width: 12px; height: 12px; background: #fff; border: 3px solid #60a5fa; border-radius: 50%; }
-.nt-tl-item strong { display: block; font-size: 1.1rem; color: #111; }
-.nt-tl-sub { display: block; font-size: 0.85rem; color: #64748b; margin-top: 2px; font-weight: 600; }
-.nt-tl-item p { font-size: 0.9rem; color: #475569; margin: 5px 0 0 0; }
+/* Projects Grid */
+.cyb-projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+.cyb-project-card { background: var(--cyb-bg-card); border: 1px solid var(--cyb-border); display: flex; flex-direction: column; transition: 0.3s; }
+.cyb-project-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.8), 0 0 15px rgba(0,243,255,0.2); }
+.cyb-project-img { height: 160px; position: relative; background: #000; overflow: hidden; }
+.cyb-project-img .cyb-zoom-btn { display: block; width: 100%; height: 100%; padding: 0; border: none; background: transparent; cursor: zoom-in; }
+.cyb-project-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; transition: 0.3s; filter: grayscale(50%); }
+.cyb-project-card:hover .cyb-project-img img { opacity: 1; filter: grayscale(0%); transform: scale(1.05); }
+.cyb-ph { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 1.2rem; color: #444; }
+.cyb-project-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); pointer-events: none; }
+.cyb-project-content { padding: 20px; border-top: 2px solid; flex: 1; display: flex; flex-direction: column; }
+.cyb-project-tags { font-size: 0.75rem; color: var(--cyb-neon-pink); letter-spacing: 1px; margin-bottom: 8px; }
+.cyb-project-title { font-size: 1.2rem; margin: 0 0 10px 0; text-transform: uppercase; }
+.cyb-link-btn { margin-top: auto; align-self: flex-start; display: inline-block; color: var(--cyb-neon-cyan); text-decoration: none; font-size: 0.85rem; border-bottom: 1px solid transparent; padding-top: 15px; transition: 0.3s; }
+.cyb-link-btn:hover { border-bottom-color: var(--cyb-neon-cyan); text-shadow: 0 0 8px var(--cyb-neon-cyan); }
 
-/* Testimonials */
-.nt-testi-list { display: flex; flex-direction: column; gap: 20px; margin-top: 20px; }
-.nt-testi-card { background: #fff; border: 2px solid #111; padding: 20px; border-radius: 12px; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
-.nt-quote-text { font-family: 'Caveat', cursive; font-size: 1.5rem; margin: 0 0 15px 0; color: #333; }
-.nt-quote-author { display: flex; align-items: center; gap: 15px; }
-.nt-quote-author img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #111; object-fit: cover; }
-.nt-quote-author strong { display: block; font-size: 0.95rem; color: #111; }
-.nt-quote-author span { font-size: 0.85rem; color: #666; }
+/* Services & Testimonials */
+.cyb-services-list { display: flex; flex-direction: column; gap: 15px; }
+.cyb-service-item { padding: 15px; border-left: 3px solid; background: rgba(0,0,0,0.4); }
+.cyb-service-item strong { display: block; font-size: 1.1rem; color: #fff; margin-bottom: 5px; text-transform: uppercase; }
+.cyb-price-badge { display: inline-block; margin-top: 10px; background: rgba(255,0,124,0.1); color: var(--cyb-neon-pink); padding: 4px 8px; font-size: 0.8rem; border: 1px solid var(--cyb-neon-pink); }
+.cyb-testi-list { display: flex; flex-direction: column; gap: 15px; }
+.cyb-testi-card { padding: 15px; background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.1); }
+.cyb-quote-text { font-style: italic; color: #d1d5db; font-family: system-ui, sans-serif; margin: 0 0 15px 0; font-size: 0.95rem; }
+.cyb-quote-author { display: flex; align-items: center; gap: 15px; }
+.cyb-quote-author img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #fff; }
+.cyb-quote-author strong { display: block; font-size: 0.9rem; text-transform: uppercase; }
+.cyb-quote-author span { font-size: 0.8rem; color: #666; font-family: system-ui, sans-serif; }
 
-/* Misc / Media */
-.nt-simple-list { list-style: circle; padding-left: 20px; margin-top: 15px; }
-.nt-simple-list li { margin-bottom: 8px; font-size: 0.95rem; }
-.nt-simple-list a { color: var(--tpl-accent, #2563eb); text-decoration: none; }
-.nt-mini-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-.nt-mini-gallery .nt-zoom-btn { border: 2px solid #111; border-radius: 8px; overflow: hidden; aspect-ratio: 1; }
-.nt-mini-gallery img { width: 100%; height: 100%; object-fit: cover; }
-.nt-video-list { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
-.nt-video-frame { position: relative; padding-bottom: 56.25%; border: 2px solid #111; border-radius: 8px; overflow: hidden; }
-.nt-video-frame iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+/* Lists (Certs, Achieves, Pubs) */
+.cyb-tech-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.cyb-tech-list li { padding-left: 15px; border-left: 1px solid var(--cyb-border); }
+.cyb-tech-list strong { color: #fff; font-size: 0.95rem; text-transform: uppercase; }
+.cyb-link-text { color: var(--cyb-neon-cyan); text-decoration: none; font-weight: bold; transition: 0.3s; }
+.cyb-link-text:hover { text-shadow: 0 0 8px var(--cyb-neon-cyan); }
+
+/* Media (Gallery, Videos) */
+.cyb-mini-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cyb-gal-item { border: 1px solid; padding: 4px; background: #000; }
+.cyb-gal-item .cyb-zoom-btn { width: 100%; height: 100%; display: block; border: none; background: transparent; padding: 0; cursor: zoom-in; }
+.cyb-gal-item img { width: 100%; aspect-ratio: 1; object-fit: cover; opacity: 0.7; transition: 0.3s; display: block; }
+.cyb-gal-item:hover img { opacity: 1; }
+.cyb-video-list { display: flex; flex-direction: column; gap: 15px; }
+.cyb-video-frame { position: relative; padding-bottom: 56.25%; border: 1px solid var(--cyb-border); background: #000; }
+.cyb-video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
 
 /* Contact Form */
-.nt-contact-box { background: #fff; border: 2px solid #111; padding: 20px; border-radius: 12px; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); margin-top: 15px; }
-.nt-contact-box :where(input, textarea) { width: 100%; border: 2px solid #e2e8f0; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-family: 'Inter', sans-serif; }
-.nt-contact-box :where(input, textarea):focus { outline: none; border-color: #111; }
-.nt-contact-box button { width: 100%; background: #111; color: #fff; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: transform 0.2s; }
-.nt-contact-box button:hover { transform: translateY(-2px); }
+.cyb-contact-wrapper :where(input, textarea) {
+  width: 100%; background: rgba(0,0,0,0.6); border: 1px solid var(--cyb-border); color: #fff;
+  padding: 12px; border-radius: 4px; margin-bottom: 15px; font-family: inherit; font-size: 0.9rem;
+}
+.cyb-contact-wrapper :where(input, textarea):focus { outline: none; border-color: var(--cyb-neon-cyan); box-shadow: 0 0 10px rgba(0,243,255,0.2); }
+.cyb-contact-wrapper textarea { min-height: 120px; resize: vertical; }
+.cyb-contact-wrapper button {
+  width: 100%; background: transparent; color: var(--cyb-neon-cyan); border: 1px solid var(--cyb-neon-cyan);
+  padding: 14px; font-family: inherit; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: 0.3s;
+}
+.cyb-contact-wrapper button:hover { background: var(--cyb-neon-cyan); color: #000; box-shadow: 0 0 15px rgba(0,243,255,0.5); }
+.cyb-footer { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: #444; letter-spacing: 2px; }
 
-/* Footer */
-.nt-footer { text-align: center; padding: 20px; font-family: 'Silkscreen', cursive; font-size: 0.8rem; color: #888; position: absolute; bottom: 0; width: 100%; left: 0; }
+/* Slide Navigation Dots */
+.cyb-dots { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 10; }
+.cyb-dot { width: 8px; height: 8px; background: transparent; border: 1px solid #555; border-radius: 0; cursor: pointer; transition: 0.3s; padding: 0; }
+.cyb-dot:hover { border-color: var(--cyb-neon-cyan); }
+.cyb-dot-active { background: var(--cyb-neon-cyan); border-color: var(--cyb-neon-cyan); box-shadow: 0 0 10px var(--cyb-neon-cyan); transform: scale(1.5) rotate(45deg); }
 
-/* Dots Navigation */
-.nt-dots { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; z-index: 10; }
-.nt-dot { width: 12px; height: 12px; border-radius: 50%; background: transparent; border: 2px solid #94a3b8; cursor: pointer; transition: 0.3s; }
-.nt-dot:hover { border-color: #111; }
-.nt-dot-active { background: #111; border-color: #111; transform: scale(1.2); }
+/* LIGHTBOX (Zoom Overlay) */
+.cyb-lb { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); animation: cyb-fade 0.2s ease both; }
+.cyb-lb-card { position: relative; background: #050505; padding: 10px; border: 1px solid var(--cyb-neon-cyan); max-width: 95vw; max-height: 95vh; box-shadow: 0 0 30px rgba(0,243,255,0.2); animation: cyb-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+.cyb-lb-fig { margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.cyb-lb-fig img { max-width: 90vw; max-height: 85vh; width: auto; height: auto; object-fit: contain; }
+.cyb-lb-cap { font-family: system-ui, sans-serif; font-size: 0.9rem; color: var(--cyb-neon-cyan); text-transform: uppercase; letter-spacing: 1px; }
+.cyb-lb-close { position: absolute; top: -15px; right: -15px; width: 40px; height: 40px; border-radius: 0; cursor: pointer; color: #000; background: var(--cyb-neon-cyan); border: none; font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: 0.2s; clip-path: polygon(20% 0%, 100% 0, 100% 80%, 80% 100%, 0 100%, 0% 20%); }
+.cyb-lb-close:hover { background: #fff; }
+@keyframes cyb-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cyb-pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: none; } }
 
-/* LIGHTBOX (Zoom Image) */
-.nt-lb { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); animation: nt-fade 0.2s ease both; }
-.nt-lb-card { position: relative; background: #fff; padding: 16px; border: 2px solid #111; border-radius: 8px; max-width: 95vw; max-height: 95vh; box-shadow: 8px 8px 0px #000; animation: nt-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
-.nt-lb-fig { margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center; }
-.nt-lb-fig img { max-width: 90vw; max-height: 80vh; width: auto; height: auto; object-fit: contain; border: 2px solid #111; border-radius: 4px; }
-.nt-lb-fig figcaption { font-family: 'Inter', sans-serif; font-weight: 700; color: #111; text-transform: uppercase; }
-.nt-lb-close { position: absolute; top: -15px; right: -15px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: #fff; background: #ef4444; border: 2px solid #111; font-size: 1.2rem; font-weight: bold; box-shadow: 3px 3px 0px #000; display: flex; align-items: center; justify-content: center; transition: transform 0.15s; }
-.nt-lb-close:hover { transform: scale(1.1); }
-@keyframes nt-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes nt-pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: none; } }
-
-/* Mobile Adaptations */
+/* Mobile */
 @media (max-width: 800px) {
-  .nt-grid-2 { grid-template-columns: 1fr; }
-  .nt-name-box { padding: 10px 20px; }
-  .nt-float { position: static; display: inline-block; margin: 5px; transform: none !important; }
-  .nt-folder-body { grid-template-columns: 1fr; }
-  .nt-slide { padding-right: 40px; padding-left: 20px; }
-  .nt-root::before { left: 15px; }
-  .nt-container { padding-left: 15px; }
+  .cyb-grid-2 { grid-template-columns: 1fr; }
+  .cyb-slide { padding-right: 40px; padding-left: 20px; }
+  .cyb-top-bar { flex-direction: column; gap: 15px; text-align: center; }
+  .cyb-dots { right: 10px; }
+  .cyb-hologram-frame { max-width: 250px; }
 }
 `;
