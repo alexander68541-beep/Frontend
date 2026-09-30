@@ -7,31 +7,33 @@ import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
 import { ContactForm } from "@/components/ContactForm";
 
 /* =====================================================================
-   NotebookTheme — Playful Sketchbook/Tech mixed media with Typing Effect,
-   Full-Page Scroll Hijacking, and all data sections included. 
-   Prefixed `.nt-`.
+   NotebookTheme — Playful Sketchbook/Tech mixed media with Typing Effect
+   and Full-Page Scroll Hijacking. Prefixed `.nt-`.
    ===================================================================== */
 
 const DEFAULT_ORDER = [
-  "about", "skills", "services", "experience", "education", 
-  "projects", "certifications", "achievements", 
-  "publications", "gallery", "videos", "testimonials",
+  "about", "projects", "skills", "services", "experience",
+  "education", "certifications", "achievements", "publications",
+  "gallery", "videos", "testimonials",
 ];
-
 function resolveOrder(settings: PublicPortfolio["settings"]): string[] {
   const custom = settings?.section_order;
   const order = custom && custom.length ? [...custom] : [...DEFAULT_ORDER];
   for (const k of DEFAULT_ORDER) if (!order.includes(k)) order.push(k);
   return order;
 }
-
+function initials(name: string | null | undefined, fallback: string | null | undefined): string {
+  const src = (name || fallback || "").trim();
+  if (!src) return "◆";
+  const parts = src.split(/\s+/).filter(Boolean);
+  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : src.slice(0, 2)).toUpperCase();
+}
 function oneDate(s: string | null): string | null {
   if (!s) return null;
   const d = new Date(s);
   if (Number.isNaN(d.getTime())) return s;
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short" });
 }
-
 function levelPct(level: unknown): number | null {
   if (level === null || level === undefined || level === "") return null;
   const clamp = (n: number) => Math.max(0, Math.min(100, n));
@@ -74,6 +76,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const username = data.username;
   const name = p?.display_name || username || "ROBIN";
+  const accent = data.accent || "#fca5a5";
   
   const [activeSlide, setActiveSlide] = useState(0);
   const isScrolling = useRef(false);
@@ -320,7 +323,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
                       </div>
                       <div className="nt-folder-body">
                          <div className="nt-folder-content">
-                            <span className="nt-date-mono">● {dateRange(pr.start_date, pr.end_date) || "RECENT"}</span>
+                            <span className="nt-date-mono">● {(pr.tags && pr.tags.length > 0) ? pr.tags[0].toUpperCase() : "RECENT"}</span>
                             <h3>{pr.title || "Untitled"}</h3>
                             <p>{pr.role || pr.description || "View details to see more about this project and the challenges solved."}</p>
                             {pr.url && <a href={ext(pr.url)} target="_blank" rel="noopener noreferrer" className="nt-view-btn">VIEW PROJECT ↗</a>}
@@ -614,7 +617,7 @@ body, html {
 /* Margin Line */
 .nt-root::before {
   content: ""; position: fixed; top: 0; bottom: 0; left: clamp(40px, 8vw, 80px);
-  width: 2px; background-color: #fca5a5; z-index: 0; pointer-events: none; opacity: 0.6;
+  width: 2px; background-color: var(--tpl-accent, #fca5a5); z-index: 0; pointer-events: none; opacity: 0.6;
 }
 
 /* Track & Slides */
@@ -760,7 +763,7 @@ body, html {
 .nt-contact-box button:hover { transform: translateY(-2px); }
 
 /* Footer */
-.nt-footer { text-align: center; padding: 20px; font-family: 'Silkscreen', cursive; font-size: 0.8rem; color: #888; position: absolute; bottom: 0; width: 100%; }
+.nt-footer { text-align: center; padding: 20px; font-family: 'Silkscreen', cursive; font-size: 0.8rem; color: #888; position: absolute; bottom: 0; width: 100%; left: 0; }
 
 /* Dots Navigation */
 .nt-dots { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; z-index: 10; }
