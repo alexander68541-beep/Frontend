@@ -55,6 +55,7 @@ const SOCIAL_ICONS: Record<string, string> = {
   facebook: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
   globe: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z",
 };
+
 function detectSocial(platform: string | null, url: string | null, label: string | null): string {
   let host = "";
   try { host = new URL(ext(url || "")).hostname.replace(/^www\./, "").toLowerCase(); } catch { host = ""; }
@@ -66,16 +67,14 @@ function detectSocial(platform: string | null, url: string | null, label: string
   if (/facebook/.test(H)) return "facebook";
   return "globe";
 }
+
 function SocialIcon({ name }: { name: string }) {
   return (<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d={SOCIAL_ICONS[name] || SOCIAL_ICONS.globe} /></svg>);
-}
-function ArrowUpRight() {
-  return (<svg viewBox="0 0 24 24" width="1.2em" height="1.2em" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>);
 }
 
 /* ------------------------------ component ------------------------------ */
 
-export function Cyberpunk({ data }: { data: PublicPortfolio }) {
+export function JournalTemplate({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const username = data.username;
   const name = p?.display_name || username || "ROBIN";
@@ -198,7 +197,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
                     </div>
                     <div className="nt-folder-body">
                        <div className="nt-folder-content">
-                          <span className="nt-date-mono">● {oneDate(pr.date) || "RECENT"}</span>
+                          <span className="nt-date-mono">● {(pr.tags && pr.tags[0]) ? pr.tags[0].toUpperCase() : "RECENT"}</span>
                           <h3>{pr.title || "Untitled"}</h3>
                           <p>{pr.role || pr.description || "View details to see more about this project and the challenges solved."}</p>
                           {pr.url && <a href={ext(pr.url)} target="_blank" rel="noopener noreferrer" className="nt-view-btn">VIEW PROJECT ↗</a>}
@@ -412,7 +411,7 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
   );
 }
 
-export default Cyberpunk;
+export default JournalTemplate;
 
 /* =====================================================================
    STYLES — Notebook / Pixel / Mixed Media + Scroll Hijacking
