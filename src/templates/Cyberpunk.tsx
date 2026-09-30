@@ -3,33 +3,17 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { PublicPortfolio } from "@/lib/publicTypes";
-import { dateRange, videoEmbed, ext } from "@/lib/publicTypes";
-import { ContactForm } from "@/components/ContactForm";
+import { dateRange, ext } from "@/lib/publicTypes";
 
 /* =====================================================================
-   CyberTemplate — Dark Neon/Cyberpunk style with Scroll Hijacking.
+   CyberDashboardTemplate — Exact match of the dark grid/neon poster style.
    ===================================================================== */
 
-function initials(name: string | null | undefined, fallback: string | null | undefined): string {
-  const src = (name || fallback || "").trim();
-  if (!src) return "◆";
-  const parts = src.split(/\s+/).filter(Boolean);
-  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : src.slice(0, 2)).toUpperCase();
-}
 function oneDate(s: string | null): string | null {
   if (!s) return null;
   const d = new Date(s);
   if (Number.isNaN(d.getTime())) return s;
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short" });
-}
-function levelPct(level: unknown): number | null {
-  if (level === null || level === undefined || level === "") return null;
-  const clamp = (n: number) => Math.max(0, Math.min(100, n));
-  if (typeof level === "number") { if (Number.isNaN(level)) return null; return clamp(level <= 5 ? (level / 5) * 100 : level); }
-  const s = String(level).trim().toLowerCase();
-  const num = parseFloat(s);
-  if (!Number.isNaN(num) && /^[\d.]+\s*%?$/.test(s)) return clamp(s.includes("%") ? num : num <= 5 ? (num / 5) * 100 : num);
-  return null;
 }
 
 const SOCIAL_ICONS: Record<string, string> = {
@@ -37,10 +21,11 @@ const SOCIAL_ICONS: Record<string, string> = {
   linkedin: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z",
   twitter: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z",
   instagram: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.332.014 7.052.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z",
-  facebook: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
-  youtube: "M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z",
+  behance: "M22 7h-7V5h7v2zm1.726 10c-.442 1.297-2.029 3-5.101 3-3.074 0-5.564-1.729-5.564-5.675 0-3.91 2.325-5.92 5.466-5.92 3.082 0 4.964 1.782 5.375 4.426.078.506.109 1.188.095 2.14H15.97c.13 3.211 3.483 3.312 4.588 2.029h3.168zm-7.686-4h4.965c-.105-1.547-1.136-2.219-2.477-2.219-1.466 0-2.277.768-2.488 2.219zm-9.574 6.988H0V5.021h6.953c5.476.081 5.58 5.444 2.72 6.906 3.461 1.26 3.577 8.061-3.207 8.061zM3 11h3.584c2.508 0 2.906-3-.312-3H3v3zm3.391 3H3v3.016h3.341c3.055 0 2.868-3.016.05-3.016z",
+  pinterest: "M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.749-7.252 7.926-7.252 4.163 0 7.398 2.967 7.398 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C24.007 5.367 18.635.001 12.017.001z",
   globe: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z",
 };
+
 function detectSocial(platform: string | null, url: string | null, label: string | null): string {
   let host = "";
   try { host = new URL(ext(url || "")).hostname.replace(/^www\./, "").toLowerCase(); } catch { host = ""; }
@@ -50,320 +35,155 @@ function detectSocial(platform: string | null, url: string | null, label: string
   if (/twitter|x\.com/.test(H)) return "twitter";
   if (/instagram/.test(H)) return "instagram";
   if (/facebook/.test(H)) return "facebook";
-  if (/youtube/.test(H)) return "youtube";
+  if (/behance/.test(H)) return "behance";
+  if (/pinterest/.test(H)) return "pinterest";
   return "globe";
 }
+
 function SocialIcon({ name }: { name: string }) {
   return (<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d={SOCIAL_ICONS[name] || SOCIAL_ICONS.globe} /></svg>);
 }
 
-/* ------------------------------ component ------------------------------ */
-
 export function Cyberpunk({ data }: { data: PublicPortfolio }) {
   const p = data.profile;
   const username = data.username;
-  const name = p?.display_name || username || "Your Name";
+  const name = p?.display_name || username || "URVASHI";
   
-  const [activeSlide, setActiveSlide] = useState(0);
-  const isScrolling = useRef(false);
-  const touchStartY = useRef(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Group data into logical full-screen slides
-  const slides: ReactNode[] = [];
-
-  // Slide 0: Hero
-  slides.push(
-    <div className="cy-hero-wrapper" key="slide-hero">
-      <div className="cy-header-bar">
-        <h1 className="cy-main-title">{name}</h1>
-        <div className="cy-contact-top">
-          {p?.phone && <span>Contact no: {p.phone}</span>}
-          {p?.email && <span>Email: {p.email}</span>}
-        </div>
-      </div>
-      <div className="cy-hero-center">
-         {p?.title && <h2 className="cy-subtitle">{p.title.toUpperCase()}</h2>}
-         <p className="cy-scroll-hint">SCROLL TO EXPLORE ↓</p>
-      </div>
-    </div>
-  );
-
-  // Slide 1: About & Socials & Image
-  const aboutText = p?.about ?? p?.bio ?? null;
   const photo = p?.avatar_url || data.gallery.find((g) => g.image_url)?.image_url || null;
-  slides.push(
-    <div className="cy-grid-2" key="slide-about">
-      <div className="cy-col">
-        <div className="cy-card">
-          <span className="cy-pill">About Me</span>
-          <p className="cy-text">{aboutText || "Welcome to my portfolio. Explore my work and skills."}</p>
-          {p?.resume_url && <a className="cy-btn" href={ext(p.resume_url)} target="_blank" rel="noopener noreferrer">Download CV</a>}
-        </div>
-        
-        {data.links.length > 0 && (
-          <div className="cy-card">
-            <span className="cy-pill">Social Media</span>
-            <div className="cy-socials">
-              {data.links.map((l) => (
-                <a key={l.id} href={ext(l.url)} target="_blank" rel="noopener noreferrer" className="cy-soc-link">
-                  <SocialIcon name={detectSocial(l.platform, l.url, l.label)} />
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="cy-col cy-col-center">
-        {photo && (
-          <div className="cy-img-card">
-            <img src={photo} alt={name} />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  // Slide 2: Education & Skills
-  if (data.education.length > 0 || data.skills.length > 0) {
-    slides.push(
-      <div className="cy-grid-2" key="slide-eduskill">
-        <div className="cy-card cy-scrollable">
-          <span className="cy-pill">Education</span>
-          <ul className="cy-list">
-            {data.education.map((ed) => (
-              <li key={ed.id}>
-                <span className="cy-star">✦</span>
-                <div>
-                  <strong>{ed.school}</strong>
-                  <span>{[ed.degree, ed.field].filter(Boolean).join(" - ")}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="cy-card cy-scrollable">
-          <span className="cy-pill">Skills</span>
-          <ul className="cy-list">
-            {data.skills.map((s) => (
-              <li key={s.id}>
-                <span className="cy-star">✦</span>
-                <div>
-                   <strong>{s.name}</strong>
-                   {s.level && <span className="cy-sub-text">({s.level})</span>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    );
-  }
-
-  // Slide 3: Experience & Services
-  if (data.experience.length > 0 || data.services.length > 0) {
-    slides.push(
-      <div className="cy-grid-2" key="slide-expserv">
-        {data.experience.length > 0 && (
-          <div className="cy-card cy-scrollable">
-            <span className="cy-pill">Experience</span>
-            <ul className="cy-list">
-              {data.experience.map((ex) => (
-                <li key={ex.id}>
-                  <span className="cy-star">✦</span>
-                  <div>
-                    <strong>{ex.title}</strong>
-                    <span>{ex.company} ({dateRange(ex.start_date, ex.end_date, ex.is_current)})</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {data.services.length > 0 && (
-          <div className="cy-card cy-scrollable">
-            <span className="cy-pill">Services</span>
-            <ul className="cy-list">
-              {data.services.map((sv) => (
-                <li key={sv.id}>
-                  <span className="cy-star">✦</span>
-                  <div>
-                    <strong>{sv.title}</strong>
-                    {sv.description && <span className="cy-sub-text">{sv.description}</span>}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Slide 4: Projects
-  if (data.projects.length > 0) {
-    slides.push(
-      <div className="cy-full-col" key="slide-projects">
-        <div className="cy-card cy-scrollable cy-full-height">
-          <span className="cy-pill">Projects</span>
-          <div className="cy-project-grid">
-            {data.projects.map((pr) => (
-              <a key={pr.id} href={pr.url ? ext(pr.url) : "#"} target="_blank" rel="noopener noreferrer" className="cy-project-card">
-                <div className="cy-project-img">
-                  {pr.image_url ? <img src={pr.image_url} alt={pr.title||"Project"} loading="lazy"/> : <div className="cy-ph">P</div>}
-                </div>
-                <div className="cy-project-info">
-                  <strong>{pr.title || "Untitled"}</strong>
-                  {pr.role && <span>{pr.role}</span>}
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Slide 5: Contact Form
-  if (username) {
-    slides.push(
-      <div className="cy-full-col cy-centered" key="slide-contact">
-         <div className="cy-card cy-contact-card">
-            <span className="cy-pill">Contact Me</span>
-            <ContactForm username={username} />
-         </div>
-      </div>
-    );
-  }
-
-  const numSlides = slides.length;
-
-  // Scroll Hijacking Logic
-  const handleWheel = useCallback((e: WheelEvent) => {
-    // Ignore wheel if we are scrolling inside a scrollable card
-    const target = e.target as HTMLElement;
-    if (target.closest('.cy-scrollable')) {
-      const scrollable = target.closest('.cy-scrollable') as HTMLElement;
-      const isAtTop = scrollable.scrollTop === 0;
-      const isAtBottom = scrollable.scrollHeight - scrollable.scrollTop <= scrollable.clientHeight + 1;
-      
-      if (!((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0))) {
-        return; // Let native scroll happen inside the box
-      }
-    }
-
-    e.preventDefault(); // Stop native page scroll
-    
-    if (isScrolling.current) return;
-    
-    if (e.deltaY > 30) {
-      setActiveSlide((prev) => Math.min(prev + 1, numSlides - 1));
-      lockScroll();
-    } else if (e.deltaY < -30) {
-      setActiveSlide((prev) => Math.max(prev - 1, 0));
-      lockScroll();
-    }
-  }, [numSlides]);
-
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
-  }, []);
-
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.cy-scrollable')) return; // let native touch scroll work inside cards
-    e.preventDefault(); // stop pull-to-refresh and native scroll on the body
-  }, []);
-
-  const handleTouchEnd = useCallback((e: TouchEvent) => {
-    const touchEndY = e.changedTouches[0].clientY;
-    const deltaY = touchStartY.current - touchEndY;
-    
-    const target = e.target as HTMLElement;
-    if (target.closest('.cy-scrollable')) {
-      const scrollable = target.closest('.cy-scrollable') as HTMLElement;
-      const isAtTop = scrollable.scrollTop === 0;
-      const isAtBottom = scrollable.scrollHeight - scrollable.scrollTop <= scrollable.clientHeight + 1;
-      
-      if (!((isAtTop && deltaY < 0) || (isAtBottom && deltaY > 0))) {
-        return; // Handled by internal scroll
-      }
-    }
-
-    if (isScrolling.current) return;
-
-    if (deltaY > 50) {
-      setActiveSlide((prev) => Math.min(prev + 1, numSlides - 1));
-      lockScroll();
-    } else if (deltaY < -50) {
-      setActiveSlide((prev) => Math.max(prev - 1, 0));
-      lockScroll();
-    }
-  }, [numSlides]);
-
-  const lockScroll = () => {
-    isScrolling.current = true;
-    setTimeout(() => { isScrolling.current = false; }, 800); // 800ms cooldown for smooth snap
-  };
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    // We must attach events with { passive: false } to successfully preventDefault
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    window.addEventListener('touchstart', handleTouchStart, { passive: false });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
-
-  // Dots navigation
-  const goToSlide = (idx: number) => {
-    setActiveSlide(idx);
-    lockScroll();
-  };
+  const aboutText = p?.about ?? p?.bio ?? "Hi! I am a professional pursuing design as my passion with creative and unique visuals & ideas.";
 
   return (
-    <div className="cy-root">
-      <style dangerouslySetInnerHTML={{ __html: CYBER_CSS }} />
+    <div className="cyb-root">
+      <style dangerouslySetInnerHTML={{ __html: CYB_CSS }} />
       
-      {/* Abstract Glowing Orbs Background */}
-      <div className="cy-glow cy-glow-1" />
-      <div className="cy-glow cy-glow-2" />
+      {/* Background Orbs */}
+      <div className="cyb-glow cyb-glow-purple" />
+      <div className="cyb-glow cyb-glow-pink" />
 
-      {/* Slide Navigation Dots */}
-      <div className="cy-dots">
-        {slides.map((_, idx) => (
-          <button 
-            key={idx} 
-            className={`cy-dot ${activeSlide === idx ? 'cy-dot-active' : ''}`} 
-            onClick={() => goToSlide(idx)}
-            aria-label={`Go to slide ${idx + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* Scroll Hijacked Container */}
-      <div 
-        ref={containerRef} 
-        className="cy-track" 
-        style={{ transform: `translateY(-${activeSlide * 100}vh)` }}
-      >
-        {slides.map((slide, idx) => (
-          <div key={idx} className={`cy-slide ${activeSlide === idx ? 'cy-slide-active' : ''}`}>
-            <div className="cy-slide-inner">
-               {slide}
-            </div>
+      <main className="cyb-container">
+        
+        {/* HEADER SECTION */}
+        <header className="cyb-header">
+          <div className="cyb-header-left">
+            <h1 className="cyb-title">{name}</h1>
+            {p?.title && <p className="cyb-subtitle">{p.title.toUpperCase()}</p>}
           </div>
-        ))}
-      </div>
+          <div className="cyb-header-right">
+            {p?.phone && <span>Contact no: {p.phone}</span>}
+            {p?.email && <span>Email: {p.email}</span>}
+          </div>
+        </header>
+
+        {/* TOP ROW: About & Social | Profile Image */}
+        <div className="cyb-grid-top">
+          <div className="cyb-box-dashed cyb-flex-col">
+            
+            {/* About Inner Box */}
+            <div className="cyb-box-solid cyb-mb">
+              <span className="cyb-pill cyb-pill-pink">About Me</span>
+              <p className="cyb-text">{aboutText}</p>
+            </div>
+
+            {/* Social Inner Box */}
+            {data.links.length > 0 && (
+              <div className="cyb-box-solid cyb-social-box">
+                <span className="cyb-pill cyb-pill-pink">Social Media</span>
+                <div className="cyb-social-icons">
+                  {data.links.map((l) => (
+                    <a key={l.id} href={ext(l.url)} target="_blank" rel="noopener noreferrer" className="cyb-soc-link" title={l.label || l.platform}>
+                      <SocialIcon name={detectSocial(l.platform, l.url, l.label)} />
+                    </a>
+                  ))}
+                  {/* Fake Arrow & QR for aesthetics as per image */}
+                  <span className="cyb-arrow">➡</span>
+                  <div className="cyb-qr-code">
+                    <div className="cyb-qr-inner">✽</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Image Box */}
+          <div className="cyb-image-wrapper">
+             {photo ? (
+               <img src={photo} alt={name} className="cyb-profile-img" />
+             ) : (
+               <div className="cyb-image-placeholder">PHOTO</div>
+             )}
+          </div>
+        </div>
+
+        {/* MIDDLE ROW: Education & Skills */}
+        <div className="cyb-box-dashed cyb-grid-mid">
+           {/* Education */}
+           <div className="cyb-section">
+              <span className="cyb-pill cyb-pill-purple">Education</span>
+              <ul className="cyb-list">
+                {data.education.length > 0 ? data.education.map((ed) => (
+                  <li key={ed.id}>
+                    <span className="cyb-star">✦</span>
+                    <span className="cyb-list-text">{[ed.degree, ed.school].filter(Boolean).join(" at ")}</span>
+                  </li>
+                )) : (
+                   <li><span className="cyb-star">✦</span><span className="cyb-list-text">No education data added yet.</span></li>
+                )}
+              </ul>
+           </div>
+
+           {/* Skills */}
+           <div className="cyb-section">
+              <span className="cyb-pill cyb-pill-purple">Skills</span>
+              <ul className="cyb-list">
+                {data.skills.length > 0 ? data.skills.map((s) => (
+                  <li key={s.id}>
+                    <span className="cyb-star">✦</span>
+                    <span className="cyb-list-text">{s.name}</span>
+                  </li>
+                )) : (
+                   <li><span className="cyb-star">✦</span><span className="cyb-list-text">No skills data added yet.</span></li>
+                )}
+              </ul>
+           </div>
+        </div>
+
+        {/* BOTTOM ROW: Services (Hobbies) & Projects (Tools) */}
+        <div className="cyb-grid-bottom">
+           {/* Left Bottom Box (Services mapped to Hobbies style) */}
+           <div className="cyb-box-dashed">
+              <span className="cyb-pill cyb-pill-pink">Services</span>
+              <div className="cyb-hobbies-container">
+                 {data.services.length > 0 ? data.services.map((sv) => (
+                   <div key={sv.id} className="cyb-hobby-item">
+                     {sv.title}
+                   </div>
+                 )) : (
+                   <div className="cyb-hobby-item">UI/UX Design</div>
+                 )}
+              </div>
+           </div>
+
+           {/* Right Bottom Box (Projects mapped to Tools style) */}
+           <div className="cyb-box-dashed">
+              <span className="cyb-pill cyb-pill-pink">Projects</span>
+              <div className="cyb-tools-container">
+                 {data.projects.length > 0 ? data.projects.slice(0, 4).map((pr, i) => (
+                   <a key={pr.id} href={pr.url ? ext(pr.url) : "#"} target="_blank" rel="noopener noreferrer" className={`cyb-tool-box cyb-c${i % 4}`}>
+                     {pr.title ? pr.title.substring(0, 2).toUpperCase() : "PR"}
+                   </a>
+                 )) : (
+                   <>
+                     <div className="cyb-tool-box cyb-c0">Ps</div>
+                     <div className="cyb-tool-box cyb-c1">Ai</div>
+                     <div className="cyb-tool-box cyb-c2">Xd</div>
+                     <div className="cyb-tool-box cyb-c3">Fm</div>
+                   </>
+                 )}
+              </div>
+           </div>
+        </div>
+
+      </main>
     </div>
   );
 }
@@ -371,296 +191,299 @@ export function Cyberpunk({ data }: { data: PublicPortfolio }) {
 export default Cyberpunk;
 
 /* =====================================================================
-   STYLES — Cyberpunk / Dark Neon Grid
+   STYLES — Exact Cyber Dashboard Style
    ===================================================================== */
 
-const CYBER_CSS = `
-:root {
-  --cy-bg: #090314;
-  --cy-grid: rgba(255, 255, 255, 0.04);
-  --cy-pink: #ff4d94;
-  --cy-pink-glow: rgba(255, 77, 148, 0.6);
-  --cy-purple: #7a22ff;
-  --cy-card-bg: rgba(20, 10, 40, 0.4);
-  --cy-card-border: rgba(255, 255, 255, 0.15);
-  --cy-text: #e2dcf2;
-  --cy-text-muted: #a496c2;
-  --cy-font-main: "Space Grotesk", system-ui, sans-serif;
-  --cy-font-head: "Cinzel", "Playfair Display", serif;
-}
+const CYB_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;500;600&display=swap');
 
-body, html {
-  margin: 0; padding: 0;
-  height: 100%;
-  overflow: hidden; /* Prevent native scroll */
-  background-color: var(--cy-bg);
-}
-
-.cy-root {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  background-color: var(--cy-bg);
+.cyb-root {
+  --bg-color: #0b0510;
+  --grid-line: rgba(255, 255, 255, 0.07);
+  --dashed-border: rgba(255, 255, 255, 0.4);
+  --text-main: #ffffff;
+  --text-muted: #e2e8f0;
+  --pink: #ff66b2;
+  --purple: #8a2be2;
+  --dark-box: #1a0b2e; /* slightly lighter than bg for contrast */
+  
+  background-color: var(--bg-color);
   background-image: 
-    linear-gradient(var(--cy-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--cy-grid) 1px, transparent 1px);
-  background-size: 50px 50px;
-  background-position: center center;
-  color: var(--cy-text);
-  font-family: var(--cy-font-main);
-  overflow: hidden;
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center top;
+  
+  min-height: 100vh;
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
 }
-
-.cy-root * { box-sizing: border-box; }
 
 /* Glowing Orbs */
-.cy-glow {
+.cyb-glow {
   position: absolute;
-  width: 60vw;
-  height: 60vw;
+  width: 50vw;
+  height: 50vw;
   border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.3;
+  filter: blur(150px);
   z-index: 0;
+  opacity: 0.4;
   pointer-events: none;
 }
-.cy-glow-1 { top: -20%; left: -10%; background: var(--cy-purple); }
-.cy-glow-2 { bottom: -20%; right: -10%; background: var(--cy-pink); }
-
-/* Track & Slides */
-.cy-track {
-  position: absolute;
-  top: 0; left: 0; width: 100%;
-  height: 100vh;
-  transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
-  will-change: transform;
-  z-index: 2;
+.cyb-glow-purple {
+  top: 10%; left: -10%;
+  background: var(--purple);
+}
+.cyb-glow-pink {
+  bottom: 0%; right: -10%;
+  background: var(--pink);
 }
 
-.cy-slide {
-  width: 100vw;
-  height: 100vh;
+/* Main Container */
+.cyb-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Common Boxes */
+.cyb-box-dashed {
+  border: 1px dashed var(--dashed-border);
+  border-radius: 12px;
+  padding: 24px;
+  background: rgba(11, 5, 16, 0.6);
+  backdrop-filter: blur(5px);
+}
+.cyb-box-solid {
+  background: var(--dark-box);
+  border-radius: 12px;
+  padding: 20px;
+}
+.cyb-mb { margin-bottom: 20px; }
+.cyb-flex-col { display: flex; flex-direction: column; }
+
+/* Pills */
+.cyb-pill {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+  color: #fff;
+}
+.cyb-pill-pink {
+  background-color: var(--pink);
+  border: 1px solid #ff99cc;
+}
+.cyb-pill-purple {
+  background-color: #5c4d99;
+  border: 1px solid #8c7dd9;
+}
+
+/* Header */
+.cyb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border: 1px dashed var(--dashed-border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  background: rgba(11, 5, 16, 0.6);
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.cyb-title {
+  font-family: 'Cinzel', serif;
+  font-size: 2.8rem;
+  margin: 0 0 5px 0;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255,255,255,0.4);
+}
+.cyb-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+.cyb-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.85rem;
+  gap: 5px;
+  color: var(--text-muted);
+}
+
+/* Top Row */
+.cyb-grid-top {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+}
+.cyb-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Social Box */
+.cyb-social-box {
+  display: flex;
+  flex-direction: column;
+}
+.cyb-social-icons {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 40px;
-  opacity: 0.3;
-  transform: scale(0.95);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cyb-soc-link {
+  width: 40px; height: 40px;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  display: flex; justify-content: center; align-items: center;
+  color: #3b82f6;
+  font-size: 1.2rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.cyb-soc-link:nth-child(2) { border-color: #ef4444; color: #ef4444; }
+.cyb-soc-link:nth-child(3) { border-color: #06b6d4; color: #06b6d4; }
+.cyb-soc-link:hover { transform: translateY(-2px); filter: brightness(1.2); }
+
+.cyb-arrow {
+  color: #3b82f6;
+  font-size: 1.5rem;
+  margin: 0 10px;
+}
+.cyb-qr-code {
+  width: 60px; height: 60px;
+  background: #fff;
+  padding: 4px;
+  display: flex; justify-content: center; align-items: center;
+}
+.cyb-qr-inner {
+  width: 100%; height: 100%;
+  border: 2px dashed #000;
+  display: flex; justify-content: center; align-items: center;
+  color: #000; font-size: 1.5rem;
 }
 
-.cy-slide-active {
-  opacity: 1;
-  transform: scale(1);
+/* Image Box */
+.cyb-image-wrapper {
+  background-color: var(--pink);
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  height: 100%;
+  min-height: 250px;
 }
-
-.cy-slide-inner {
+.cyb-profile-img {
   width: 100%;
-  max-width: 1000px;
-  max-height: 85vh;
-  position: relative;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--dark-box);
+}
+.cyb-image-placeholder {
+  width: 100%; height: 100%;
+  border-radius: 8px;
+  background: var(--dark-box);
+  display: flex; justify-content: center; align-items: center;
+  font-weight: bold; letter-spacing: 2px;
 }
 
-/* Slide Specific Layouts */
-.cy-hero-wrapper {
-  display: flex; flex-direction: column; height: 100%; justify-content: center;
-}
-.cy-header-bar {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  border-bottom: 1px dashed var(--cy-card-border);
-  padding-bottom: 20px;
-  margin-bottom: 40px;
-  flex-wrap: wrap; gap: 20px;
-}
-.cy-main-title {
-  font-family: var(--cy-font-head);
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
-  margin: 0;
-  color: #fff;
-  text-transform: uppercase;
-  text-shadow: 0 0 10px rgba(255,255,255,0.3);
-}
-.cy-contact-top {
-  display: flex; flex-direction: column; gap: 8px;
-  font-size: 0.9rem; color: var(--cy-text-muted);
-  text-align: right;
-}
-.cy-hero-center { text-align: left; }
-.cy-subtitle {
-  font-size: clamp(1.2rem, 2vw, 1.5rem);
-  font-weight: 300;
-  letter-spacing: 2px;
-  color: var(--cy-pink);
-  margin-bottom: 30px;
-}
-.cy-scroll-hint {
-  font-size: 0.85rem; letter-spacing: 3px; color: var(--cy-text-muted);
-  animation: cy-bounce 2s infinite;
-  display: inline-block;
-}
-
-@keyframes cy-bounce {
-  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-10px); }
-  60% { transform: translateY(-5px); }
-}
-
-.cy-grid-2 {
+/* Middle Row (Education & Skills) */
+.cyb-grid-mid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  height: 100%;
+  gap: 40px;
 }
-.cy-col { display: flex; flex-direction: column; gap: 30px; }
-.cy-col-center { justify-content: center; align-items: center; }
-.cy-full-col { display: flex; flex-direction: column; width: 100%; height: 100%; }
-.cy-centered { justify-content: center; align-items: center; }
-
-/* Cards */
-.cy-card {
-  background: var(--cy-card-bg);
-  border: 1px dashed var(--cy-card-border);
-  border-radius: 16px;
-  padding: 30px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+.cyb-list {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 12px;
 }
-.cy-full-height { height: 100%; display: flex; flex-direction: column; }
-
-/* Scrollable Inner Cards */
-.cy-scrollable {
-  max-height: 70vh;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--cy-pink) transparent;
+.cyb-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
-.cy-scrollable::-webkit-scrollbar { width: 6px; }
-.cy-scrollable::-webkit-scrollbar-track { background: transparent; }
-.cy-scrollable::-webkit-scrollbar-thumb { background-color: var(--cy-pink); border-radius: 10px; }
-
-.cy-pill {
-  display: inline-block;
-  background: var(--cy-pink);
-  color: #fff;
-  padding: 6px 16px;
-  border-radius: 8px;
-  font-weight: 600;
+.cyb-star {
+  color: #fde047; /* Yellow star */
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+.cyb-list-text {
   font-size: 0.95rem;
-  margin-bottom: 24px;
-  box-shadow: 0 0 15px var(--cy-pink-glow);
-  letter-spacing: 1px;
+  line-height: 1.4;
 }
 
-.cy-text { line-height: 1.7; font-size: 1.05rem; margin-bottom: 20px; }
-.cy-sub-text { display: block; font-size: 0.85rem; color: var(--cy-text-muted); margin-top: 4px; }
-
-.cy-btn {
-  display: inline-block;
-  background: transparent;
-  color: var(--cy-pink);
-  border: 1px solid var(--cy-pink);
-  padding: 10px 20px;
+/* Bottom Row (Hobbies & Tools) */
+.cyb-grid-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.cyb-hobbies-container {
+  background: var(--pink);
   border-radius: 8px;
-  text-decoration: none;
+  padding: 15px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+  min-height: 70px;
+}
+.cyb-hobby-item {
+  border: 1px solid rgba(0,0,0,0.3);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
   font-weight: 600;
-  transition: all 0.3s;
+  color: #000;
 }
-.cy-btn:hover { background: var(--cy-pink); color: #fff; box-shadow: 0 0 15px var(--cy-pink-glow); }
 
-/* Socials */
-.cy-socials { display: flex; gap: 15px; flex-wrap: wrap; }
-.cy-soc-link {
+.cyb-tools-container {
+  background: #11052C;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  min-height: 70px;
+}
+.cyb-tool-box {
   width: 45px; height: 45px;
-  display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--cy-card-border);
-  border-radius: 12px;
-  color: var(--cy-text);
-  font-size: 1.2rem;
-  transition: all 0.3s;
-  background: rgba(0,0,0,0.3);
+  display: flex; justify-content: center; align-items: center;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  text-decoration: none;
+  border: 1px solid;
 }
-.cy-soc-link:hover {
-  border-color: #00d2ff;
-  color: #00d2ff;
-  box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
-  transform: translateY(-3px);
-}
+.cyb-c0 { border-color: #06b6d4; color: #06b6d4; }
+.cyb-c1 { border-color: #f59e0b; color: #f59e0b; }
+.cyb-c2 { border-color: #ec4899; color: #ec4899; }
+.cyb-c3 { border-color: #84cc16; color: #84cc16; background: rgba(132, 204, 22, 0.2); }
 
-/* Image Profile (Slide 1 right col) */
-.cy-img-card {
-  width: 100%; max-width: 380px; aspect-ratio: 4/5;
-  background: var(--cy-pink);
-  border-radius: 16px;
-  padding: 4px;
-  box-shadow: 0 0 30px var(--cy-pink-glow);
-  overflow: hidden;
-}
-.cy-img-card img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
-  filter: contrast(1.1) saturate(1.2);
-}
-
-/* Lists */
-.cy-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 20px; }
-.cy-list li { display: flex; gap: 12px; align-items: flex-start; }
-.cy-star { color: #fde047; font-size: 1.2rem; margin-top: 2px; text-shadow: 0 0 8px rgba(253,224,71,0.6); }
-.cy-list strong { color: #fff; font-size: 1.1rem; display: block; }
-
-/* Projects */
-.cy-project-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;
-}
-.cy-project-card {
-  display: block; border: 1px solid var(--cy-card-border); border-radius: 12px; overflow: hidden; text-decoration: none;
-  background: rgba(0,0,0,0.4); transition: transform 0.3s, border-color 0.3s;
-}
-.cy-project-card:hover { transform: translateY(-5px); border-color: var(--cy-purple); box-shadow: 0 0 20px rgba(122,34,255,0.4); }
-.cy-project-img { height: 160px; background: #000; display: flex; align-items: center; justify-content: center; }
-.cy-project-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: opacity 0.3s; }
-.cy-project-card:hover .cy-project-img img { opacity: 1; }
-.cy-ph { font-family: var(--cy-font-head); font-size: 3rem; color: var(--cy-card-border); }
-.cy-project-info { padding: 15px; }
-.cy-project-info strong { display: block; color: #fff; margin-bottom: 5px; }
-.cy-project-info span { font-size: 0.85rem; color: var(--cy-text-muted); }
-
-/* Contact Form Overrides */
-.cy-contact-card { width: 100%; max-width: 600px; }
-.cy-contact-card :where(input, textarea) {
-  width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--cy-card-border);
-  color: #fff; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-family: var(--cy-font-main);
-}
-.cy-contact-card :where(input, textarea):focus { outline: none; border-color: var(--cy-pink); box-shadow: 0 0 10px var(--cy-pink-glow); }
-.cy-contact-card textarea { min-height: 120px; resize: vertical; }
-.cy-contact-card button {
-  width: 100%; background: var(--cy-pink); color: #fff; font-weight: bold; border: none; padding: 14px; border-radius: 8px; cursor: pointer; box-shadow: 0 0 15px var(--cy-pink-glow); transition: transform 0.2s;
-}
-.cy-contact-card button:hover { transform: scale(1.02); }
-.cy-contact-card label { display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--cy-text-muted); }
-
-/* Dots Navigation */
-.cy-dots {
-  position: fixed; right: 30px; top: 50%; transform: translateY(-50%);
-  display: flex; flex-direction: column; gap: 12px; z-index: 10;
-}
-.cy-dot {
-  width: 10px; height: 10px; border-radius: 50%; background: var(--cy-card-border); border: none; cursor: pointer; transition: all 0.3s;
-}
-.cy-dot:hover { background: #fff; transform: scale(1.2); }
-.cy-dot-active { background: var(--cy-pink); box-shadow: 0 0 10px var(--cy-pink-glow); transform: scale(1.3); }
-
-/* Mobile Adaptations */
-@media (max-width: 800px) {
-  .cy-grid-2 { grid-template-columns: 1fr; display: flex; flex-direction: column; }
-  .cy-header-bar { flex-direction: column; gap: 10px; text-align: center; justify-content: center; align-items: center; }
-  .cy-contact-top { text-align: center; }
-  .cy-hero-center { text-align: center; }
-  .cy-slide { padding: 20px; padding-right: 40px; /* leave room for dots */ }
-  .cy-dots { right: 15px; }
-  .cy-img-card { max-width: 250px; }
-  .cy-scrollable { max-height: unset; flex: 1; }
-  .cy-slide-inner { display: flex; flex-direction: column; gap: 20px; }
+/* Responsive Media Queries */
+@media (max-width: 768px) {
+  .cyb-header { flex-direction: column; align-items: center; text-align: center; }
+  .cyb-header-right { align-items: center; margin-top: 10px; }
+  .cyb-grid-top { grid-template-columns: 1fr; }
+  .cyb-grid-mid { grid-template-columns: 1fr; gap: 30px; }
+  .cyb-grid-bottom { grid-template-columns: 1fr; }
+  .cyb-image-wrapper { aspect-ratio: 1; max-width: 400px; margin: 0 auto; }
 }
 `;
