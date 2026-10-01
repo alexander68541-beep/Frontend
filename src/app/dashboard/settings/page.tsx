@@ -80,7 +80,7 @@ export default function SettingsPage() {
         <h2 className="card-title">Account</h2>
         <div className="kv mt-4">
           <div className="row between"><span className="muted">Email</span><span>{account.data?.email ?? "…"}</span></div>
-          <div className="row between"><span className="muted">Plan</span><span className={`badge ${account.data?.plan === "pro" ? "badge-published" : ""}`}>{account.data?.plan ?? "free"}</span></div>
+          <div className="row between"><span className="muted">Plan</span><span className={`badge ${account.data?.plan && account.data.plan !== "free" ? "badge-published" : ""}`}>{account.data?.plan ?? "free"}</span></div>
           <div className="row between"><span className="muted">Public address</span><span>{portfolio.data?.username ? portfolioLabel(portfolio.data.username) : "Not set"}</span></div>
         </div>
         <div className="stack gap-3 mt-6">

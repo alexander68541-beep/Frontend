@@ -20,7 +20,6 @@ export default function TemplatesPage() {
   const portfolio = usePortfolio();
   const account = useAccount();
   const isAdmin = account.data?.role === "admin";
-  const isPro = isAdmin || account.data?.plan === "pro";
   const current = portfolio.data?.template ?? "minimal";
   const accent = portfolio.data?.accent ?? "#7c6cff";
   const published = portfolio.data?.status === "published";
@@ -30,6 +29,7 @@ export default function TemplatesPage() {
   const list = useQuery({ queryKey: ["templates"], queryFn: () => apiFetch<CT[]>("/templates"), refetchOnWindowFocus: true });
   const billing = useQuery({ queryKey: ["billing-info"], queryFn: () => apiFetch<{ features: { key: string; has: boolean }[] }>("/billing/info") });
   const customAccentAllowed = billing.data?.features.find((f) => f.key === "custom_accent")?.has ?? true;
+  const isPro = isAdmin || (billing.data?.features.find((f) => f.key === "premium_templates")?.has ?? (account.data?.plan === "pro" || account.data?.plan === "max"));
 
   const setTemplate = useMutation({
     mutationFn: (key: string) => apiFetch<Portfolio>("/portfolio/template", { method: "PATCH", body: JSON.stringify({ template: key }) }),
